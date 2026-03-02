@@ -1,0 +1,2783 @@
+[
+  {
+    "code": "ZA",
+    "name": "South Africa",
+    "regime": "Licensing",
+    "regulator": "FSCA",
+    "keyLaw": "FAIS Act / Declaration 44",
+    "travelRule": "Enforced",
+    "entityCount": 102,
+    "sources": [
+      {
+        "name": "FSCA CASP Register",
+        "url": "https://www.fsca.co.za/Regulated%20Entities/Pages/List-of-Authorised-CASPs.aspx"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "FATF MER South Africa",
+        "url": "https://www.fatf-gafi.org/en/countries/detail/South-Africa.html"
+      }
+    ],
+    "notes": "CASPs must hold FAIS Category I/II license since Dec 2024; 248+ licensed"
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "regime": "Licensing",
+    "regulator": "SEC Nigeria",
+    "keyLaw": "SEC Rules on Digital Assets 2022",
+    "travelRule": "Legislated",
+    "entityCount": 7,
+    "sources": [
+      {
+        "name": "SEC Nigeria VASP",
+        "url": "https://home.sec.gov.ng/fintech-and-innovation-hub-finport/registered-fintech-operators/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "FATF MER Nigeria",
+        "url": "https://www.fatf-gafi.org/en/countries/detail/Nigeria.html"
+      }
+    ],
+    "notes": "ARIP provisional licensing; 2 approved (Busha, Quidax), 5 in sandbox"
+  },
+  {
+    "code": "MU",
+    "name": "Mauritius",
+    "regime": "Licensing",
+    "regulator": "FSC Mauritius",
+    "keyLaw": "Virtual Asset and Initial Token Offering Services Act 2021",
+    "travelRule": "Legislated",
+    "entityCount": 3,
+    "sources": [
+      {
+        "name": "FSC Mauritius VASP",
+        "url": "https://www.fscmauritius.org/en/supervision/register-of-licensee"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Class R/S/T VASP licenses"
+  },
+  {
+    "code": "GH",
+    "name": "Ghana",
+    "regime": "Sandbox",
+    "regulator": "Bank of Ghana",
+    "keyLaw": "E-Money Issuer Guidelines / VARO",
+    "travelRule": "In Progress",
+    "entityCount": 6,
+    "sources": [
+      {
+        "name": "Bank of Ghana VARO",
+        "url": "https://www.bog.gov.gh/virtual-assets/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "6 sandbox entities, regulatory sandbox pilot"
+  },
+  {
+    "code": "SC",
+    "name": "Seychelles",
+    "regime": "Licensing",
+    "regulator": "FSA Seychelles",
+    "keyLaw": "VASP Act 2024",
+    "travelRule": "In Progress",
+    "entityCount": 7,
+    "sources": [],
+    "notes": "Effective Sep 2024; OKX licensed"
+  },
+  {
+    "code": "BW",
+    "name": "Botswana",
+    "regime": "Licensing",
+    "regulator": "NBFIRA",
+    "keyLaw": "Virtual Assets Act 2022",
+    "travelRule": "Not Implemented",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "1-2 licensed VASPs (Yellow Card)"
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "regime": "Unclear",
+    "regulator": "CMA / CBK",
+    "keyLaw": "Capital Markets Act (amendment draft)",
+    "travelRule": "In Progress",
+    "entityCount": 7,
+    "sources": [
+      {
+        "name": "CMA Kenya",
+        "url": "https://www.cma.or.ke/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "No formal VASP licensing yet; high adoption"
+  },
+  {
+    "code": "RW",
+    "name": "Rwanda",
+    "regime": "Registration",
+    "regulator": "BNR",
+    "keyLaw": "National Bank of Rwanda regulations",
+    "travelRule": "In Progress",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "Informal registration, no dedicated VASP law"
+  },
+  {
+    "code": "TZ",
+    "name": "Tanzania",
+    "regime": "Unclear",
+    "regulator": "BoT / CMSA",
+    "keyLaw": "Capital Markets and Securities Act",
+    "travelRule": "Not Implemented",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "No formal VASP framework; BoT cautionary notices"
+  },
+  {
+    "code": "UG",
+    "name": "Uganda",
+    "regime": "Unclear",
+    "regulator": "CMA Uganda",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "No specific VASP regulation"
+  },
+  {
+    "code": "MW",
+    "name": "Malawi",
+    "regime": "None",
+    "regulator": "RBM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "NA",
+    "name": "Namibia",
+    "regime": "Unclear",
+    "regulator": "NAMFISA / BoN",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "BoN cautionary statements; no formal framework"
+  },
+  {
+    "code": "ZM",
+    "name": "Zambia",
+    "regime": "Unclear",
+    "regulator": "SEC Zambia / BoZ",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "SEC exploring framework; no formal licensing"
+  },
+  {
+    "code": "ZW",
+    "name": "Zimbabwe",
+    "regime": "Ban",
+    "regulator": "RBZ",
+    "keyLaw": "RBZ Directive 2018",
+    "travelRule": "N/A",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "Crypto transactions banned by central bank"
+  },
+  {
+    "code": "SZ",
+    "name": "Eswatini",
+    "regime": "None",
+    "regulator": "FSRA Eswatini",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "MZ",
+    "name": "Mozambique",
+    "regime": "None",
+    "regulator": "Banco de Moçambique",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "AO",
+    "name": "Angola",
+    "regime": "None",
+    "regulator": "BNA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; BNA warning notices"
+  },
+  {
+    "code": "ET",
+    "name": "Ethiopia",
+    "regime": "Ban",
+    "regulator": "NBE",
+    "keyLaw": "NBE Directive 2021",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto use prohibited by central bank"
+  },
+  {
+    "code": "CM",
+    "name": "Cameroon",
+    "regime": "None",
+    "regulator": "COBAC / BEAC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "CEMAC zone; no specific crypto regulation"
+  },
+  {
+    "code": "SN",
+    "name": "Senegal",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments, P2P tolerated"
+  },
+  {
+    "code": "CI",
+    "name": "Côte d'Ivoire",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; same BCEAO stance as Senegal"
+  },
+  {
+    "code": "TN",
+    "name": "Tunisia",
+    "regime": "Ban",
+    "regulator": "BCT",
+    "keyLaw": "BCT Circular 2017",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto transactions banned"
+  },
+  {
+    "code": "MA",
+    "name": "Morocco",
+    "regime": "Unclear",
+    "regulator": "BAM / AMMC",
+    "keyLaw": "Crypto bill draft 2024",
+    "travelRule": "Not Implemented",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "Ban since 2017; new regulatory bill under review"
+  },
+  {
+    "code": "EG",
+    "name": "Egypt",
+    "regime": "Unclear",
+    "regulator": "CBE / FRA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "Implicit ban by CBE; fintech sandbox exploring crypto"
+  },
+  {
+    "code": "CF",
+    "name": "Central African Republic",
+    "regime": "Unclear",
+    "regulator": "COBAC / BEAC",
+    "keyLaw": "Crypto as legal tender law 2022 (repealed)",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Adopted Bitcoin as legal tender Apr 2022, reversed by CEMAC court"
+  },
+  {
+    "code": "CG",
+    "name": "Republic of Congo",
+    "regime": "None",
+    "regulator": "COBAC / BEAC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CEMAC zone; no specific crypto regulation"
+  },
+  {
+    "code": "CD",
+    "name": "DR Congo",
+    "regime": "None",
+    "regulator": "BCC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "SL",
+    "name": "Sierra Leone",
+    "regime": "None",
+    "regulator": "BSL",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "LR",
+    "name": "Liberia",
+    "regime": "None",
+    "regulator": "CBL",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "DZ",
+    "name": "Algeria",
+    "regime": "Ban",
+    "regulator": "Banque d'Algérie",
+    "keyLaw": "Finance Law 2018, Art. 117",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Purchase, sale, use, and holding of virtual currency prohibited"
+  },
+  {
+    "code": "BJ",
+    "name": "Benin",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments"
+  },
+  {
+    "code": "BF",
+    "name": "Burkina Faso",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments"
+  },
+  {
+    "code": "BI",
+    "name": "Burundi",
+    "regime": "None",
+    "regulator": "BRB",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "CV",
+    "name": "Cape Verde",
+    "regime": "None",
+    "regulator": "BCV",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "TD",
+    "name": "Chad",
+    "regime": "None",
+    "regulator": "COBAC / BEAC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CEMAC zone; no specific crypto regulation"
+  },
+  {
+    "code": "KM",
+    "name": "Comoros",
+    "regime": "None",
+    "regulator": "BCC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "DJ",
+    "name": "Djibouti",
+    "regime": "None",
+    "regulator": "BCD",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "GQ",
+    "name": "Equatorial Guinea",
+    "regime": "None",
+    "regulator": "COBAC / BEAC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CEMAC zone; no specific crypto regulation"
+  },
+  {
+    "code": "ER",
+    "name": "Eritrea",
+    "regime": "None",
+    "regulator": "Bank of Eritrea",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; limited internet access"
+  },
+  {
+    "code": "GA",
+    "name": "Gabon",
+    "regime": "None",
+    "regulator": "COBAC / BEAC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CEMAC zone; no specific crypto regulation"
+  },
+  {
+    "code": "GM",
+    "name": "Gambia",
+    "regime": "None",
+    "regulator": "CBG",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "GN",
+    "name": "Guinea",
+    "regime": "None",
+    "regulator": "BCRG",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "GW",
+    "name": "Guinea-Bissau",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments"
+  },
+  {
+    "code": "LS",
+    "name": "Lesotho",
+    "regime": "None",
+    "regulator": "CBL",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "LY",
+    "name": "Libya",
+    "regime": "None",
+    "regulator": "CBL",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; political instability"
+  },
+  {
+    "code": "MG",
+    "name": "Madagascar",
+    "regime": "None",
+    "regulator": "Banky Foiben'i Madagasikara",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "ML",
+    "name": "Mali",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments"
+  },
+  {
+    "code": "MR",
+    "name": "Mauritania",
+    "regime": "None",
+    "regulator": "BCM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "NE",
+    "name": "Niger",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments"
+  },
+  {
+    "code": "SO",
+    "name": "Somalia",
+    "regime": "None",
+    "regulator": "CBS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; fragile state"
+  },
+  {
+    "code": "SS",
+    "name": "South Sudan",
+    "regime": "None",
+    "regulator": "BSS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; conflict zone"
+  },
+  {
+    "code": "SD",
+    "name": "Sudan",
+    "regime": "None",
+    "regulator": "CBOS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; under sanctions"
+  },
+  {
+    "code": "TG",
+    "name": "Togo",
+    "regime": "None",
+    "regulator": "BCEAO",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "WAEMU zone; BCEAO ban on crypto payments"
+  },
+  {
+    "code": "ST",
+    "name": "São Tomé and Príncipe",
+    "regime": "None",
+    "regulator": "BCSTP",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "AL",
+    "name": "Albania",
+    "regime": "Licensing",
+    "regulator": "AFSA Albania",
+    "keyLaw": "Law on Financial Markets Based on DLT 2023",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "AFSA licenses VASPs; EU candidate"
+  },
+  {
+    "code": "BA",
+    "name": "Bosnia and Herzegovina",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; fragmented governance"
+  },
+  {
+    "code": "ME",
+    "name": "Montenegro",
+    "regime": "Unclear",
+    "regulator": "CMA Montenegro",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "EU candidate; MiCA alignment in progress"
+  },
+  {
+    "code": "MD",
+    "name": "Moldova",
+    "regime": "None",
+    "regulator": "NBM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "MK",
+    "name": "North Macedonia",
+    "regime": "None",
+    "regulator": "NBRM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; EU candidate"
+  },
+  {
+    "code": "RS",
+    "name": "Serbia",
+    "regime": "Licensing",
+    "regulator": "NBS / SEC Serbia",
+    "keyLaw": "Digital Assets Law 2021",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Licensing regime since 2021; several licensed VASPs"
+  },
+  {
+    "code": "GB",
+    "name": "United Kingdom",
+    "regime": "Registration",
+    "regulator": "FCA",
+    "keyLaw": "MLR 2017 (AML/CTF registration)",
+    "travelRule": "Enforced",
+    "entityCount": 20,
+    "sources": [
+      {
+        "name": "FCA Crypto Register",
+        "url": "https://register.fca.org.uk/s/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "FCA MLR 2017 Guidance",
+        "url": "https://www.fca.org.uk/firms/financial-crime/cryptoassets-aml-ctf-regime"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "Crypto registration under MLR; ~40 registered firms"
+  },
+  {
+    "code": "FR",
+    "name": "France",
+    "regime": "Registration",
+    "regulator": "AMF / ACPR",
+    "keyLaw": "PACTE Law 2019 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 18,
+    "sources": [
+      {
+        "name": "AMF DASP Register",
+        "url": "https://www.amf-france.org/en/professionals/fintech/my-registrations/list-registered-dasp"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "EU MiCA / TFR",
+        "url": "https://eur-lex.europa.eu/eli/reg/2023/1114/oj"
+      }
+    ],
+    "notes": "DASP registration; MiCA transitional period until 2026"
+  },
+  {
+    "code": "DE",
+    "name": "Germany",
+    "regime": "Licensing",
+    "regulator": "BaFin",
+    "keyLaw": "KWG / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 18,
+    "sources": [
+      {
+        "name": "BaFin Crypto Custody Register",
+        "url": "https://www.bafin.de/EN/Aufsicht/BankenFinanzdienstleister/erlaubnis_node_en.html"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "EU MiCA / TFR",
+        "url": "https://eur-lex.europa.eu/eli/reg/2023/1114/oj"
+      }
+    ],
+    "notes": "Crypto custody license since 2020; MiCA full from 2025"
+  },
+  {
+    "code": "CH",
+    "name": "Switzerland",
+    "regime": "Licensing",
+    "regulator": "FINMA",
+    "keyLaw": "AMLA / DLT Law 2021",
+    "travelRule": "Enforced",
+    "entityCount": 12,
+    "sources": [
+      {
+        "name": "FINMA Licensed Entities",
+        "url": "https://www.finma.ch/en/authorisation/self-regulatory-organisations-sro/sro-member-search/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "Bank/securities dealer licenses for crypto; DLT framework"
+  },
+  {
+    "code": "LI",
+    "name": "Liechtenstein",
+    "regime": "Licensing",
+    "regulator": "FMA",
+    "keyLaw": "TVTG (Blockchain Act) 2020",
+    "travelRule": "Enforced",
+    "entityCount": 8,
+    "sources": [
+      {
+        "name": "FMA Token Register",
+        "url": "https://www.fma-li.li/en/fma/token-and-tt-service-provider-act.html"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Comprehensive token/VASP licensing since 2020"
+  },
+  {
+    "code": "MT",
+    "name": "Malta",
+    "regime": "Licensing",
+    "regulator": "MFSA",
+    "keyLaw": "VFA Act 2018 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 12,
+    "sources": [
+      {
+        "name": "MFSA VFA Register",
+        "url": "https://www.mfsa.mt/fintech/virtual-financial-assets/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VFA licensing since 2018; MiCA transitional"
+  },
+  {
+    "code": "EE",
+    "name": "Estonia",
+    "regime": "Licensing",
+    "regulator": "Finantsinspektsioon",
+    "keyLaw": "MLTFPA / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 7,
+    "sources": [
+      {
+        "name": "FIU VASP Register",
+        "url": "https://jfreg.jm/vasp-register"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP licensing (tightened 2022); MiCA transitional"
+  },
+  {
+    "code": "LT",
+    "name": "Lithuania",
+    "regime": "Registration",
+    "regulator": "Bank of Lithuania",
+    "keyLaw": "MLTFPD / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 10,
+    "sources": [],
+    "notes": "VASP registration under AML; MiCA transitional; ~500 registered"
+  },
+  {
+    "code": "IE",
+    "name": "Ireland",
+    "regime": "Registration",
+    "regulator": "CBI",
+    "keyLaw": "CJA 2010 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 6,
+    "sources": [],
+    "notes": "VASP AML registration; MiCA transitional"
+  },
+  {
+    "code": "NL",
+    "name": "Netherlands",
+    "regime": "Registration",
+    "regulator": "DNB / AFM",
+    "keyLaw": "Wwft / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 13,
+    "sources": [
+      {
+        "name": "DNB Crypto Register",
+        "url": "https://www.dnb.nl/en/public-register/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "EU MiCA / TFR",
+        "url": "https://eur-lex.europa.eu/eli/reg/2023/1114/oj"
+      }
+    ],
+    "notes": "DNB VASP registration since 2020; MiCA CASPs from 2025"
+  },
+  {
+    "code": "LU",
+    "name": "Luxembourg",
+    "regime": "Registration",
+    "regulator": "CSSF",
+    "keyLaw": "AML Law / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 7,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "IT",
+    "name": "Italy",
+    "regime": "Registration",
+    "regulator": "OAM / CONSOB",
+    "keyLaw": "D.Lgs. 90/2017 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 6,
+    "sources": [],
+    "notes": "OAM VASP register; MiCA transitional"
+  },
+  {
+    "code": "ES",
+    "name": "Spain",
+    "regime": "Registration",
+    "regulator": "Banco de España",
+    "keyLaw": "LABE / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 6,
+    "sources": [],
+    "notes": "BdE VASP registration since 2022; MiCA transitional"
+  },
+  {
+    "code": "PT",
+    "name": "Portugal",
+    "regime": "Registration",
+    "regulator": "Banco de Portugal",
+    "keyLaw": "VASP Registration Regime 2022 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 4,
+    "sources": [],
+    "notes": "BdP VASP registration; MiCA transitional"
+  },
+  {
+    "code": "AT",
+    "name": "Austria",
+    "regime": "Licensing",
+    "regulator": "FMA Austria",
+    "keyLaw": "FM-GwG / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 5,
+    "sources": [],
+    "notes": "VASP registration under AML; MiCA from 2025"
+  },
+  {
+    "code": "PL",
+    "name": "Poland",
+    "regime": "Registration",
+    "regulator": "KNF / GIIF",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "CZ",
+    "name": "Czech Republic",
+    "regime": "Registration",
+    "regulator": "CNB / FAU",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "Trade license + AML registration; MiCA transitional"
+  },
+  {
+    "code": "CY",
+    "name": "Cyprus",
+    "regime": "Registration",
+    "regulator": "CySEC",
+    "keyLaw": "AML Law / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 4,
+    "sources": [],
+    "notes": "CASP registration since 2021; MiCA transitional"
+  },
+  {
+    "code": "GI",
+    "name": "Gibraltar",
+    "regime": "Licensing",
+    "regulator": "GFSC",
+    "keyLaw": "DLT Providers Regulations 2018",
+    "travelRule": "Enforced",
+    "entityCount": 10,
+    "sources": [
+      {
+        "name": "GFSC DLT Register",
+        "url": "https://www.fsc.gi/dlt"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "DLT Provider licensing since 2018"
+  },
+  {
+    "code": "JE",
+    "name": "Jersey",
+    "regime": "Registration",
+    "regulator": "JFSC",
+    "keyLaw": "Proceeds of Crime (Supervisory Bodies) Order",
+    "travelRule": "Enforced",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "VASP AML registration"
+  },
+  {
+    "code": "GG",
+    "name": "Guernsey",
+    "regime": "Registration",
+    "regulator": "GFSC Guernsey",
+    "keyLaw": "Registration of Non-Regulated Financial Services Businesses Law",
+    "travelRule": "Enforced",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "VASP registration under AML"
+  },
+  {
+    "code": "IM",
+    "name": "Isle of Man",
+    "regime": "Registration",
+    "regulator": "IOMFSA",
+    "keyLaw": "Designated Businesses Act 2015",
+    "travelRule": "Enforced",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "VASP registration under AML/CFT"
+  },
+  {
+    "code": "SE",
+    "name": "Sweden",
+    "regime": "Registration",
+    "regulator": "Finansinspektionen",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 3,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "NO",
+    "name": "Norway",
+    "regime": "Registration",
+    "regulator": "Finanstilsynet",
+    "keyLaw": "AML Act",
+    "travelRule": "Enforced",
+    "entityCount": 3,
+    "sources": [],
+    "notes": "VASP registration; EEA state, MiCA applicable via EEA Agreement"
+  },
+  {
+    "code": "DK",
+    "name": "Denmark",
+    "regime": "Registration",
+    "regulator": "Finanstilsynet DK",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "FI",
+    "name": "Finland",
+    "regime": "Registration",
+    "regulator": "Finanssivalvonta",
+    "keyLaw": "Virtual Currency Providers Act 2019 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 4,
+    "sources": [],
+    "notes": "VASP registration since 2019; MiCA transitional"
+  },
+  {
+    "code": "BE",
+    "name": "Belgium",
+    "regime": "Registration",
+    "regulator": "FSMA",
+    "keyLaw": "AML Law / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "HR",
+    "name": "Croatia",
+    "regime": "Registration",
+    "regulator": "HANFA",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "VASP registration; EU member since 2023; MiCA transitional"
+  },
+  {
+    "code": "RO",
+    "name": "Romania",
+    "regime": "Registration",
+    "regulator": "ASF Romania",
+    "keyLaw": "AML Law / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "BG",
+    "name": "Bulgaria",
+    "regime": "Registration",
+    "regulator": "NRA / BNB",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration; MiCA 18-month transition"
+  },
+  {
+    "code": "SK",
+    "name": "Slovakia",
+    "regime": "Registration",
+    "regulator": "NBS Slovakia",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "SI",
+    "name": "Slovenia",
+    "regime": "Registration",
+    "regulator": "ATVP",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration; Bitstamp founded here; MiCA transitional"
+  },
+  {
+    "code": "HU",
+    "name": "Hungary",
+    "regime": "Registration",
+    "regulator": "MNB",
+    "keyLaw": "AML Act / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "VASP registration; MiCA transitional"
+  },
+  {
+    "code": "LV",
+    "name": "Latvia",
+    "regime": "Registration",
+    "regulator": "FKTK (now Latvijas Banka)",
+    "keyLaw": "AML/CFT Law / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration; MiCA grandfathering expired"
+  },
+  {
+    "code": "GR",
+    "name": "Greece",
+    "regime": "Registration",
+    "regulator": "HCMC / BoG",
+    "keyLaw": "Law 5193/2025 / MiCA",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CASP registration under MiCA; ~12 registered CASPs"
+  },
+  {
+    "code": "AD",
+    "name": "Andorra",
+    "regime": "Licensing",
+    "regulator": "INAF / AFA",
+    "keyLaw": "Digital Assets Law 2022",
+    "travelRule": "In Progress",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Digital asset service provider licensing; not EU but adopting MiCA-like framework"
+  },
+  {
+    "code": "IS",
+    "name": "Iceland",
+    "regime": "Registration",
+    "regulator": "FME (Fjármálaeftirlitið)",
+    "keyLaw": "Act on Virtual Currency Service Providers 2020",
+    "travelRule": "Enforced",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP registration under AML; EEA member, MiCA applicable"
+  },
+  {
+    "code": "MC",
+    "name": "Monaco",
+    "regime": "Unclear",
+    "regulator": "CCAF / AMSF",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific crypto law; follows French regulatory trends"
+  },
+  {
+    "code": "SM",
+    "name": "San Marino",
+    "regime": "Unclear",
+    "regulator": "BCSM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Delegated Decree on blockchain technology 2019; limited framework"
+  },
+  {
+    "code": "VA",
+    "name": "Vatican City",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No financial services regulation"
+  },
+  {
+    "code": "RU",
+    "name": "Russia",
+    "regime": "Licensing",
+    "regulator": "CBR / Ministry of Finance",
+    "keyLaw": "Federal Law on Digital Financial Assets 2021 / Mining Law 2024",
+    "travelRule": "In Progress",
+    "entityCount": 0,
+    "sources": [
+      {
+        "name": "CBR Digital Assets",
+        "url": "https://cbr.ru/eng/analytics/d_ok/dig_curr/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "Mining licensing 2024; exchange/payment use restricted; experimental regime"
+  },
+  {
+    "code": "UA",
+    "name": "Ukraine",
+    "regime": "Licensing",
+    "regulator": "NSSMC",
+    "keyLaw": "Law on Virtual Assets 2022",
+    "travelRule": "Legislated",
+    "entityCount": 0,
+    "sources": [
+      {
+        "name": "NSSMC",
+        "url": "https://www.nssmc.gov.ua/en/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP licensing regime; implementation delayed by war"
+  },
+  {
+    "code": "BY",
+    "name": "Belarus",
+    "regime": "Licensing",
+    "regulator": "HTP Administration",
+    "keyLaw": "Decree No. 8 (2017) / Presidential Decree",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Hi-Tech Park (HTP) crypto legal since 2017; tax-exempt until 2025"
+  },
+  {
+    "code": "GE",
+    "name": "Georgia",
+    "regime": "Unclear",
+    "regulator": "NBG",
+    "keyLaw": "",
+    "travelRule": "Legislated",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; crypto not regulated; mining hub"
+  },
+  {
+    "code": "KZ",
+    "name": "Kazakhstan",
+    "regime": "Licensing",
+    "regulator": "AFSA (AIFC)",
+    "keyLaw": "AIFC Framework on Digital Assets 2022",
+    "travelRule": "Legislated",
+    "entityCount": 0,
+    "sources": [
+      {
+        "name": "AFSA AIFC Register",
+        "url": "https://afsa.aifc.kz/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "AIFC/AFSA licenses VASPs; Binance, Bybit licensed; top-10 mining"
+  },
+  {
+    "code": "UZ",
+    "name": "Uzbekistan",
+    "regime": "Licensing",
+    "regulator": "NAPP (NAPM)",
+    "keyLaw": "Presidential Decree on Crypto Assets 2022",
+    "travelRule": "In Progress",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "NAPP licenses crypto exchanges; income tax-exempt for individuals"
+  },
+  {
+    "code": "KG",
+    "name": "Kyrgyzstan",
+    "regime": "Unclear",
+    "regulator": "NBKR",
+    "keyLaw": "Draft crypto regulation",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No formal VASP licensing; draft legislation under review"
+  },
+  {
+    "code": "TJ",
+    "name": "Tajikistan",
+    "regime": "Ban",
+    "regulator": "NBT",
+    "keyLaw": "NBT Directive",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto use prohibited by central bank"
+  },
+  {
+    "code": "TM",
+    "name": "Turkmenistan",
+    "regime": "Ban",
+    "regulator": "CBT",
+    "keyLaw": "",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto effectively banned; no legal framework"
+  },
+  {
+    "code": "AM",
+    "name": "Armenia",
+    "regime": "Unclear",
+    "regulator": "CBA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; crypto not illegal; CBA exploring framework"
+  },
+  {
+    "code": "AZ",
+    "name": "Azerbaijan",
+    "regime": "Unclear",
+    "regulator": "CBA / FIMSA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; draft digital assets regulation"
+  },
+  {
+    "code": "AE",
+    "name": "United Arab Emirates",
+    "regime": "Licensing",
+    "regulator": "VARA / ADGM FSRA / DIFC",
+    "keyLaw": "VARA Regulations 2023 / ADGM FSMR",
+    "travelRule": "Enforced",
+    "entityCount": 31,
+    "sources": [
+      {
+        "name": "VARA Licensed Entities",
+        "url": "https://www.vara.ae/en/"
+      },
+      {
+        "name": "ADGM FSRA Register",
+        "url": "https://www.adgm.com/setting-up/financial-services-regulatory-authority"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Multi-regulator: VARA (Dubai), ADGM (Abu Dhabi), DIFC; 20+ licensed"
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "regime": "Licensing",
+    "regulator": "CBB",
+    "keyLaw": "CBB Crypto-Asset Module 2019",
+    "travelRule": "Enforced",
+    "entityCount": 8,
+    "sources": [
+      {
+        "name": "CBB Crypto Licensees",
+        "url": "https://www.cbb.gov.bh/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Crypto-asset service licensing since 2019"
+  },
+  {
+    "code": "SA",
+    "name": "Saudi Arabia",
+    "regime": "Unclear",
+    "regulator": "SAMA / CMA Saudi",
+    "keyLaw": "",
+    "travelRule": "Legislated",
+    "entityCount": 0,
+    "sources": [
+      {
+        "name": "SAMA",
+        "url": "https://www.sama.gov.sa/en-US/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "No specific VASP law; crypto not illegal; SAMA exploring framework"
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "regime": "Licensing",
+    "regulator": "QFCRA",
+    "keyLaw": "QFC Digital Assets Framework 2024",
+    "travelRule": "Legislated",
+    "entityCount": 0,
+    "sources": [
+      {
+        "name": "QFC Authority",
+        "url": "https://www.qfc.qa/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "QFC licenses for tokenized/digital assets; limited scope"
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "regime": "Licensing",
+    "regulator": "CMA Oman",
+    "keyLaw": "Virtual Assets Regulatory Framework 2023",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CMA VASP licensing since 2023"
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "regime": "Ban",
+    "regulator": "CBK / CMA Kuwait",
+    "keyLaw": "CBK Circular 2017",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto transactions prohibited; banks barred from crypto services"
+  },
+  {
+    "code": "JO",
+    "name": "Jordan",
+    "regime": "Ban",
+    "regulator": "CBJ",
+    "keyLaw": "CBJ Circular 2014",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto use prohibited by central bank"
+  },
+  {
+    "code": "IQ",
+    "name": "Iraq",
+    "regime": "Ban",
+    "regulator": "CBI",
+    "keyLaw": "CBI Circular 2017",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto banned; banks prohibited from dealing in crypto"
+  },
+  {
+    "code": "IR",
+    "name": "Iran",
+    "regime": "Licensing",
+    "regulator": "CBI / Ministry of Industry",
+    "keyLaw": "Crypto Mining Regulation 2019",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Mining licensing; exchange/payment restricted; sanctions complicate"
+  },
+  {
+    "code": "LB",
+    "name": "Lebanon",
+    "regime": "Ban",
+    "regulator": "BDL",
+    "keyLaw": "BDL Circular 2014",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto prohibited by central bank directive"
+  },
+  {
+    "code": "IL",
+    "name": "Israel",
+    "regime": "Registration",
+    "regulator": "ISA / BoI",
+    "keyLaw": "AML Order / Financial Assets Law amendment",
+    "travelRule": "Enforced",
+    "entityCount": 7,
+    "sources": [
+      {
+        "name": "ISA Financial Assets",
+        "url": "https://www.isa.gov.il/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP AML registration; ISA oversight for crypto securities"
+  },
+  {
+    "code": "TR",
+    "name": "Turkey",
+    "regime": "Licensing",
+    "regulator": "CMB (SPK)",
+    "keyLaw": "Capital Markets Law amendment 2024",
+    "travelRule": "Legislated",
+    "entityCount": 10,
+    "sources": [
+      {
+        "name": "CMB/SPK VASP",
+        "url": "https://www.spk.gov.tr/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "VASP licensing under SPK since mid-2024; payment use banned by CBRT"
+  },
+  {
+    "code": "SY",
+    "name": "Syria",
+    "regime": "None",
+    "regulator": "CBS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; under comprehensive sanctions; conflict zone"
+  },
+  {
+    "code": "YE",
+    "name": "Yemen",
+    "regime": "None",
+    "regulator": "CBY",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; conflict zone"
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "regime": "Licensing",
+    "regulator": "MAS",
+    "keyLaw": "Payment Services Act 2019",
+    "travelRule": "Enforced",
+    "entityCount": 16,
+    "sources": [
+      {
+        "name": "MAS DPT Register",
+        "url": "https://eservices.mas.gov.sg/fid/institution"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "MAS PS Act",
+        "url": "https://www.mas.gov.sg/regulation/acts/payment-services-act"
+      }
+    ],
+    "notes": "MPI/DPT licensing; ~20 licensed"
+  },
+  {
+    "code": "HK",
+    "name": "Hong Kong",
+    "regime": "Licensing",
+    "regulator": "SFC / HKMA",
+    "keyLaw": "AMLO (AML Ordinance) / SFC VATP Regime 2023",
+    "travelRule": "Enforced",
+    "entityCount": 10,
+    "sources": [
+      {
+        "name": "SFC VATP Register",
+        "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/List-of-licensed-virtual-asset-trading-platforms"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "HKMA/SFC Joint Circular",
+        "url": "https://www.sfc.hk/en/Rules-and-standards/Codes-and-guidelines/"
+      }
+    ],
+    "notes": "VATP licensing since June 2023; dual SFC+HKMA for fiat"
+  },
+  {
+    "code": "JP",
+    "name": "Japan",
+    "regime": "Licensing",
+    "regulator": "FSA / JFSA",
+    "keyLaw": "Payment Services Act / FIEA",
+    "travelRule": "Enforced",
+    "entityCount": 20,
+    "sources": [
+      {
+        "name": "JFSA VCEA Registry",
+        "url": "https://www.fsa.go.jp/menkyo/menkyo.html"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "Crypto Asset Exchange Service registration; JVCEA self-regulation"
+  },
+  {
+    "code": "KR",
+    "name": "South Korea",
+    "regime": "Registration",
+    "regulator": "FSC / FIU Korea",
+    "keyLaw": "Act on Reporting and Use of Specific Financial Transaction Information",
+    "travelRule": "Enforced",
+    "entityCount": 6,
+    "sources": [
+      {
+        "name": "FSC/FIU VASP Registry",
+        "url": "https://www.fsc.go.kr/eng/index"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "VASP registration + ISMS certification required"
+  },
+  {
+    "code": "AU",
+    "name": "Australia",
+    "regime": "Registration",
+    "regulator": "AUSTRAC",
+    "keyLaw": "AML/CTF Act 2006",
+    "travelRule": "Enforced",
+    "entityCount": 12,
+    "sources": [
+      {
+        "name": "AUSTRAC DCE Register",
+        "url": "https://www.austrac.gov.au/business/how-comply-and-report-guidance-and-resources/cryptocurrency/digital-currency-exchange-register"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "Digital currency exchange registration under AML; ASIC for securities-like tokens"
+  },
+  {
+    "code": "NZ",
+    "name": "New Zealand",
+    "regime": "Registration",
+    "regulator": "FMA NZ / DIA",
+    "keyLaw": "AML/CFT Act 2009",
+    "travelRule": "Enforced",
+    "entityCount": 3,
+    "sources": [
+      {
+        "name": "FMA NZ FSPR",
+        "url": "https://www.fma.govt.nz/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP AML registration with DIA"
+  },
+  {
+    "code": "PH",
+    "name": "Philippines",
+    "regime": "Licensing",
+    "regulator": "BSP",
+    "keyLaw": "BSP Circular 944 (2017) / 1108 (2021)",
+    "travelRule": "Legislated",
+    "entityCount": 8,
+    "sources": [
+      {
+        "name": "BSP VCE Licensees",
+        "url": "https://www.bsp.gov.ph/SitePages/FinancialStability/VirtualCurrency.aspx"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Virtual Currency Exchange (VCE) licensing since 2017"
+  },
+  {
+    "code": "TH",
+    "name": "Thailand",
+    "regime": "Licensing",
+    "regulator": "SEC Thailand",
+    "keyLaw": "Emergency Decree on Digital Asset Businesses 2018",
+    "travelRule": "Legislated",
+    "entityCount": 7,
+    "sources": [
+      {
+        "name": "SEC Thailand DA Register",
+        "url": "https://www.sec.or.th/EN/Pages/LawandRegulations/DigitalAssetBusiness.aspx"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Digital asset business licensing; ~15 licensed"
+  },
+  {
+    "code": "MY",
+    "name": "Malaysia",
+    "regime": "Licensing",
+    "regulator": "SC Malaysia",
+    "keyLaw": "Capital Markets and Services Order (Digital Currency & Token) 2019",
+    "travelRule": "Legislated",
+    "entityCount": 5,
+    "sources": [
+      {
+        "name": "SC DAX Register",
+        "url": "https://www.sc.com.my/regulation/guidelines/recognizedmarkets/list-of-registered-digital-asset-exchanges"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "DAX (Digital Asset Exchange) licensing"
+  },
+  {
+    "code": "ID",
+    "name": "Indonesia",
+    "regime": "Licensing",
+    "regulator": "Bappebti / OJK",
+    "keyLaw": "Bappebti Regulation 5/2019 / OJK transition 2025",
+    "travelRule": "Legislated",
+    "entityCount": 12,
+    "sources": [
+      {
+        "name": "OJK/Bappebti Register",
+        "url": "https://www.ojk.go.id/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Crypto futures exchange licensing; moving from Bappebti to OJK in 2025"
+  },
+  {
+    "code": "IN",
+    "name": "India",
+    "regime": "Registration",
+    "regulator": "FIU-IND",
+    "keyLaw": "PMLA / Finance Act 2022",
+    "travelRule": "Legislated",
+    "entityCount": 12,
+    "sources": [
+      {
+        "name": "FIU-IND VDA Registration",
+        "url": "https://fiuindia.gov.in/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "VDA service provider registration; 30% crypto tax + 1% TDS"
+  },
+  {
+    "code": "TW",
+    "name": "Taiwan",
+    "regime": "Registration",
+    "regulator": "FSC Taiwan",
+    "keyLaw": "AML regulations for VASPs (2024)",
+    "travelRule": "Legislated",
+    "entityCount": 5,
+    "sources": [
+      {
+        "name": "FSC Taiwan VASP",
+        "url": "https://www.fsc.gov.tw/en/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP AML registration; self-regulatory guidelines"
+  },
+  {
+    "code": "VN",
+    "name": "Vietnam",
+    "regime": "Unclear",
+    "regulator": "SBV / MoF",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 3,
+    "sources": [],
+    "notes": "No legal framework; crypto not legal tender; regulation in development"
+  },
+  {
+    "code": "PK",
+    "name": "Pakistan",
+    "regime": "Unclear",
+    "regulator": "SBP / SECP",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "Crypto not explicitly legal; SBP cautionary; SECP exploring"
+  },
+  {
+    "code": "KH",
+    "name": "Cambodia",
+    "regime": "Unclear",
+    "regulator": "NBC / SERC",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "Bakong CBDC; SERC guidelines for crypto; enforcement limited"
+  },
+  {
+    "code": "BD",
+    "name": "Bangladesh",
+    "regime": "Ban",
+    "regulator": "Bangladesh Bank",
+    "keyLaw": "Bangladesh Bank notice 2017",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto transactions prohibited; banks warned"
+  },
+  {
+    "code": "LK",
+    "name": "Sri Lanka",
+    "regime": "Unclear",
+    "regulator": "CBSL",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific regulation; CBSL cautionary; regulatory exploration"
+  },
+  {
+    "code": "MM",
+    "name": "Myanmar",
+    "regime": "None",
+    "regulator": "CBM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; political instability"
+  },
+  {
+    "code": "NP",
+    "name": "Nepal",
+    "regime": "Ban",
+    "regulator": "NRB",
+    "keyLaw": "NRB Circular 2017",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto trading and mining banned by NRB"
+  },
+  {
+    "code": "CN",
+    "name": "China",
+    "regime": "Ban",
+    "regulator": "PBoC / CSRC",
+    "keyLaw": "PBoC Joint Circular 2021",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [
+      {
+        "name": "PBoC Joint Circular 2021",
+        "url": "http://www.pbc.gov.cn/en/3688110/3688172/4157443/4353814/index.html"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "Complete ban on crypto trading, mining, ICOs since Sep 2021"
+  },
+  {
+    "code": "AF",
+    "name": "Afghanistan",
+    "regime": "Ban",
+    "regulator": "Da Afghanistan Bank",
+    "keyLaw": "",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Taliban government banned crypto trading 2022"
+  },
+  {
+    "code": "BN",
+    "name": "Brunei",
+    "regime": "Unclear",
+    "regulator": "AMBD",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; AMBD cautionary notices"
+  },
+  {
+    "code": "BT",
+    "name": "Bhutan",
+    "regime": "Unclear",
+    "regulator": "RMA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Bitcoin mining pilot using hydropower; no formal VASP framework"
+  },
+  {
+    "code": "FJ",
+    "name": "Fiji",
+    "regime": "None",
+    "regulator": "RBF",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; RBF cautionary statement"
+  },
+  {
+    "code": "KP",
+    "name": "North Korea",
+    "regime": "Ban",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Comprehensive sanctions; state-sponsored crypto theft; no legal market"
+  },
+  {
+    "code": "KI",
+    "name": "Kiribati",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; minimal financial infrastructure"
+  },
+  {
+    "code": "LA",
+    "name": "Laos",
+    "regime": "Licensing",
+    "regulator": "BOL / MICT",
+    "keyLaw": "Notice on Crypto Assets 2021",
+    "travelRule": "In Progress",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Licensed crypto mining and trading; 6+ operators licensed 2022"
+  },
+  {
+    "code": "MV",
+    "name": "Maldives",
+    "regime": "Unclear",
+    "regulator": "MMA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; MMA cautionary"
+  },
+  {
+    "code": "MH",
+    "name": "Marshall Islands",
+    "regime": "Unclear",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "SOV digital currency law 2018 (not implemented); DAO incorporation law"
+  },
+  {
+    "code": "FM",
+    "name": "Micronesia",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "MN",
+    "name": "Mongolia",
+    "regime": "Unclear",
+    "regulator": "FRC / Bank of Mongolia",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No formal VASP licensing; growing adoption"
+  },
+  {
+    "code": "MO",
+    "name": "Macau",
+    "regime": "Unclear",
+    "regulator": "AMCM",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific crypto regulation; follows China trends but less restrictive"
+  },
+  {
+    "code": "NR",
+    "name": "Nauru",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; minimal financial sector"
+  },
+  {
+    "code": "PG",
+    "name": "Papua New Guinea",
+    "regime": "None",
+    "regulator": "BPNG",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "PW",
+    "name": "Palau",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "SB",
+    "name": "Solomon Islands",
+    "regime": "None",
+    "regulator": "CBSI",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "TL",
+    "name": "Timor-Leste",
+    "regime": "None",
+    "regulator": "BCTL",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "TO",
+    "name": "Tonga",
+    "regime": "None",
+    "regulator": "NRBT",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "TV",
+    "name": "Tuvalu",
+    "regime": "None",
+    "regulator": "",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; .tv domain revenue"
+  },
+  {
+    "code": "VU",
+    "name": "Vanuatu",
+    "regime": "Licensing",
+    "regulator": "VFSC",
+    "keyLaw": "VASP Act 2025",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "VASP licensing framework adopted 2025; zero income tax jurisdiction"
+  },
+  {
+    "code": "WS",
+    "name": "Samoa",
+    "regime": "None",
+    "regulator": "CBS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "US",
+    "name": "United States",
+    "regime": "Licensing",
+    "regulator": "FinCEN / SEC / CFTC / States",
+    "keyLaw": "BSA / State MTL / BitLicense (NY)",
+    "travelRule": "Enforced",
+    "entityCount": 20,
+    "sources": [
+      {
+        "name": "FinCEN MSB Registry",
+        "url": "https://www.fincen.gov/msb-registrant-search"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      },
+      {
+        "name": "NYDFS BitLicense",
+        "url": "https://www.dfs.ny.gov/virtual_currency_businesses"
+      }
+    ],
+    "notes": "Fragmented: FinCEN MSB + state money transmitter licenses + NY BitLicense"
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "regime": "Registration",
+    "regulator": "FINTRAC / CSA",
+    "keyLaw": "PCMLTFA / CSA Staff Notice 21-327",
+    "travelRule": "Enforced",
+    "entityCount": 12,
+    "sources": [
+      {
+        "name": "FINTRAC MSB Registry",
+        "url": "https://www10.fintrac-canafe.gc.ca/msb-esm/public/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "CSA Staff Notice 21-327",
+        "url": "https://www.securities-administrators.ca/resources/notices/"
+      }
+    ],
+    "notes": "MSB registration + provincial securities registration for CTPs"
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "regime": "Licensing",
+    "regulator": "BCB / CVM",
+    "keyLaw": "Crypto Assets Law (14,478/2022)",
+    "travelRule": "Legislated",
+    "entityCount": 10,
+    "sources": [
+      {
+        "name": "BCB Crypto Regulation",
+        "url": "https://www.bcb.gov.br/en/financialstability/cryptoassets"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "BCB as primary regulator; CVM for securities-like tokens"
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "regime": "Licensing",
+    "regulator": "CNBV",
+    "keyLaw": "FinTech Law (LRITF) 2018",
+    "travelRule": "Legislated",
+    "entityCount": 4,
+    "sources": [
+      {
+        "name": "CNBV ITF Registry",
+        "url": "https://www.gob.mx/cnbv"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      },
+      {
+        "name": "Library of Congress",
+        "url": "https://tile.loc.gov/storage-services/service/ll/llglrd/2021687419/2021687419.pdf"
+      }
+    ],
+    "notes": "ITF licensing for crypto operations"
+  },
+  {
+    "code": "AR",
+    "name": "Argentina",
+    "regime": "Registration",
+    "regulator": "CNV / UIF",
+    "keyLaw": "CNV Resolution 994/2024",
+    "travelRule": "Legislated",
+    "entityCount": 8,
+    "sources": [
+      {
+        "name": "CNV VASP Registry",
+        "url": "https://www.argentina.gob.ar/cnv"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP registration under AML; CNV oversight"
+  },
+  {
+    "code": "CO",
+    "name": "Colombia",
+    "regime": "Sandbox",
+    "regulator": "SFC Colombia",
+    "keyLaw": "Regulatory sandbox (LaArenera)",
+    "travelRule": "In Progress",
+    "entityCount": 4,
+    "sources": [
+      {
+        "name": "SFC Colombia Sandbox",
+        "url": "https://www.superfinanciera.gov.co/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Crypto in regulatory sandbox; no dedicated VASP law"
+  },
+  {
+    "code": "CL",
+    "name": "Chile",
+    "regime": "Licensing",
+    "regulator": "CMF Chile",
+    "keyLaw": "FinTech & Banking Law 2023",
+    "travelRule": "Legislated",
+    "entityCount": 3,
+    "sources": [
+      {
+        "name": "CMF FinTech",
+        "url": "https://www.cmfchile.cl/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "CMF licensing for crypto platforms since 2023"
+  },
+  {
+    "code": "SV",
+    "name": "El Salvador",
+    "regime": "Licensing",
+    "regulator": "BCR / CNAD",
+    "keyLaw": "Bitcoin Law 2021",
+    "travelRule": "In Progress",
+    "entityCount": 3,
+    "sources": [
+      {
+        "name": "CNAD El Salvador",
+        "url": "https://www.cnad.gob.sv/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Bitcoin legal tender; CNAD for digital asset oversight"
+  },
+  {
+    "code": "PA",
+    "name": "Panama",
+    "regime": "Unclear",
+    "regulator": "SMV Panama",
+    "keyLaw": "Law 129/2020 (vetoed provisions)",
+    "travelRule": "In Progress",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "Crypto-friendly but incomplete regulation; no formal VASP licensing"
+  },
+  {
+    "code": "BM",
+    "name": "Bermuda",
+    "regime": "Licensing",
+    "regulator": "BMA",
+    "keyLaw": "Digital Asset Business Act 2018",
+    "travelRule": "Legislated",
+    "entityCount": 7,
+    "sources": [
+      {
+        "name": "BMA DABA Licensees",
+        "url": "https://www.bma.bm/digital-assets"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "DABA licensing; Class F/M/T licenses"
+  },
+  {
+    "code": "KY",
+    "name": "Cayman Islands",
+    "regime": "Licensing",
+    "regulator": "CIMA",
+    "keyLaw": "Virtual Asset (Service Providers) Act 2020",
+    "travelRule": "Legislated",
+    "entityCount": 5,
+    "sources": [
+      {
+        "name": "CIMA VASP Register",
+        "url": "https://www.cima.ky/virtual-asset-service-providers"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "VASP licensing since 2020"
+  },
+  {
+    "code": "BS",
+    "name": "Bahamas",
+    "regime": "Licensing",
+    "regulator": "SCB Bahamas",
+    "keyLaw": "DARE Act 2020",
+    "travelRule": "Legislated",
+    "entityCount": 4,
+    "sources": [
+      {
+        "name": "SCB DARE Register",
+        "url": "https://www.centralbankbahamas.com/"
+      },
+      {
+        "name": "Atlantic Council Tracker",
+        "url": "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker/"
+      }
+    ],
+    "notes": "Digital asset and registered exchanges licensing"
+  },
+  {
+    "code": "VG",
+    "name": "British Virgin Islands",
+    "regime": "Unclear",
+    "regulator": "FSC BVI",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 3,
+    "sources": [],
+    "notes": "No specific VASP regulation; popular for incorporation"
+  },
+  {
+    "code": "TC",
+    "name": "Turks and Caicos",
+    "regime": "None",
+    "regulator": "FSC TCI",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "No crypto-specific regulation"
+  },
+  {
+    "code": "CW",
+    "name": "Curaçao",
+    "regime": "Unclear",
+    "regulator": "CBCS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 3,
+    "sources": [],
+    "notes": "No specific VASP regulation"
+  },
+  {
+    "code": "PE",
+    "name": "Peru",
+    "regime": "Unclear",
+    "regulator": "SBS / SMV Peru",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 2,
+    "sources": [],
+    "notes": "No specific VASP law; AML registration proposals under review"
+  },
+  {
+    "code": "UY",
+    "name": "Uruguay",
+    "regime": "Unclear",
+    "regulator": "BCU",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 1,
+    "sources": [],
+    "notes": "No specific VASP regulation; BCU considering framework"
+  },
+  {
+    "code": "CR",
+    "name": "Costa Rica",
+    "regime": "Unclear",
+    "regulator": "SUGEF",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto not regulated; BCCR/SUGEF have not banned or licensed"
+  },
+  {
+    "code": "PY",
+    "name": "Paraguay",
+    "regime": "Unclear",
+    "regulator": "BCP / CNV Paraguay",
+    "keyLaw": "Crypto mining/trading bill (vetoed 2022)",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No formal framework; mining bill vetoed by president"
+  },
+  {
+    "code": "DO",
+    "name": "Dominican Republic",
+    "regime": "Unclear",
+    "regulator": "BCRD",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; BCRD cautionary statement"
+  },
+  {
+    "code": "HT",
+    "name": "Haiti",
+    "regime": "None",
+    "regulator": "BRH",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; limited financial infrastructure"
+  },
+  {
+    "code": "BB",
+    "name": "Barbados",
+    "regime": "Sandbox",
+    "regulator": "FSC Barbados / CBB",
+    "keyLaw": "Financial Technology Regulatory Sandbox",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Fintech sandbox; no dedicated VASP law"
+  },
+  {
+    "code": "JM",
+    "name": "Jamaica",
+    "regime": "Unclear",
+    "regulator": "BOJ / FSC Jamaica",
+    "keyLaw": "",
+    "travelRule": "In Progress",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "JAM-DEX CBDC launched; no VASP licensing; BOJ cautionary"
+  },
+  {
+    "code": "TT",
+    "name": "Trinidad and Tobago",
+    "regime": "Unclear",
+    "regulator": "CBTT / TTSEC",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "CBTT CBDC pilot; no VASP licensing framework"
+  },
+  {
+    "code": "VE",
+    "name": "Venezuela",
+    "regime": "Licensing",
+    "regulator": "SUNACRIP",
+    "keyLaw": "Constituent Decree on Crypto Assets 2018",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "SUNACRIP licensing; Petro discontinued; licensing operational"
+  },
+  {
+    "code": "BO",
+    "name": "Bolivia",
+    "regime": "Ban",
+    "regulator": "BCB Bolivia",
+    "keyLaw": "BCB Resolution 044/2014",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto use prohibited since 2014; reversed late 2024 — now exploring"
+  },
+  {
+    "code": "EC",
+    "name": "Ecuador",
+    "regime": "Ban",
+    "regulator": "BCE",
+    "keyLaw": "Monetary and Financial Organic Code 2014",
+    "travelRule": "N/A",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Crypto banned as payment; only BCE can issue electronic money"
+  },
+  {
+    "code": "AG",
+    "name": "Antigua and Barbuda",
+    "regime": "Licensing",
+    "regulator": "FSRC",
+    "keyLaw": "Digital Assets Business Act 2020",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "ECCU member; digital asset business licensing"
+  },
+  {
+    "code": "BZ",
+    "name": "Belize",
+    "regime": "None",
+    "regulator": "CBB",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "CU",
+    "name": "Cuba",
+    "regime": "Licensing",
+    "regulator": "BCC",
+    "keyLaw": "Resolution 215/2021",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "Central bank licensing for crypto service providers; limited in practice"
+  },
+  {
+    "code": "DM",
+    "name": "Dominica",
+    "regime": "None",
+    "regulator": "ECCB",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "ECCU member; no specific VASP regulation"
+  },
+  {
+    "code": "GD",
+    "name": "Grenada",
+    "regime": "None",
+    "regulator": "ECCB / GARFIN",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "ECCU member; no specific VASP regulation"
+  },
+  {
+    "code": "GT",
+    "name": "Guatemala",
+    "regime": "Unclear",
+    "regulator": "SIB / Banguat",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; Banguat cautionary; crypto use growing"
+  },
+  {
+    "code": "GY",
+    "name": "Guyana",
+    "regime": "None",
+    "regulator": "BoG",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "HN",
+    "name": "Honduras",
+    "regime": "Unclear",
+    "regulator": "CNBS / BCH",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No specific VASP law; BCH cautionary; Bitcoin Valley project"
+  },
+  {
+    "code": "KN",
+    "name": "Saint Kitts and Nevis",
+    "regime": "Licensing",
+    "regulator": "FSRC",
+    "keyLaw": "Virtual Asset Business Act 2020",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "ECCU member; virtual asset business licensing"
+  },
+  {
+    "code": "LC",
+    "name": "Saint Lucia",
+    "regime": "None",
+    "regulator": "ECCB / FSRA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "ECCU member; no specific VASP regulation"
+  },
+  {
+    "code": "NI",
+    "name": "Nicaragua",
+    "regime": "None",
+    "regulator": "BCN / SIBOIF",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation; BCN cautionary"
+  },
+  {
+    "code": "SR",
+    "name": "Suriname",
+    "regime": "None",
+    "regulator": "CBvS",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "No crypto regulation"
+  },
+  {
+    "code": "VC",
+    "name": "Saint Vincent and the Grenadines",
+    "regime": "None",
+    "regulator": "ECCB / SVGFSA",
+    "keyLaw": "",
+    "travelRule": "Not Implemented",
+    "entityCount": 0,
+    "sources": [],
+    "notes": "ECCU member; no specific VASP regulation"
+  }
+]
