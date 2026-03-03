@@ -18,8 +18,9 @@ export default function LoginPage() {
     }
   }, [user, navigate, from]);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Demo credentials pre-filled for easy access
+  const [email, setEmail] = useState('test@remide.dev');
+  const [password, setPassword] = useState('TestPass123!');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +50,10 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="st-auth-form clip-lg">
+          <div className="st-demo-hint">
+            <strong>Demo access</strong> — credentials are pre-filled. Just click Sign In.
+          </div>
+
           {error && (
             <div className="st-auth-error">{error}</div>
           )}

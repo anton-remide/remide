@@ -21,13 +21,14 @@ describe('LoginPage', () => {
     </Routes>
   );
 
-  it('renders sign in form', () => {
+  it('renders sign in form with demo credentials pre-filled', () => {
     renderWithProviders(loginRoutes, { route: '/login' });
 
     expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toHaveValue('test@remide.dev');
+    expect(screen.getByLabelText(/password/i)).toHaveValue('TestPass123!');
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByText(/demo access/i)).toBeInTheDocument();
   });
 
   it('has a link to sign up page', () => {
@@ -37,15 +38,30 @@ describe('LoginPage', () => {
     expect(link).toHaveAttribute('href', '/signup');
   });
 
-  it('calls signIn on form submit', async () => {
+  it('calls signIn on form submit with pre-filled demo credentials', async () => {
     const user = userEvent.setup();
     const { authValue } = renderWithProviders(loginRoutes, { route: '/login' });
 
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
+    // Submit with pre-filled demo credentials
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-    expect(authValue.signIn).toHaveBeenCalledWith('test@example.com', 'password123');
+    expect(authValue.signIn).toHaveBeenCalledWith('test@remide.dev', 'TestPass123!');
+  });
+
+  it('calls signIn with custom credentials after clearing fields', async () => {
+    const user = userEvent.setup();
+    const { authValue } = renderWithProviders(loginRoutes, { route: '/login' });
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+
+    await user.clear(emailInput);
+    await user.type(emailInput, 'custom@example.com');
+    await user.clear(passwordInput);
+    await user.type(passwordInput, 'mypass123');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    expect(authValue.signIn).toHaveBeenCalledWith('custom@example.com', 'mypass123');
   });
 
   it('shows error message on failed sign in', async () => {
@@ -54,8 +70,6 @@ describe('LoginPage', () => {
 
     authValue.signIn.mockResolvedValue({ error: 'Invalid credentials' });
 
-    await user.type(screen.getByLabelText(/email/i), 'bad@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'wrong');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     expect(await screen.findByText('Invalid credentials')).toBeInTheDocument();
@@ -68,8 +82,6 @@ describe('LoginPage', () => {
     // Never resolve to keep loading state
     authValue.signIn.mockReturnValue(new Promise(() => {}));
 
-    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
     expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();

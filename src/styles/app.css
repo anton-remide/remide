@@ -410,6 +410,15 @@ ul {
   color: var(--text-muted);
 }
 
+/* Ensure .st-btn inside nav keeps its own color scheme */
+.st-header-nav a.st-btn {
+  color: var(--white);
+}
+
+.st-header-nav a.st-btn:hover {
+  color: var(--white);
+}
+
 .st-header-nav a.active::after {
   content: '';
   position: absolute;
@@ -930,6 +939,82 @@ ul {
   background: rgba(10, 37, 64, 0.14);
 }
 
+/* Active Filter Pills (Notion-style) */
+.st-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 6px 0 10px;
+  background: rgba(10, 37, 64, 0.06);
+  border: 1px solid rgba(10, 37, 64, 0.1);
+  border-radius: 6px;
+  font-family: var(--font1);
+  font-size: 12px;
+  color: var(--black);
+  white-space: nowrap;
+  animation: st-pill-in 150ms ease-out;
+}
+
+@keyframes st-pill-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.st-filter-pill-label {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.st-filter-pill-values {
+  font-weight: 500;
+  color: var(--black);
+}
+
+.st-filter-pill-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: rgba(10, 37, 64, 0.08);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  margin-left: 2px;
+  transition: all 120ms ease;
+}
+
+.st-filter-pill-x:hover {
+  background: rgba(10, 37, 64, 0.18);
+  color: var(--black);
+}
+
+.st-filter-clear-all {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font1);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 0 4px;
+  height: 28px;
+  transition: color 150ms ease;
+}
+
+.st-filter-clear-all:hover {
+  color: var(--black);
+  text-decoration: underline;
+}
+
 /* ==========================================================================
    Column Header Filter
    ========================================================================== */
@@ -1288,6 +1373,23 @@ ul {
   border-radius: 8px;
   padding: 36px 32px;
   box-shadow: 0 1px 3px rgba(10, 37, 64, 0.04);
+}
+
+.st-demo-hint {
+  background: rgba(10, 37, 64, 0.04);
+  border: 1px solid rgba(10, 37, 64, 0.1);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.st-demo-hint strong {
+  color: var(--black);
+  font-weight: 600;
 }
 
 .st-auth-error {

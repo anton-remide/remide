@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SortConfig } from '../../types';
 import { ChevronUp, ChevronDown, Search, X } from 'lucide-react';
 import ColumnHeaderFilter from './ColumnHeaderFilter';
@@ -79,26 +79,75 @@ export default function DataTable<T extends Record<string, unknown>>({
     searchTimer.current = setTimeout(() => onSearchChange?.(val), 200);
   };
 
+  // Derive active filters from columns for pill display
+  const activeFilterPills = useMemo(() => {
+    const pills: { field: string; label: string; values: string[]; onClear: (field: string) => void; renderValue?: (v: string) => React.ReactNode }[] = [];
+    columns.forEach((col) => {
+      if (col.filterable && col.selectedFilters && col.selectedFilters.length > 0 && col.onFilterClear) {
+        pills.push({
+          field: col.key,
+          label: col.label,
+          values: col.selectedFilters,
+          onClear: col.onFilterClear,
+          renderValue: col.renderFilterValue,
+        });
+      }
+    });
+    return pills;
+  }, [columns]);
+
+  const hasActiveFilters = activeFilterPills.length > 0;
+
+  const handleClearAllFilters = () => {
+    activeFilterPills.forEach((p) => p.onClear(p.field));
+  };
+
   return (
     <div className="st-card" style={{ padding: 0, overflow: 'hidden', borderRadius: 10 }}>
       {/* Header bar */}
       <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-        {onSearchChange && (
-          <div className="st-table-search">
-            <Search size={14} className="st-table-search-icon" />
-            <input
-              type="text"
-              value={localSearch}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder={searchPlaceholder}
-            />
-            {localSearch && (
-              <button className="st-table-search-clear" onClick={() => handleSearchChange('')} aria-label="Clear search">
-                <X size={12} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+          {onSearchChange && (
+            <div className="st-table-search">
+              <Search size={14} className="st-table-search-icon" />
+              <input
+                type="text"
+                value={localSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder={searchPlaceholder}
+              />
+              {localSearch && (
+                <button className="st-table-search-clear" onClick={() => handleSearchChange('')} aria-label="Clear search">
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          )}
+          {/* Active filter pills (Notion-style) */}
+          {activeFilterPills.map((pill) => (
+            <span key={pill.field} className="st-filter-pill">
+              <span className="st-filter-pill-label">{pill.label}:</span>
+              <span className="st-filter-pill-values">
+                {pill.values.length <= 2
+                  ? pill.values.join(', ')
+                  : `${pill.values[0]} +${pill.values.length - 1}`
+                }
+              </span>
+              <button
+                className="st-filter-pill-x"
+                onClick={() => pill.onClear(pill.field)}
+                aria-label={`Clear ${pill.label} filter`}
+              >
+                <X size={10} />
               </button>
-            )}
-          </div>
-        )}
+            </span>
+          ))}
+          {hasActiveFilters && (
+            <button className="st-filter-clear-all" onClick={handleClearAllFilters}>
+              Clear all
+            </button>
+          )}
+        </div>
         <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
           {totalFiltered > 0
             ? `Showing ${startIndex}–${endIndex} of ${totalFiltered.toLocaleString()}`
