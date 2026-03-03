@@ -130,10 +130,12 @@ export default function LandingPage() {
           {features.map((f) => (
             <div key={f.title} className="col-12 col-md-6 col-lg-3">
               <div className="st-feature-card clip-lg stagger-in">
-                <div className="st-feature-icon">
-                  <f.icon size={24} color="var(--black)" strokeWidth={2} />
+                <div className="st-feature-header">
+                  <div className="st-feature-icon">
+                    <f.icon size={20} color="var(--black)" strokeWidth={2} />
+                  </div>
+                  <h6>{f.title}</h6>
                 </div>
-                <h6>{f.title}</h6>
                 <p>{f.desc}</p>
               </div>
             </div>

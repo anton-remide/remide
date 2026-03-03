@@ -13,17 +13,23 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@notionhq/client": "^5.11.1",
     "@supabase/supabase-js": "^2.98.0",
     "bootstrap": "^5.3.8",
+    "cheerio": "^1.2.0",
+    "csv-parse": "^6.1.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.575.0",
     "maplibre-gl": "^5.19.0",
+    "node-html-parser": "^7.1.0",
+    "pdf-parse": "^2.4.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",
     "recharts": "^3.7.0",
     "topojson-client": "^3.1.0",
-    "world-atlas": "^2.0.2"
+    "world-atlas": "^2.0.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -31,6 +37,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.10.1",
+    "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.18.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
