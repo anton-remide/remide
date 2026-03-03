@@ -13,6 +13,7 @@ interface JurisdictionRow {
   entity_count: number;
   sources: { name: string; url: string }[] | string;
   notes: string;
+  description: string;
 }
 
 interface EntityRow {
@@ -27,6 +28,9 @@ interface EntityRow {
   status: string;
   regulator: string;
   website: string;
+  description: string;
+  registry_url: string;
+  linkedin_url: string;
 }
 
 function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
@@ -40,6 +44,7 @@ function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
     entityCount: row.entity_count,
     sources: typeof row.sources === 'string' ? JSON.parse(row.sources) : row.sources,
     notes: row.notes,
+    description: row.description ?? '',
   };
 }
 
@@ -56,6 +61,9 @@ function mapEntity(row: EntityRow): Entity {
     status: row.status as Entity['status'],
     regulator: row.regulator,
     website: row.website,
+    description: row.description ?? '',
+    registryUrl: row.registry_url ?? '',
+    linkedinUrl: row.linkedin_url ?? '',
   };
 }
 
@@ -107,6 +115,46 @@ export async function getEntityById(id: string): Promise<Entity | null> {
     throw new Error(`Failed to load entity: ${error.message}`);
   }
   return mapEntity(data as EntityRow);
+}
+
+// ── Global Search (header dropdown) ──
+
+export interface SearchResult {
+  jurisdictions: { code: string; name: string; regulator: string }[];
+  entities: { id: string; name: string; country: string; countryCode: string; regulator: string }[];
+}
+
+export async function searchGlobal(query: string): Promise<SearchResult> {
+  const q = `%${query}%`;
+  const [jRes, eRes] = await Promise.all([
+    supabase
+      .from('jurisdictions')
+      .select('code, name, regulator')
+      .or(`name.ilike.${q},regulator.ilike.${q}`)
+      .order('entity_count', { ascending: false })
+      .limit(5),
+    supabase
+      .from('entities')
+      .select('id, name, country, country_code, regulator')
+      .or(`name.ilike.${q},country.ilike.${q},regulator.ilike.${q}`)
+      .order('name')
+      .limit(5),
+  ]);
+
+  return {
+    jurisdictions: (jRes.data ?? []).map((r: Record<string, string>) => ({
+      code: r.code,
+      name: r.name,
+      regulator: r.regulator,
+    })),
+    entities: (eRes.data ?? []).map((r: Record<string, string>) => ({
+      id: r.id,
+      name: r.name,
+      country: r.country,
+      countryCode: r.country_code,
+      regulator: r.regulator,
+    })),
+  };
 }
 
 export async function getEntitiesByCountry(code: string): Promise<Entity[]> {

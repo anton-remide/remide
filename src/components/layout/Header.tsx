@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import MobileMenu from './MobileMenu';
+import HeaderSearch from './HeaderSearch';
 
 export default function Header() {
   const location = useLocation();
@@ -50,8 +51,16 @@ export default function Header() {
   return (
     <>
       <header ref={headerRef} className={cls.join(' ')}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link to="/" className="st-header-brand">RemiDe</Link>
+        <div className="st-header-inner">
+          {/* Left: Logo */}
+          <Link to="/" className="st-header-brand" aria-label="RemiDe Home">
+            <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={28} className="st-header-logo" />
+          </Link>
+
+          {/* Center: Search */}
+          <HeaderSearch />
+
+          {/* Right: Nav + Auth */}
           <nav className="st-header-nav">
             {navLinks.map((link) => (
               <Link
@@ -76,6 +85,7 @@ export default function Header() {
               </>
             )}
           </nav>
+
           <button
             className={`st-hamburger${menuOpen ? ' open' : ''}`}
             onClick={() => setMenuOpen(!menuOpen)}

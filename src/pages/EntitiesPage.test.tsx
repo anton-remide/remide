@@ -38,13 +38,14 @@ describe('EntitiesPage', () => {
     expect(screen.getByText('Entity Directory')).toBeInTheDocument();
     expect(screen.getByText(/3 licensed entities/i)).toBeInTheDocument();
 
-    // Search
-    expect(screen.getByPlaceholderText(/search entities/i)).toBeInTheDocument();
+    // Search is now in the header, not on the page itself
 
-    // Dropdown filters
-    expect(screen.getByDisplayValue('All Countries')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('All Statuses')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('All Regulators')).toBeInTheDocument();
+    // Column headers with filters (country, status, licenseType, regulator are filterable)
+    const table = document.querySelector('table')!;
+    const headers = Array.from(table.querySelectorAll('th')).map((h) => h.textContent?.trim());
+    expect(headers).toContain('Country');
+    expect(headers).toContain('Status');
+    expect(headers).toContain('Regulator');
 
     // Table data
     expect(screen.getByText('Coinbase')).toBeInTheDocument();

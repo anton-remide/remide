@@ -8,7 +8,7 @@ describe('Header', () => {
   it('renders brand link', () => {
     renderWithProviders(<Header />);
 
-    const brand = screen.getByText('RemiDe');
+    const brand = screen.getByAltText('RemiDe');
     expect(brand).toBeInTheDocument();
     expect(brand.closest('a')).toHaveAttribute('href', '/');
   });

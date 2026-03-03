@@ -42,16 +42,13 @@ describe('JurisdictionsPage', () => {
     // Map
     expect(screen.getByTestId('world-map')).toBeInTheDocument();
 
-    // Search
-    expect(screen.getByPlaceholderText(/search countries/i)).toBeInTheDocument();
+    // Search is now in the header, not on the page itself
 
-    // Regime filter chips (text also appears in table badge cells)
-    expect(screen.getAllByText('Licensing').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Registration').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Sandbox').length).toBeGreaterThanOrEqual(1);
-
-    // Travel Rule filter chips (text also appears in table badge cells)
-    expect(screen.getAllByText('Enforced').length).toBeGreaterThanOrEqual(1);
+    // Column headers with filters (regime, travel rule, regulator are filterable)
+    const table = document.querySelector('table')!;
+    const headers = Array.from(table.querySelectorAll('th')).map((h) => h.textContent?.trim());
+    expect(headers).toContain('Regime');
+    expect(headers).toContain('Travel Rule');
 
     // Table renders jurisdictions
     expect(screen.getByText('United States')).toBeInTheDocument();

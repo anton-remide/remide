@@ -1,9 +1,11 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCallback, useMemo } from 'react';
+import { ExternalLink, Linkedin } from 'lucide-react';
 import { getEntityById, getEntitiesByCountry, getJurisdictionByCode } from '../data/dataLoader';
-import { STATUS_COLORS } from '../theme';
+import { STATUS_COLORS, REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
 
@@ -74,14 +76,31 @@ export default function EntityDetailPage() {
 
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
         <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>{entity.name}</h2>
-        <Badge label={entity.status} colorMap={STATUS_COLORS} />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Badge label={entity.status} colorMap={STATUS_COLORS} />
+          {jurisdiction && (
+            <>
+              <Badge label={jurisdiction.regime} colorMap={REGIME_CHIP_COLORS} />
+              <Badge label={jurisdiction.travelRule} colorMap={TRAVEL_RULE_COLORS} />
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Description */}
+      {entity.description && (
+        <div className="reveal" style={{ marginBottom: 28 }}>
+          <p style={{ color: 'var(--text)', lineHeight: 1.65, fontSize: '0.9375rem' }}>{entity.description}</p>
+        </div>
+      )}
 
       <div className="reveal st-info-card clip-lg" style={{ marginBottom: 32 }}>
         <div className="st-info-row">
           <span className="st-info-label">Country</span>
           <span className="st-info-value">
-            <Link to={`/jurisdictions/${entity.countryCode}`}>{entity.country}</Link>
+            <Link to={`/jurisdictions/${entity.countryCode}`}>
+              {countryCodeToFlag(entity.countryCode)} {entity.country}
+            </Link>
           </span>
         </div>
         <div className="st-info-row">
@@ -100,8 +119,32 @@ export default function EntityDetailPage() {
           <div className="st-info-row">
             <span className="st-info-label">Website</span>
             <span className="st-info-value">
-              <a href={entity.website} target="_blank" rel="noopener noreferrer">
+              <a href={entity.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 {entity.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                <ExternalLink size={12} />
+              </a>
+            </span>
+          </div>
+        )}
+        {entity.registryUrl && (
+          <div className="st-info-row">
+            <span className="st-info-label">Registry</span>
+            <span className="st-info-value">
+              <a href={entity.registryUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Verify license
+                <ExternalLink size={12} />
+              </a>
+            </span>
+          </div>
+        )}
+        {entity.linkedinUrl && (
+          <div className="st-info-row">
+            <span className="st-info-label">LinkedIn</span>
+            <span className="st-info-value">
+              <a href={entity.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Linkedin size={14} />
+                Company page
+                <ExternalLink size={12} />
               </a>
             </span>
           </div>

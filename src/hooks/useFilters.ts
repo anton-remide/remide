@@ -6,11 +6,12 @@ export function useTableState<T>(
   data: T[],
   filterFn: (item: T, search: string) => boolean,
   defaultSort?: SortConfig,
-  pageSize = 25,
+  defaultPageSize = 25,
 ) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortConfig>(defaultSort ?? { field: '', direction: null });
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSizeRaw] = useState(defaultPageSize);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -49,6 +50,11 @@ export function useTableState<T>(
     setPage(1);
   }, []);
 
+  const setPageSize = useCallback((size: number) => {
+    setPageSizeRaw(size);
+    setPage(1);
+  }, []);
+
   return {
     search,
     setSearch: handleSearch,
@@ -56,6 +62,8 @@ export function useTableState<T>(
     toggleSort,
     page: safePage,
     setPage,
+    pageSize,
+    setPageSize,
     totalPages,
     filtered,
     sorted,

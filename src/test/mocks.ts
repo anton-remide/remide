@@ -15,6 +15,7 @@ export const mockJurisdictionRow = {
   entity_count: 42,
   sources: JSON.stringify([{ name: 'FinCEN', url: 'https://fincen.gov' }]),
   notes: 'Federal and state-level licensing',
+  description: '',
 };
 
 export const mockJurisdiction: Jurisdiction = {
@@ -27,6 +28,7 @@ export const mockJurisdiction: Jurisdiction = {
   entityCount: 42,
   sources: [{ name: 'FinCEN', url: 'https://fincen.gov' }],
   notes: 'Federal and state-level licensing',
+  description: '',
 };
 
 export const mockEntityRow = {
@@ -41,6 +43,9 @@ export const mockEntityRow = {
   status: 'Licensed',
   regulator: 'FinCEN',
   website: 'https://coinbase.com',
+  description: '',
+  registry_url: '',
+  linkedin_url: '',
 };
 
 export const mockEntity: Entity = {
@@ -55,6 +60,9 @@ export const mockEntity: Entity = {
   status: 'Licensed',
   regulator: 'FinCEN',
   website: 'https://coinbase.com',
+  description: '',
+  registryUrl: '',
+  linkedinUrl: '',
 };
 
 export const mockJurisdictions: Jurisdiction[] = [
@@ -69,6 +77,7 @@ export const mockJurisdictions: Jurisdiction[] = [
     entityCount: 15,
     sources: [{ name: 'MAS', url: 'https://mas.gov.sg' }],
     notes: 'Comprehensive licensing regime',
+    description: '',
   },
   {
     code: 'JP',
@@ -80,6 +89,7 @@ export const mockJurisdictions: Jurisdiction[] = [
     entityCount: 31,
     sources: [{ name: 'JFSA', url: 'https://fsa.go.jp' }],
     notes: 'Registration-based system',
+    description: '',
   },
 ];
 
@@ -97,6 +107,9 @@ export const mockEntities: Entity[] = [
     status: 'Licensed',
     regulator: 'MAS',
     website: 'https://crypto.com',
+    description: '',
+    registryUrl: '',
+    linkedinUrl: '',
   },
   {
     id: 'us-kraken',
@@ -110,6 +123,9 @@ export const mockEntities: Entity[] = [
     status: 'Licensed',
     regulator: 'FinCEN',
     website: 'https://kraken.com',
+    description: '',
+    registryUrl: '',
+    linkedinUrl: '',
   },
 ];
 

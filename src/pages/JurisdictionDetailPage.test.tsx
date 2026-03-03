@@ -13,6 +13,16 @@ vi.mock('../hooks/useAnimations', () => ({
   useCounter: vi.fn(),
 }));
 
+// Mock WorldMap (uses maplibregl which isn't available in test)
+vi.mock('../components/map/WorldMap', () => ({
+  default: (props: Record<string, unknown>) => <div data-testid="world-map" data-focus={props.focusCountry as string} />,
+}));
+
+// Mock countryFlags
+vi.mock('../utils/countryFlags', () => ({
+  countryCodeToFlag: (code: string) => `[${code}]`,
+}));
+
 // Mock dataLoader
 const mockGetJurisdictionByCode = vi.fn();
 const mockGetEntitiesByCountry = vi.fn();

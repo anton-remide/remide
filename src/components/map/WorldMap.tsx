@@ -3,9 +3,12 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
-import { REGIME_COLORS } from '../../theme';
+import { Plus, Minus } from 'lucide-react';
+import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS } from '../../theme';
 import { numericToAlpha2 } from '../../data/isoMapping';
 import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../../types';
+
+export type MapColorMode = 'regime' | 'travelRule';
 
 interface Props {
   height?: string;
@@ -13,7 +16,35 @@ interface Props {
   selectedRegimes?: RegimeType[];
   selectedTravelRules?: TravelRuleStatus[];
   onCountryClick?: (code: string) => void;
+  onMiniStatClick?: (label: string) => void;
+  activeMiniStat?: string | null;
   compact?: boolean;
+  colorMode?: MapColorMode;
+  /** Alpha-2 code — zoom map to this country on load */
+  focusCountry?: string;
+}
+
+/* Build a MapLibre match expression for fill-color */
+function buildFillExpression(mode: MapColorMode): maplibregl.ExpressionSpecification {
+  if (mode === 'travelRule') {
+    return [
+      'match', ['get', 'travelRule'],
+      'Enforced', TRAVEL_RULE_MAP_COLORS['Enforced'],
+      'Legislated', TRAVEL_RULE_MAP_COLORS['Legislated'],
+      'In Progress', TRAVEL_RULE_MAP_COLORS['In Progress'],
+      'Not Implemented', TRAVEL_RULE_MAP_COLORS['Not Implemented'],
+      TRAVEL_RULE_MAP_COLORS['N/A'],
+    ];
+  }
+  return [
+    'match', ['get', 'regime'],
+    'Licensing', REGIME_COLORS.Licensing,
+    'Registration', REGIME_COLORS.Registration,
+    'Sandbox', REGIME_COLORS.Sandbox,
+    'Ban', REGIME_COLORS.Ban,
+    'Unclear', REGIME_COLORS.Unclear,
+    REGIME_COLORS.None,
+  ];
 }
 
 export default function WorldMap({
@@ -22,12 +53,17 @@ export default function WorldMap({
   selectedRegimes = [],
   selectedTravelRules = [],
   onCountryClick,
+  onMiniStatClick,
+  activeMiniStat = null,
   compact = false,
+  colorMode = 'regime',
+  focusCountry,
 }: Props) {
   const mapHeight = height ?? (compact ? '360px' : '65vh');
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<GeoJSON.Feature[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   // Build lookup: alpha2 → jurisdiction
@@ -44,6 +80,23 @@ export default function WorldMap({
     if (selectedTravelRules.length) filtered = filtered.filter((j) => selectedTravelRules.includes(j.travelRule));
     return new Set(filtered.map((j) => j.code.toUpperCase()));
   }, [jurisdictions, selectedRegimes, selectedTravelRules]);
+
+  // Dynamic mini-stats based on colorMode
+  const miniStats = useMemo(() => {
+    if (colorMode === 'travelRule') {
+      return [
+        { value: jurisdictions.filter((j) => j.travelRule === 'Enforced').length, label: 'enforced' },
+        { value: jurisdictions.filter((j) => j.travelRule === 'Legislated').length, label: 'legislated' },
+        { value: jurisdictions.filter((j) => j.travelRule === 'In Progress').length, label: 'in progress' },
+      ];
+    }
+    return [
+      { value: jurisdictions.filter((j) => j.regime === 'Licensing').length, label: 'licensing' },
+      { value: jurisdictions.filter((j) => j.regime === 'Registration').length, label: 'registration' },
+      { value: jurisdictions.filter((j) => j.regime === 'Sandbox').length, label: 'sandbox' },
+      { value: jurisdictions.filter((j) => j.regime === 'Ban').length, label: 'ban' },
+    ];
+  }, [jurisdictions, colorMode]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -67,36 +120,38 @@ export default function WorldMap({
       renderWorldCopies: false,
     });
 
+    // Disable scroll zoom — user requested explicit zoom buttons only
+    map.scrollZoom.disable();
+
     mapRef.current = map;
 
     map.on('load', async () => {
-      // Load TopoJSON and convert to GeoJSON
       const resp = await fetch(`${import.meta.env.BASE_URL}countries-110m.json`);
       const topo = (await resp.json()) as Topology;
       const geo = topojson.feature(topo, topo.objects.countries as GeometryCollection);
 
-      // Fix antimeridian-crossing polygons (Russia id=643, Fiji id=242)
-      // by filtering out sub-polygons whose ring spans > 300° longitude
       const fixAntimeridian = (feature: (typeof geo.features)[0]) => {
         if (feature.geometry.type !== 'MultiPolygon') return feature;
         const coords = feature.geometry.coordinates as number[][][][];
         const fixed = coords.filter((polygon) => {
-          const ring = polygon[0]; // outer ring
+          const ring = polygon[0];
           const lngs = ring.map((pt) => pt[0]);
           const span = Math.max(...lngs) - Math.min(...lngs);
-          return span < 300; // keep normal polygons, drop world-wrapping ones
+          return span < 300;
         });
-        if (fixed.length === 0) return feature; // safety: don't drop entire country
+        if (fixed.length === 0) return feature;
         return { ...feature, geometry: { ...feature.geometry, type: 'MultiPolygon' as const, coordinates: fixed } };
       };
 
-      // Enrich features with our data — filter out Antarctica (010)
       const features = geo.features
         .filter((f) => String(f.id ?? '') !== '010')
         .map(fixAntimeridian)
         .map((f) => {
           const numId = String(f.id ?? '');
           const alpha2 = numericToAlpha2[numId] ?? '';
+          if (!alpha2 && import.meta.env.DEV) {
+            console.warn(`[WorldMap] Unmapped TopoJSON feature id=${numId}`);
+          }
           const j = jurisdictionMap.get(alpha2);
           return {
             ...f,
@@ -112,50 +167,35 @@ export default function WorldMap({
           };
         });
 
+      featuresRef.current = features as unknown as GeoJSON.Feature[];
+
       map.addSource('countries', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features },
       });
 
-      // Country fill — muted Stripe palette
       map.addLayer({
         id: 'countries-fill',
         type: 'fill',
         source: 'countries',
         paint: {
-          'fill-color': [
-            'match', ['get', 'regime'],
-            'Licensing', REGIME_COLORS.Licensing,
-            'Registration', REGIME_COLORS.Registration,
-            'Sandbox', REGIME_COLORS.Sandbox,
-            'Ban', REGIME_COLORS.Ban,
-            'Unclear', REGIME_COLORS.Unclear,
-            REGIME_COLORS.None,
-          ],
+          'fill-color': buildFillExpression(colorMode) as unknown as string,
           'fill-opacity': 0.82,
         },
       });
 
-      // Country borders — subtle, not white
       map.addLayer({
         id: 'countries-border',
         type: 'line',
         source: 'countries',
-        paint: {
-          'line-color': '#E2E8F0',
-          'line-width': 0.6,
-        },
+        paint: { 'line-color': '#E2E8F0', 'line-width': 0.6 },
       });
 
-      // Hover highlight
       map.addLayer({
         id: 'countries-hover',
         type: 'fill',
         source: 'countries',
-        paint: {
-          'fill-color': '#0A2540',
-          'fill-opacity': 0,
-        },
+        paint: { 'fill-color': '#0A2540', 'fill-opacity': 0 },
       });
 
       setLoaded(true);
@@ -167,6 +207,16 @@ export default function WorldMap({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update fill color when colorMode changes
+  useEffect(() => {
+    if (!loaded || !mapRef.current) return;
+    mapRef.current.setPaintProperty(
+      'countries-fill',
+      'fill-color',
+      buildFillExpression(colorMode) as unknown as string,
+    );
+  }, [loaded, colorMode]);
 
   // Update opacity based on filter state
   useEffect(() => {
@@ -187,6 +237,27 @@ export default function WorldMap({
     ]);
   }, [loaded, activeCodes, selectedRegimes, selectedTravelRules]);
 
+  // Zoom to focused country (for detail page mini-map)
+  useEffect(() => {
+    if (!loaded || !mapRef.current || !focusCountry) return;
+    const features = featuresRef.current as Array<{ properties?: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }>;
+    const target = features.find((f) => f.properties?.alpha2 === focusCountry.toUpperCase());
+    if (!target) return;
+
+    const bounds = new maplibregl.LngLatBounds();
+    const processCoords = (coords: unknown): void => {
+      if (Array.isArray(coords) && coords.length >= 2 && typeof coords[0] === 'number') {
+        bounds.extend(coords as [number, number]);
+      } else if (Array.isArray(coords)) {
+        coords.forEach(processCoords);
+      }
+    };
+    processCoords(target.geometry.coordinates);
+    if (!bounds.isEmpty()) {
+      mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 4, duration: 0 });
+    }
+  }, [loaded, focusCountry]);
+
   // Hover + click handlers
   useEffect(() => {
     if (!loaded || !mapRef.current) return;
@@ -205,12 +276,14 @@ export default function WorldMap({
           hoveredId = alpha2;
           const name = f.properties?.countryName || '';
           const regime = f.properties?.regime || '';
+          const travelRule = f.properties?.travelRule || '';
           const entities = f.properties?.entityCount || 0;
           const regulator = f.properties?.regulator || '';
           tooltip.innerHTML = `
             <strong>${name}</strong>
             <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
-              ${regime} · ${entities} entities
+              ${regime} · ${travelRule}
+              <br/>${entities} entities
               ${regulator ? `<br/>${regulator}` : ''}
             </div>
           `;
@@ -262,32 +335,33 @@ export default function WorldMap({
     };
   }, [loaded, onCountryClick]);
 
+  const handleZoomIn = () => mapRef.current?.zoomIn();
+  const handleZoomOut = () => mapRef.current?.zoomOut();
+
+  // Choose legend colors based on mode
+  const legendColors = colorMode === 'travelRule' ? TRAVEL_RULE_MAP_COLORS : REGIME_COLORS;
+  const legendTitle = colorMode === 'travelRule' ? 'Travel Rule Status' : 'Regulatory Regime';
+
   return (
     <div style={{ position: 'relative', height: mapHeight, minHeight: compact ? 200 : 300 }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       <div ref={tooltipRef} className="st-map-tooltip" />
+
+      {/* Zoom Controls */}
+      <div className="st-map-zoom-controls">
+        <button onClick={handleZoomIn} aria-label="Zoom in" className="st-map-zoom-btn">
+          <Plus size={16} />
+        </button>
+        <button onClick={handleZoomOut} aria-label="Zoom out" className="st-map-zoom-btn">
+          <Minus size={16} />
+        </button>
+      </div>
+
       {/* Legend */}
       {!compact && (
-        <div style={{
-          position: 'absolute',
-          top: 56,
-          right: 12,
-          background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          borderRadius: 8,
-          padding: '12px 16px',
-          fontSize: '0.6875rem',
-          fontFamily: 'var(--font1)',
-          fontWeight: 500,
-          lineHeight: 1,
-          boxShadow: '0 1px 3px rgba(10,37,64,0.06), 0 4px 12px rgba(10,37,64,0.04)',
-          border: '1px solid rgba(10,37,64,0.06)',
-          zIndex: 2,
-          letterSpacing: '0.01em',
-          color: '#586B82',
-        }}>
-          {Object.entries(REGIME_COLORS).map(([label, color]) => (
+        <div className="st-map-legend">
+          <div className="st-map-legend-title">{legendTitle}</div>
+          {Object.entries(legendColors).map(([label, color]) => (
             <div
               key={label}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}
@@ -295,6 +369,23 @@ export default function WorldMap({
               <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, flexShrink: 0 }} />
               <span>{label}</span>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Mini-Stats Overlay — clickable toggle filters */}
+      {!compact && (
+        <div className="st-map-mini-stats">
+          {miniStats.map((s) => (
+            <button
+              key={s.label}
+              className={`st-map-mini-stat${activeMiniStat === s.label ? ' active' : ''}`}
+              onClick={() => onMiniStatClick?.(s.label)}
+              type="button"
+            >
+              <span className="st-map-mini-stat-value">{s.value}</span>
+              <span className="st-map-mini-stat-label">{s.label}</span>
+            </button>
           ))}
         </div>
       )}

@@ -6,10 +6,11 @@ import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS } from '../theme'
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
-import SearchInput from '../components/ui/SearchInput';
 import DataTable, { type Column } from '../components/ui/DataTable';
+import WorldMap from '../components/map/WorldMap';
 
 export default function JurisdictionDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -26,8 +27,14 @@ export default function JurisdictionDetailPage() {
 
   const safeEntities = useMemo(() => entities ?? [], [entities]);
 
+  // Mini-map needs just this jurisdiction for coloring
+  const jurisdictionList = useMemo(
+    () => jurisdiction ? [jurisdiction] : [],
+    [jurisdiction],
+  );
+
   const filterFn = useCallback((e: Entity, q: string) => {
-    return e.name.toLowerCase().includes(q);
+    return e.name.toLowerCase().includes(q) || (e.licenseType ?? '').toLowerCase().includes(q);
   }, []);
 
   const table = useTableState(safeEntities, filterFn, { field: 'name', direction: 'asc' });
@@ -78,33 +85,58 @@ export default function JurisdictionDetailPage() {
         ]} />
       </div>
 
-      <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>{jurisdiction.name}</h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {/* Title, badges, description */}
+      <div className="reveal" style={{ marginTop: 24, marginBottom: 20 }}>
+        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>
+          <span style={{ marginRight: 8 }}>{countryCodeToFlag(jurisdiction.code)}</span>
+          {jurisdiction.name}
+        </h2>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: jurisdiction.description ? 20 : 0 }}>
           <Badge label={jurisdiction.regime} colorMap={REGIME_CHIP_COLORS} />
           <Badge label={jurisdiction.travelRule} colorMap={TRAVEL_RULE_COLORS} />
         </div>
+        {jurisdiction.description && (
+          <p style={{ color: 'var(--text)', lineHeight: 1.65, fontSize: '0.9375rem', margin: 0 }}>
+            {jurisdiction.description}
+          </p>
+        )}
       </div>
 
-      <div className="reveal st-info-card clip-lg" style={{ marginBottom: 32 }}>
-        <div className="st-info-row">
-          <span className="st-info-label">Regulator</span>
-          <span className="st-info-value">{jurisdiction.regulator || '—'}</span>
-        </div>
-        <div className="st-info-row">
-          <span className="st-info-label">Key Law</span>
-          <span className="st-info-value">{jurisdiction.keyLaw || '—'}</span>
-        </div>
-        <div className="st-info-row">
-          <span className="st-info-label">Entities</span>
-          <span className="st-info-value">{jurisdiction.entityCount}</span>
-        </div>
-        {jurisdiction.notes && (
-          <div className="st-info-row">
-            <span className="st-info-label">Notes</span>
-            <span className="st-info-value">{jurisdiction.notes}</span>
+      {/* Info card + Mini map — aligned side by side */}
+      <div className="reveal" style={{ display: 'flex', gap: 24, alignItems: 'stretch', flexWrap: 'wrap', marginBottom: 32 }}>
+        <div style={{ flex: '1 1 400px', minWidth: 0 }}>
+          <div className="st-info-card clip-lg" style={{ height: '100%', margin: 0 }}>
+            <div className="st-info-row">
+              <span className="st-info-label">Regulator</span>
+              <span className="st-info-value">{jurisdiction.regulator || '—'}</span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Key Law</span>
+              <span className="st-info-value">{jurisdiction.keyLaw || '—'}</span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Entities</span>
+              <span className="st-info-value">{jurisdiction.entityCount}</span>
+            </div>
+            {jurisdiction.notes && (
+              <div className="st-info-row">
+                <span className="st-info-label">Notes</span>
+                <span className="st-info-value">{jurisdiction.notes}</span>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Mini map — same height as info card */}
+        <div style={{ flex: '1 1 360px', minHeight: 280, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' }}>
+          <WorldMap
+            height="100%"
+            jurisdictions={jurisdictionList}
+            compact
+            focusCountry={code?.toUpperCase()}
+            onCountryClick={(c) => c !== code?.toUpperCase() && navigate(`/jurisdictions/${c}`)}
+          />
+        </div>
       </div>
 
       {jurisdiction.sources.length > 0 && (
@@ -130,24 +162,26 @@ export default function JurisdictionDetailPage() {
       {safeEntities.length > 0 && (
         <>
           <div className="reveal" style={{ marginBottom: 16 }}>
-            <h5 style={{ marginBottom: 16 }}>Entities in {jurisdiction.name}</h5>
-            <SearchInput value={table.search} onChange={table.setSearch} placeholder="Search entities..." />
+            <h5>Entities in {jurisdiction.name}</h5>
           </div>
           <div className="reveal">
-            <div className="clip-lg">
-              <DataTable
-                columns={entityColumns}
-                data={table.paginated as (Entity & Record<string, unknown>)[]}
-                sort={table.sort}
-                onSort={table.toggleSort}
-                onRowClick={(row) => navigate(`/entities/${(row as unknown as Entity).id}`)}
-                page={table.page}
-                totalPages={table.totalPages}
-                onPageChange={table.setPage}
-                totalFiltered={table.totalFiltered}
-                totalCount={safeEntities.length}
-              />
-            </div>
+            <DataTable
+              columns={entityColumns}
+              data={table.paginated as (Entity & Record<string, unknown>)[]}
+              sort={table.sort}
+              onSort={table.toggleSort}
+              onRowClick={(row) => navigate(`/entities/${(row as unknown as Entity).id}`)}
+              page={table.page}
+              totalPages={table.totalPages}
+              onPageChange={table.setPage}
+              totalFiltered={table.totalFiltered}
+              totalCount={safeEntities.length}
+              search={table.search}
+              onSearchChange={table.setSearch}
+              searchPlaceholder="Search entities..."
+              pageSize={table.pageSize}
+              onPageSizeChange={table.setPageSize}
+            />
           </div>
         </>
       )}

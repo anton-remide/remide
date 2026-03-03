@@ -10,6 +10,9 @@ export interface Entity {
   status: EntityStatus;
   regulator: string;
   website: string;
+  description: string;
+  registryUrl: string;
+  linkedinUrl: string;
 }
 
 export type EntityStatus =
@@ -30,6 +33,7 @@ export interface Jurisdiction {
   entityCount: number;
   sources: Source[];
   notes: string;
+  description: string;
 }
 
 export type RegimeType =

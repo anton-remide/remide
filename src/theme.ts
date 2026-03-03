@@ -34,6 +34,15 @@ export const TRAVEL_RULE_COLORS: Record<string, { bg: string; text: string }> = 
   'N/A': { bg: '#F1F5F9', text: '#586B82' },
 };
 
+/* ── Map fill colors for Travel Rule mode ── */
+export const TRAVEL_RULE_MAP_COLORS: Record<string, string> = {
+  Enforced: '#5BB98C',
+  Legislated: '#7B93DB',
+  'In Progress': '#D4A55A',
+  'Not Implemented': '#C97878',
+  'N/A': '#CBD5E1',
+};
+
 export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Licensed: { bg: '#ECFDF3', text: '#2B7A4B' },
   Provisional: { bg: '#EEF0FF', text: '#4B5CC4' },

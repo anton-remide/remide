@@ -56,6 +56,7 @@ describe('dataLoader', () => {
         entityCount: 42,
         sources: [{ name: 'FinCEN', url: 'https://fincen.gov' }],
         notes: 'Federal and state-level licensing',
+        description: '',
       });
     });
 
@@ -124,6 +125,9 @@ describe('dataLoader', () => {
         status: 'Licensed',
         regulator: 'FinCEN',
         website: 'https://coinbase.com',
+        description: '',
+        registryUrl: '',
+        linkedinUrl: '',
       });
     });
 

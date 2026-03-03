@@ -16,6 +16,7 @@ describe('ProtectedRoute', () => {
         }
       />
       <Route path="/login" element={<div>Login page</div>} />
+      <Route path="/signup" element={<div>Signup page</div>} />
     </Routes>
   );
 
@@ -29,14 +30,21 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
   });
 
-  it('redirects to /login when not authenticated', () => {
+  it('shows blurred content with registration popup when not authenticated', () => {
     renderWithProviders(protectedContent, {
       route: '/secret',
       user: null,
     });
 
-    expect(screen.getByText('Login page')).toBeInTheDocument();
-    expect(screen.queryByText('Secret content')).not.toBeInTheDocument();
+    // Content is rendered but blurred
+    expect(screen.getByText('Secret content')).toBeInTheDocument();
+    expect(document.querySelector('.st-auth-blur')).toBeInTheDocument();
+    expect(document.querySelector('.st-auth-overlay')).toBeInTheDocument();
+
+    // Popup has CTA
+    expect(screen.getByText('Sign up for free access')).toBeInTheDocument();
+    expect(screen.getByText('Create Free Account')).toBeInTheDocument();
+    expect(screen.getByText('Sign in')).toBeInTheDocument();
   });
 
   it('renders children when authenticated', () => {
@@ -46,5 +54,7 @@ describe('ProtectedRoute', () => {
     });
 
     expect(screen.getByText('Secret content')).toBeInTheDocument();
+    expect(document.querySelector('.st-auth-blur')).not.toBeInTheDocument();
+    expect(document.querySelector('.st-auth-overlay')).not.toBeInTheDocument();
   });
 });
