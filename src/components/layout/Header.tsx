@@ -12,6 +12,8 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
   const lastY = useRef(0);
 
   useEffect(() => {
@@ -29,10 +31,22 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Close menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
+    setAvatarOpen(false);
   }, [location.pathname]);
+
+  // Close avatar dropdown on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setAvatarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const navLinks = [
     { to: '/jurisdictions', label: 'Jurisdictions' },
@@ -40,6 +54,7 @@ export default function Header() {
   ];
 
   const handleSignOut = async () => {
+    setAvatarOpen(false);
     await signOut();
     navigate('/');
   };
@@ -75,12 +90,25 @@ export default function Header() {
                 </Link>
               ))}
               {user ? (
-                <button className="st-header-auth-btn" onClick={handleSignOut}>
-                  <span className="st-header-avatar">
-                    {(user.email ?? '?')[0].toUpperCase()}
-                  </span>
-                  Sign Out
-                </button>
+                <div ref={avatarRef} className="st-avatar-menu">
+                  <button
+                    className="st-avatar-trigger"
+                    onClick={() => setAvatarOpen(!avatarOpen)}
+                    aria-label="Account menu"
+                  >
+                    <span className="st-header-avatar">
+                      {(user.email ?? '?')[0].toUpperCase()}
+                    </span>
+                  </button>
+                  {avatarOpen && (
+                    <div className="st-avatar-dropdown">
+                      <div className="st-avatar-dropdown-email">{user.email}</div>
+                      <button className="st-avatar-dropdown-item" onClick={handleSignOut}>
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   <Link to="/login" className="st-header-auth-link">Sign In</Link>

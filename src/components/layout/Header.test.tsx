@@ -37,14 +37,19 @@ describe('Header', () => {
     expect(signUpLinks.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows user avatar and sign out when authenticated', () => {
+  it('shows user avatar and sign out when authenticated', async () => {
+    const clicker = userEvent.setup();
     const user = createMockUser({ email: 'test@example.com' });
     renderWithProviders(<Header />, { user });
 
     // Avatar with first letter of email
     expect(screen.getByText('T')).toBeInTheDocument();
 
-    // Sign Out appears in both header and mobile menu
+    // Sign Out is in dropdown — click avatar first
+    const avatarBtn = screen.getByLabelText(/account menu/i);
+    await clicker.click(avatarBtn);
+
+    // Sign Out now visible in both header dropdown and mobile menu
     const signOuts = screen.getAllByText(/sign out/i);
     expect(signOuts.length).toBeGreaterThanOrEqual(1);
   });
@@ -54,7 +59,11 @@ describe('Header', () => {
     const user = createMockUser({ email: 'test@example.com' });
     const { authValue } = renderWithProviders(<Header />, { user });
 
-    // Click the first Sign Out (header button, not mobile menu)
+    // Open avatar dropdown first
+    const avatarBtn = screen.getByLabelText(/account menu/i);
+    await clicker.click(avatarBtn);
+
+    // Click Sign Out in the header dropdown
     const header = document.querySelector('header')!;
     const signOutBtn = within(header).getByText(/sign out/i);
     await clicker.click(signOutBtn);

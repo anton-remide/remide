@@ -15,6 +15,18 @@ export default function HeaderSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  // ⌘K / Ctrl+K global shortcut to focus search (Stripe pattern)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
   // Flatten results for keyboard navigation
   const flatItems = useCallback(() => {
     if (!results) return [];
@@ -114,7 +126,7 @@ export default function HeaderSearch() {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search jurisdictions, entities..."
+          placeholder="Search..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { if (results) setOpen(true); }}
@@ -122,7 +134,11 @@ export default function HeaderSearch() {
           className="st-header-search-input"
           autoComplete="off"
         />
-        {loading && <div className="st-header-search-spinner" />}
+        {loading ? (
+          <div className="st-header-search-spinner" />
+        ) : (
+          !query && <kbd className="st-header-search-kbd">⌘K</kbd>
+        )}
       </div>
 
       {open && results && (
