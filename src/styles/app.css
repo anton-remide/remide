@@ -612,12 +612,23 @@ ul {
   pointer-events: all;
 }
 
+.st-mobile-menu nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  padding: 0 24px;
+}
+
 .st-mobile-menu a {
   font-family: var(--font2);
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--black);
   text-decoration: none;
+  display: block;
+  text-align: center;
 }
 
 .st-mobile-menu-close {
@@ -1662,6 +1673,15 @@ ul {
   text-transform: uppercase;
 }
 
+/* Map Legend Item — with tooltip */
+.st-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: help;
+}
+
 /* Map Zoom Controls */
 .st-map-zoom-controls {
   position: absolute;
@@ -1670,7 +1690,7 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  z-index: 2;
+  z-index: 10;
 }
 
 .st-map-zoom-btn {
@@ -1688,6 +1708,8 @@ ul {
   color: var(--black);
   box-shadow: 0 1px 3px rgba(10, 37, 64, 0.06);
   transition: background 150ms ease, box-shadow 150ms ease;
+  pointer-events: auto;
+  position: relative;
 }
 
 .st-map-zoom-btn:hover {
@@ -2092,12 +2114,13 @@ a, button, input, select, textarea {
 
 .st-header-search-wrapper {
   position: relative;
-  width: 200px;
+  width: 180px;
+  flex-shrink: 0;
   transition: width 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .st-header-search-wrapper:focus-within {
-  width: 360px;
+  width: 320px;
 }
 
 .st-header-search {

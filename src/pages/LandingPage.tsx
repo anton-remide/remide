@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Scale, BookOpen, Search, ArrowRight, ChevronDown, Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getJurisdictions } from '../data/dataLoader';
+import { getJurisdictions, getEntities, getStablecoins, getCbdcs } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 
@@ -18,11 +18,15 @@ function NumberStat({ label, value }: { label: string; value: number }) {
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { data: jurisdictions, loading, error, refetch } = useSupabaseQuery(getJurisdictions);
+  const { data: jurisdictions, loading: jLoading, error, refetch } = useSupabaseQuery(getJurisdictions);
+  const { data: entities, loading: eLoading } = useSupabaseQuery(getEntities);
+  const { data: stablecoins, loading: sLoading } = useSupabaseQuery(getStablecoins);
+  const { data: cbdcs, loading: cLoading } = useSupabaseQuery(getCbdcs);
 
-  const totalEntities = jurisdictions?.reduce((sum, j) => sum + j.entityCount, 0) ?? 0;
-  const active = jurisdictions?.filter((j) => j.entityCount > 0).length ?? 0;
-  const travelEnforced = jurisdictions?.filter((j) => j.travelRule === 'Enforced').length ?? 0;
+  const loading = jLoading || eLoading || sLoading || cLoading;
+  const totalEntities = entities?.length ?? 0;
+  const totalStablecoins = stablecoins?.length ?? 0;
+  const totalCbdcs = cbdcs?.length ?? 0;
 
   const revealRef = useReveal(loading);
   const statsRef = useStaggerReveal(loading);
@@ -41,8 +45,8 @@ export default function LandingPage() {
   const stats = [
     { label: 'Countries Tracked', value: jurisdictions?.length ?? 0 },
     { label: 'Licensed Entities', value: totalEntities },
-    { label: 'Active Jurisdictions', value: active },
-    { label: 'Travel Rule Enforced', value: travelEnforced },
+    { label: 'Stablecoins Tracked', value: totalStablecoins },
+    { label: 'CBDC Projects', value: totalCbdcs },
   ];
 
   const features = [

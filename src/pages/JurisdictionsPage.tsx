@@ -33,23 +33,25 @@ export default function JurisdictionsPage() {
   const regimes = (colFilters.filters['regime'] ?? []) as RegimeType[];
   const travelRules = (colFilters.filters['travelRule'] ?? []) as TravelRuleStatus[];
 
-  // Map mini-stat label (lowercase) → filter field value (title-case)
-  const miniStatLabelToValue: Record<string, string> = {
-    licensing: 'Licensing', registration: 'Registration', sandbox: 'Sandbox', ban: 'Ban',
-    enforced: 'Enforced', legislated: 'Legislated', 'in progress': 'In Progress',
+  // Map mini-stat label (lowercase) → filter field values (title-case)
+  // "none / unclear" maps to TWO regime values
+  const miniStatLabelToValues: Record<string, string[]> = {
+    licensing: ['Licensing'], registration: ['Registration'], sandbox: ['Sandbox'], ban: ['Ban'],
+    'none / unclear': ['None', 'Unclear'],
+    enforced: ['Enforced'], legislated: ['Legislated'], 'in progress': ['In Progress'],
   };
 
   const handleMiniStatClick = useCallback((label: string) => {
     const filterField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
-    const value = miniStatLabelToValue[label] ?? label;
+    const values = miniStatLabelToValues[label] ?? [label];
 
     if (activeMiniStat === label) {
       // Toggle off — clear filter
       colFilters.clearFilter(filterField);
       setActiveMiniStat(null);
     } else {
-      // Toggle on — set filter to just this value
-      colFilters.applyFilter(filterField, [value]);
+      // Toggle on — set filter to matching values
+      colFilters.applyFilter(filterField, values);
       setActiveMiniStat(label);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

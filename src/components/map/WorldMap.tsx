@@ -90,11 +90,13 @@ export default function WorldMap({
         { value: jurisdictions.filter((j) => j.travelRule === 'In Progress').length, label: 'in progress' },
       ];
     }
+    const noneUnclear = jurisdictions.filter((j) => j.regime === 'None' || j.regime === 'Unclear').length;
     return [
       { value: jurisdictions.filter((j) => j.regime === 'Licensing').length, label: 'licensing' },
       { value: jurisdictions.filter((j) => j.regime === 'Registration').length, label: 'registration' },
       { value: jurisdictions.filter((j) => j.regime === 'Sandbox').length, label: 'sandbox' },
       { value: jurisdictions.filter((j) => j.regime === 'Ban').length, label: 'ban' },
+      { value: noneUnclear, label: 'none / unclear' },
     ];
   }, [jurisdictions, colorMode]);
 
@@ -335,12 +337,27 @@ export default function WorldMap({
     };
   }, [loaded, onCountryClick]);
 
-  const handleZoomIn = () => mapRef.current?.zoomIn();
-  const handleZoomOut = () => mapRef.current?.zoomOut();
+  const handleZoomIn = (e: React.MouseEvent) => { e.stopPropagation(); mapRef.current?.zoomIn(); };
+  const handleZoomOut = (e: React.MouseEvent) => { e.stopPropagation(); mapRef.current?.zoomOut(); };
 
   // Choose legend colors based on mode
   const legendColors = colorMode === 'travelRule' ? TRAVEL_RULE_MAP_COLORS : REGIME_COLORS;
   const legendTitle = colorMode === 'travelRule' ? 'Travel Rule Status' : 'Regulatory Regime';
+
+  // Tooltip descriptions for each legend item
+  const legendTooltips: Record<string, string> = {
+    Licensing: 'A formal license is required to operate as a VASP. Comprehensive regulatory requirements with ongoing supervision.',
+    Registration: 'Notification-based registration required. Less stringent than a full license but still regulated.',
+    Sandbox: 'Regulatory sandbox available for crypto firms to operate under controlled, experimental conditions.',
+    Ban: 'Crypto-related activities are prohibited by the government.',
+    None: 'No specific crypto or VASP regulatory framework in place.',
+    Unclear: 'Regulatory status is ambiguous, under development, or not yet clearly defined.',
+    Enforced: 'FATF Travel Rule is actively enforced by regulators. VASPs must share originator/beneficiary data.',
+    Legislated: 'Travel Rule has been passed into law, but active enforcement may still be developing.',
+    'In Progress': 'The jurisdiction is working on implementing Travel Rule requirements.',
+    'Not Implemented': 'No Travel Rule requirements currently in place.',
+    'N/A': 'Travel Rule status is not applicable or not tracked for this jurisdiction.',
+  };
 
   return (
     <div style={{ position: 'relative', height: mapHeight, minHeight: compact ? 200 : 300 }}>
@@ -364,7 +381,8 @@ export default function WorldMap({
           {Object.entries(legendColors).map(([label, color]) => (
             <div
               key={label}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}
+              className="st-map-legend-item"
+              title={legendTooltips[label] ?? ''}
             >
               <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, flexShrink: 0 }} />
               <span>{label}</span>

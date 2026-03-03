@@ -96,13 +96,23 @@ export async function getJurisdictionByCode(code: string): Promise<Jurisdiction 
 }
 
 export async function getEntities(): Promise<Entity[]> {
-  const { data, error } = await supabase
-    .from('entities')
-    .select('*')
-    .order('name');
-
-  if (error) throw new Error(`Failed to load entities: ${error.message}`);
-  return (data as EntityRow[]).map(mapEntity);
+  // Supabase default limit is 1000 — paginate to get all rows
+  const all: EntityRow[] = [];
+  const PAGE = 1000;
+  let from = 0;
+  let done = false;
+  while (!done) {
+    const { data, error } = await supabase
+      .from('entities')
+      .select('*')
+      .order('name')
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`Failed to load entities: ${error.message}`);
+    all.push(...(data as EntityRow[]));
+    if ((data as EntityRow[]).length < PAGE) done = true;
+    else from += PAGE;
+  }
+  return all.map(mapEntity);
 }
 
 export async function getEntityById(id: string): Promise<Entity | null> {
@@ -160,14 +170,23 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
 }
 
 export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
-  const { data, error } = await supabase
-    .from('entities')
-    .select('*')
-    .eq('country_code', code.toUpperCase())
-    .order('name');
-
-  if (error) throw new Error(`Failed to load entities: ${error.message}`);
-  return (data as EntityRow[]).map(mapEntity);
+  const all: EntityRow[] = [];
+  const PAGE = 1000;
+  let from = 0;
+  let done = false;
+  while (!done) {
+    const { data, error } = await supabase
+      .from('entities')
+      .select('*')
+      .eq('country_code', code.toUpperCase())
+      .order('name')
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`Failed to load entities: ${error.message}`);
+    all.push(...(data as EntityRow[]));
+    if ((data as EntityRow[]).length < PAGE) done = true;
+    else from += PAGE;
+  }
+  return all.map(mapEntity);
 }
 
 // ── Stablecoins & CBDCs (static JSON for now) ──
