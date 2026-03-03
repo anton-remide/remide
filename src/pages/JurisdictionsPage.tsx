@@ -129,8 +129,8 @@ export default function JurisdictionsPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page" style={{ paddingBottom: 48 }}>
-      {/* Map Frame — rounded corners, inside max-width container */}
+    <div ref={revealRef} className="st-map-section">
+      {/* Map Frame — rounded corners */}
       <div className="st-map-frame">
         <WorldMap
           jurisdictions={safeJurisdictions}
@@ -163,7 +163,7 @@ export default function JurisdictionsPage() {
       </div>
 
       {/* Table */}
-      <div style={{ marginTop: 24 }} className="reveal">
+      <div style={{ marginTop: 24 }}>
         <DataTable
           columns={columns}
           data={table.paginated as (Jurisdiction & Record<string, unknown>)[]}

@@ -114,7 +114,7 @@ export default function EntitiesPage() {
         </p>
       </div>
 
-      <div className="reveal">
+      <div>
         <DataTable
           columns={columns}
           data={table.paginated as (Entity & Record<string, unknown>)[]}
