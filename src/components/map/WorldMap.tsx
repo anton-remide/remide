@@ -15,6 +15,7 @@ interface Props {
   jurisdictions: Jurisdiction[];
   selectedRegimes?: RegimeType[];
   selectedTravelRules?: TravelRuleStatus[];
+  selectedStablecoinStatuses?: string[];
   onCountryClick?: (code: string) => void;
   onMiniStatClick?: (label: string) => void;
   activeMiniStats?: string[];
@@ -22,19 +23,22 @@ interface Props {
   colorMode?: MapColorMode;
   /** Alpha-2 code — zoom map to this country on load */
   focusCountry?: string;
-  /** Stablecoin count per country code (alpha2 uppercase) — used in stablecoin mode */
-  stablecoinCounts?: Map<string, number>;
+  /** Best stablecoin regulatory status per country code (alpha2 uppercase) */
+  stablecoinStatuses?: Map<string, string>;
 }
 
 /* Build a MapLibre match expression for fill-color */
 function buildFillExpression(mode: MapColorMode): maplibregl.ExpressionSpecification {
   if (mode === 'stablecoin') {
-    // Use stablecoinCount property (number) to color-code
     return [
-      'case',
-      ['>=', ['get', 'stablecoinCount'], 6], STABLECOIN_MAP_COLORS['6+'],
-      ['>=', ['get', 'stablecoinCount'], 3], STABLECOIN_MAP_COLORS['3–5'],
-      ['>=', ['get', 'stablecoinCount'], 1], STABLECOIN_MAP_COLORS['1–2'],
+      'match', ['get', 'stablecoinStatus'],
+      'Compliant', STABLECOIN_MAP_COLORS['Compliant'],
+      'Allowed', STABLECOIN_MAP_COLORS['Allowed'],
+      'Pending', STABLECOIN_MAP_COLORS['Pending'],
+      'Restricted', STABLECOIN_MAP_COLORS['Restricted'],
+      'Non-Compliant', STABLECOIN_MAP_COLORS['Non-Compliant'],
+      'Discontinued', STABLECOIN_MAP_COLORS['Discontinued'],
+      'Unclear', STABLECOIN_MAP_COLORS['Unclear'],
       STABLECOIN_MAP_COLORS['None'],
     ];
   }
@@ -64,13 +68,14 @@ export default function WorldMap({
   jurisdictions,
   selectedRegimes = [],
   selectedTravelRules = [],
+  selectedStablecoinStatuses = [],
   onCountryClick,
   onMiniStatClick,
   activeMiniStats = [],
   compact = false,
   colorMode = 'regime',
   focusCountry,
-  stablecoinCounts,
+  stablecoinStatuses,
 }: Props) {
   const mapHeight = height ?? (compact ? '360px' : '65vh');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,20 +102,18 @@ export default function WorldMap({
   // Dynamic mini-stats based on colorMode
   const miniStats = useMemo(() => {
     if (colorMode === 'stablecoin') {
-      const counts = stablecoinCounts ?? new Map<string, number>();
-      let six = 0, three = 0, one = 0, none = 0;
+      const statuses = stablecoinStatuses ?? new Map<string, string>();
+      const countByStatus: Record<string, number> = {};
       jurisdictions.forEach((j) => {
-        const c = counts.get(j.code.toUpperCase()) ?? 0;
-        if (c >= 6) six++;
-        else if (c >= 3) three++;
-        else if (c >= 1) one++;
-        else none++;
+        const st = statuses.get(j.code.toUpperCase()) ?? 'None';
+        countByStatus[st] = (countByStatus[st] ?? 0) + 1;
       });
       return [
-        { value: six, label: '6+ stablecoins' },
-        { value: three, label: '3–5 stablecoins' },
-        { value: one, label: '1–2 stablecoins' },
-        { value: none, label: 'none' },
+        { value: (countByStatus['Compliant'] ?? 0) + (countByStatus['Allowed'] ?? 0), label: 'compliant / allowed' },
+        { value: countByStatus['Pending'] ?? 0, label: 'pending' },
+        { value: countByStatus['Restricted'] ?? 0, label: 'restricted' },
+        { value: (countByStatus['Non-Compliant'] ?? 0) + (countByStatus['Discontinued'] ?? 0), label: 'non-compliant' },
+        { value: (countByStatus['Unclear'] ?? 0) + (countByStatus['None'] ?? 0), label: 'no data' },
       ];
     }
     if (colorMode === 'travelRule') {
@@ -130,7 +133,7 @@ export default function WorldMap({
       { value: jurisdictions.filter((j) => j.regime === 'Ban').length, label: 'ban' },
       { value: noneUnclear, label: 'none / unclear' },
     ];
-  }, [jurisdictions, colorMode, stablecoinCounts]);
+  }, [jurisdictions, colorMode, stablecoinStatuses]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -197,7 +200,7 @@ export default function WorldMap({
               entityCount: j?.entityCount ?? 0,
               regulator: j?.regulator ?? '',
               countryName: j?.name ?? (f.properties as Record<string, string>)?.name ?? '',
-              stablecoinCount: stablecoinCounts?.get(alpha2) ?? 0,
+              stablecoinStatus: stablecoinStatuses?.get(alpha2) ?? 'None',
             },
           };
         });
@@ -243,21 +246,21 @@ export default function WorldMap({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update stablecoinCount in GeoJSON source when counts change
+  // Update stablecoinStatus in GeoJSON source when statuses change
   useEffect(() => {
-    if (!loaded || !mapRef.current || !stablecoinCounts) return;
+    if (!loaded || !mapRef.current || !stablecoinStatuses) return;
     const source = mapRef.current.getSource('countries') as maplibregl.GeoJSONSource | undefined;
     if (!source || !featuresRef.current.length) return;
     const updated = featuresRef.current.map((f) => {
       const alpha2 = (f.properties as Record<string, unknown>)?.alpha2 as string;
       return {
         ...f,
-        properties: { ...f.properties, stablecoinCount: stablecoinCounts.get(alpha2) ?? 0 },
+        properties: { ...f.properties, stablecoinStatus: stablecoinStatuses.get(alpha2) ?? 'None' },
       };
     });
     featuresRef.current = updated as GeoJSON.Feature[];
     source.setData({ type: 'FeatureCollection', features: updated } as GeoJSON.FeatureCollection);
-  }, [loaded, stablecoinCounts]);
+  }, [loaded, stablecoinStatuses]);
 
   // Update fill color when colorMode changes
   useEffect(() => {
@@ -269,24 +272,43 @@ export default function WorldMap({
     );
   }, [loaded, colorMode]);
 
+  // Active stablecoin country codes (for opacity when stablecoin filters are active)
+  const activeStablecoinCodes = useMemo(() => {
+    if (!selectedStablecoinStatuses.length || !stablecoinStatuses) return new Set<string>();
+    const codes = new Set<string>();
+    stablecoinStatuses.forEach((status, code) => {
+      if (selectedStablecoinStatuses.includes(status)) codes.add(code);
+    });
+    // "None" status — countries not in stablecoinStatuses
+    if (selectedStablecoinStatuses.includes('None')) {
+      jurisdictions.forEach((j) => {
+        if (!stablecoinStatuses.has(j.code.toUpperCase())) codes.add(j.code.toUpperCase());
+      });
+    }
+    return codes;
+  }, [selectedStablecoinStatuses, stablecoinStatuses, jurisdictions]);
+
   // Update opacity based on filter state
   useEffect(() => {
     if (!loaded || !mapRef.current) return;
     const map = mapRef.current;
-    const hasFilter = selectedRegimes.length > 0 || selectedTravelRules.length > 0;
+    const hasFilter = selectedRegimes.length > 0 || selectedTravelRules.length > 0 || selectedStablecoinStatuses.length > 0;
 
     if (!hasFilter) {
       map.setPaintProperty('countries-fill', 'fill-opacity', 0.82);
       return;
     }
 
+    // Use the right code set based on which filter mode is active
+    const codes = selectedStablecoinStatuses.length > 0 ? activeStablecoinCodes : activeCodes;
+
     map.setPaintProperty('countries-fill', 'fill-opacity', [
       'case',
-      ['in', ['get', 'alpha2'], ['literal', [...activeCodes]]],
+      ['in', ['get', 'alpha2'], ['literal', [...codes]]],
       0.9,
       0.12,
     ]);
-  }, [loaded, activeCodes, selectedRegimes, selectedTravelRules]);
+  }, [loaded, activeCodes, activeStablecoinCodes, selectedRegimes, selectedTravelRules, selectedStablecoinStatuses]);
 
   // Zoom to focused country (for detail page mini-map)
   useEffect(() => {
@@ -330,12 +352,12 @@ export default function WorldMap({
           const travelRule = f.properties?.travelRule || '';
           const entities = f.properties?.entityCount || 0;
           const regulator = f.properties?.regulator || '';
-          const stablecoins = f.properties?.stablecoinCount || 0;
+          const stablecoinStatus = f.properties?.stablecoinStatus || 'None';
           tooltip.innerHTML = `
             <strong>${name}</strong>
             <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
               ${regime} · ${travelRule}
-              <br/>${entities} entities · ${stablecoins} stablecoins
+              <br/>${entities} entities${stablecoinStatus !== 'None' ? ` · Stablecoins: ${stablecoinStatus}` : ''}
               ${regulator ? `<br/>${regulator}` : ''}
             </div>
           `;
@@ -397,7 +419,7 @@ export default function WorldMap({
       ? TRAVEL_RULE_MAP_COLORS
       : REGIME_COLORS;
   const legendTitle = colorMode === 'stablecoin'
-    ? 'Stablecoin Coverage'
+    ? 'Stablecoin Status'
     : colorMode === 'travelRule'
       ? 'Travel Rule Status'
       : 'Regulatory Regime';
@@ -415,9 +437,12 @@ export default function WorldMap({
     'In Progress': 'The jurisdiction is working on implementing Travel Rule requirements.',
     'Not Implemented': 'No Travel Rule requirements currently in place.',
     'N/A': 'Travel Rule status is not applicable or not tracked for this jurisdiction.',
-    '6+': 'Six or more major stablecoins available in this jurisdiction.',
-    '3–5': 'Three to five major stablecoins available.',
-    '1–2': 'One or two major stablecoins available.',
+    Compliant: 'Stablecoins are fully compliant with local regulations.',
+    Allowed: 'Stablecoins are permitted and available on regulated exchanges.',
+    Pending: 'Stablecoin regulatory framework is under development.',
+    Restricted: 'Stablecoins face usage restrictions or regulatory scrutiny.',
+    'Non-Compliant': 'Stablecoins do not meet local regulatory requirements.',
+    Discontinued: 'Stablecoin operations have been discontinued in this jurisdiction.',
   };
 
   return (

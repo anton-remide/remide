@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getJurisdictions } from '../data/dataLoader';
 import stablecoinsData from '../data/stablecoins.json';
-import type { Jurisdiction, RegimeType, TravelRuleStatus, Stablecoin } from '../types';
+import type { Jurisdiction, RegimeType, TravelRuleStatus, Stablecoin, StablecoinJurisdictionStatus } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -25,13 +25,21 @@ export default function JurisdictionsPage() {
 
   const safeJurisdictions = allJurisdictions ?? [];
 
-  // Build stablecoin-per-country counts (synchronous — static JSON)
-  const stablecoinCounts = useMemo(() => {
-    const m = new Map<string, number>();
+  // Build best stablecoin regulatory status per country (synchronous — static JSON)
+  // Priority: Compliant > Allowed > Pending > Restricted > Non-Compliant > Discontinued > Unclear
+  const stablecoinStatuses = useMemo(() => {
+    const priority: Record<string, number> = {
+      Compliant: 1, Allowed: 2, Pending: 3, Restricted: 4,
+      'Non-Compliant': 5, Discontinued: 6, Unclear: 7,
+    };
+    const m = new Map<string, string>();
     (stablecoinsData as unknown as Stablecoin[]).forEach((s) => {
       s.majorJurisdictions.forEach((j) => {
         const code = j.code.toUpperCase();
-        m.set(code, (m.get(code) ?? 0) + 1);
+        const current = m.get(code);
+        const currentP = current ? (priority[current] ?? 99) : 99;
+        const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
+        if (newP < currentP) m.set(code, j.status);
       });
     });
     return m;
@@ -53,21 +61,36 @@ export default function JurisdictionsPage() {
     'none / unclear': ['None', 'Unclear'],
     enforced: ['Enforced'], legislated: ['Legislated'], 'in progress': ['In Progress'],
     'not implemented': ['Not Implemented', 'N/A'],
-    '6+ stablecoins': [], '3–5 stablecoins': [], '1–2 stablecoins': [], none: [],
+    // Stablecoin status labels → status values
+    'compliant / allowed': ['Compliant', 'Allowed'],
+    pending: ['Pending'],
+    restricted: ['Restricted'],
+    'non-compliant': ['Non-Compliant', 'Discontinued'],
+    'no data': ['Unclear', 'None'],
   };
 
-  const handleMiniStatClick = useCallback((label: string) => {
-    const filterField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
+  // Derive stablecoin status filters from activeMiniStats when in stablecoin mode
+  const stablecoinStatusFilters = useMemo(() => {
+    if (mapColorMode !== 'stablecoin' || activeMiniStats.length === 0) return [] as string[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats]);
 
+  const handleMiniStatClick = useCallback((label: string) => {
     setActiveMiniStats((prev) => {
       const isActive = prev.includes(label);
       const next = isActive ? prev.filter((l) => l !== label) : [...prev, label];
 
+      // In stablecoin mode, we only update activeMiniStats — map handles it via selectedStablecoinStatuses
+      if (mapColorMode === 'stablecoin') {
+        return next;
+      }
+
+      // For regime/travelRule modes, apply column filters
+      const filterField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
       if (next.length === 0) {
-        // No active filters — clear
         colFilters.clearFilter(filterField);
       } else {
-        // Combine all selected mini-stat values
         const combined = next.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
         colFilters.applyFilter(filterField, combined);
       }
@@ -157,11 +180,12 @@ export default function JurisdictionsPage() {
           jurisdictions={safeJurisdictions}
           selectedRegimes={regimes}
           selectedTravelRules={travelRules}
+          selectedStablecoinStatuses={stablecoinStatusFilters}
           onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
           onMiniStatClick={handleMiniStatClick}
           activeMiniStats={activeMiniStats}
           colorMode={mapColorMode}
-          stablecoinCounts={stablecoinCounts}
+          stablecoinStatuses={stablecoinStatuses}
         />
         {/* Toggles overlay — top-left */}
         <div className="st-map-toggles-overlay">
@@ -173,13 +197,14 @@ export default function JurisdictionsPage() {
             ]}
             value={mapColorMode}
             onChange={(v) => {
-              setMapColorMode(v as MapColorMode);
               // Reset mini-stat filter when switching mode
               if (activeMiniStats.length > 0) {
-                const filterField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
-                colFilters.clearFilter(filterField);
+                // Clear column filters for previous mode (stablecoin mode doesn't use column filters)
+                if (mapColorMode === 'travelRule') colFilters.clearFilter('travelRule');
+                else if (mapColorMode === 'regime') colFilters.clearFilter('regime');
                 setActiveMiniStats([]);
               }
+              setMapColorMode(v as MapColorMode);
             }}
           />
         </div>

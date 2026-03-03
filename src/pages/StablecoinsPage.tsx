@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStablecoins, getCbdcs } from '../data/dataLoader';
-import type { Stablecoin, Cbdc } from '../types';
+import { getStablecoins, getCbdcs, getJurisdictions } from '../data/dataLoader';
+import stablecoinsData from '../data/stablecoins.json';
+import cbdcsData from '../data/cbdcs.json';
+import type { Stablecoin, Cbdc, StablecoinJurisdictionStatus } from '../types';
 import {
   STABLECOIN_TYPE_COLORS,
   CBDC_STATUS_COLORS,
@@ -14,6 +16,7 @@ import { countryCodeToFlag } from '../utils/countryFlags';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
 import SegmentedControl from '../components/ui/SegmentedControl';
+import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
 
 type TabMode = 'stablecoins' | 'cbdcs';
 
@@ -287,8 +290,45 @@ function CbdcsTab() {
 
 /* ── Main Page ── */
 export default function StablecoinsPage() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<TabMode>('stablecoins');
   const revealRef = useReveal(false);
+
+  // Load jurisdictions for the map
+  const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
+  const safeJurisdictions = allJurisdictions ?? [];
+
+  // Stablecoin statuses per country (best status)
+  const stablecoinStatuses = useMemo(() => {
+    const priority: Record<string, number> = {
+      Compliant: 1, Allowed: 2, Pending: 3, Restricted: 4,
+      'Non-Compliant': 5, Discontinued: 6, Unclear: 7,
+    };
+    const m = new Map<string, string>();
+    (stablecoinsData as unknown as Stablecoin[]).forEach((s) => {
+      s.majorJurisdictions.forEach((j) => {
+        const code = j.code.toUpperCase();
+        const current = m.get(code);
+        const currentP = current ? (priority[current] ?? 99) : 99;
+        const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
+        if (newP < currentP) m.set(code, j.status);
+      });
+    });
+    return m;
+  }, []);
+
+  // CBDC statuses per country
+  const cbdcStatuses = useMemo(() => {
+    const m = new Map<string, string>();
+    (cbdcsData as unknown as Cbdc[]).forEach((c) => {
+      m.set(c.countryCode.toUpperCase(), c.status);
+    });
+    return m;
+  }, []);
+
+  // Choose which map data to show based on tab
+  const mapStatuses = tab === 'stablecoins' ? stablecoinStatuses : cbdcStatuses;
+  const mapMode: MapColorMode = tab === 'stablecoins' ? 'stablecoin' : 'stablecoin'; // both use stablecoin paint
 
   return (
     <div ref={revealRef} className="st-page">
@@ -307,6 +347,17 @@ export default function StablecoinsPage() {
           ]}
           value={tab}
           onChange={(v) => setTab(v as TabMode)}
+        />
+      </div>
+
+      {/* Map */}
+      <div className="reveal st-map-frame" style={{ marginBottom: 24 }}>
+        <WorldMap
+          jurisdictions={safeJurisdictions}
+          colorMode={mapMode}
+          stablecoinStatuses={mapStatuses}
+          onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
+          compact
         />
       </div>
 

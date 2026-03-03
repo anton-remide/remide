@@ -91,10 +91,14 @@ export const CBDC_MAP_COLORS: Record<string, string> = {
   Inactive: '#CBD5E1',
 };
 
-/* ── Stablecoin coverage map fill colors (by count) ── */
+/* ── Stablecoin regulatory status map fill colors ── */
 export const STABLECOIN_MAP_COLORS: Record<string, string> = {
-  '6+': '#2B7A4B',
-  '3–5': '#5BB98C',
-  '1–2': '#7B93DB',
+  Compliant: '#5BB98C',
+  Allowed: '#7B93DB',
+  Pending: '#D4A55A',
+  Restricted: '#E0926C',
+  'Non-Compliant': '#C97878',
+  Discontinued: '#94A3B8',
+  Unclear: '#CBD5E1',
   None: '#E2E8F0',
 };
