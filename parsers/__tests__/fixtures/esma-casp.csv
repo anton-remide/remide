@@ -1,0 +1,7 @@
+ae_homeMemberState,ae_lei,ae_lei_name,ae_commercial_name,ac_serviceCode,ac_authorisationEndDate,ae_website
+DE,529900ABCDEF123456DE,Deutsche Krypto GmbH,DK Exchange,CS01|CS02,,https://dk-exchange.de
+DE,529900GHIJKL789012DE,Berlin Blockchain AG,BBChain,CS03,,
+FR,529900MNOPQR345678FR,Paris Crypto SAS,ParisCrypto,CS01|CS04,,https://pariscrypto.fr
+FR,529900STUVWX901234FR,Lyon Digital Assets SA,,CS02|CS03,2025-12-31,https://lyon-da.fr
+NL,529900YZABCD567890NL,Amsterdam Digital BV,AmsDigital,CS01|CS02|CS03,,https://amsdigital.nl
+NL,,,,,,
