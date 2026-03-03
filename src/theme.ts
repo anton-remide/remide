@@ -90,3 +90,11 @@ export const CBDC_MAP_COLORS: Record<string, string> = {
   Cancelled: '#C97878',
   Inactive: '#CBD5E1',
 };
+
+/* ── Stablecoin coverage map fill colors (by count) ── */
+export const STABLECOIN_MAP_COLORS: Record<string, string> = {
+  '6+': '#2B7A4B',
+  '3–5': '#5BB98C',
+  '1–2': '#7B93DB',
+  None: '#E2E8F0',
+};

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCallback, useMemo } from 'react';
-import { getJurisdictionByCode, getEntitiesByCountry } from '../data/dataLoader';
+import { getJurisdictionByCode, getEntitiesByCountry, getStablecoinsByCountry, getCbdcsByCountry } from '../data/dataLoader';
 import type { Entity } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
@@ -26,6 +26,16 @@ export default function JurisdictionDetailPage() {
   const revealRef = useReveal(loading);
 
   const safeEntities = useMemo(() => entities ?? [], [entities]);
+
+  // Stablecoins & CBDCs per country (synchronous — static JSON)
+  const countryStablecoins = useMemo(
+    () => code ? getStablecoinsByCountry(code) : [],
+    [code],
+  );
+  const countryCbdcs = useMemo(
+    () => code ? getCbdcsByCountry(code) : [],
+    [code],
+  );
 
   // Mini-map needs just this jurisdiction for coloring
   const jurisdictionList = useMemo(
@@ -115,13 +125,50 @@ export default function JurisdictionDetailPage() {
               <span className="st-info-value">{jurisdiction.keyLaw || '—'}</span>
             </div>
             <div className="st-info-row">
-              <span className="st-info-label">Entities</span>
+              <span className="st-info-label">Travel Rule</span>
+              <span className="st-info-value">
+                <Badge label={jurisdiction.travelRule} colorMap={TRAVEL_RULE_COLORS} />
+              </span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Licensed Entities</span>
               <span className="st-info-value">{jurisdiction.entityCount}</span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Stablecoins</span>
+              <span className="st-info-value">
+                {countryStablecoins.length > 0
+                  ? `${countryStablecoins.length} (${countryStablecoins.map((s) => s.ticker).join(', ')})`
+                  : '—'}
+              </span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">CBDCs</span>
+              <span className="st-info-value">
+                {countryCbdcs.length > 0
+                  ? countryCbdcs.map((c) => `${c.name} (${c.status})`).join(', ')
+                  : '—'}
+              </span>
             </div>
             {jurisdiction.notes && (
               <div className="st-info-row">
                 <span className="st-info-label">Notes</span>
                 <span className="st-info-value">{jurisdiction.notes}</span>
+              </div>
+            )}
+            {jurisdiction.sources.length > 0 && (
+              <div className="st-info-row">
+                <span className="st-info-label">Sources</span>
+                <span className="st-info-value">
+                  {jurisdiction.sources.map((s, i) => (
+                    <span key={i}>
+                      {i > 0 && <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>·</span>}
+                      <a href={s.url} target="_blank" rel="noopener noreferrer" className="st-inline-link">
+                        {s.name}
+                      </a>
+                    </span>
+                  ))}
+                </span>
               </div>
             )}
           </div>
@@ -138,26 +185,6 @@ export default function JurisdictionDetailPage() {
           />
         </div>
       </div>
-
-      {jurisdiction.sources.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={{ marginBottom: 12 }}>Sources</h6>
-          <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
-            {jurisdiction.sources.map((s, i) => (
-              <a
-                key={i}
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="st-related-link"
-                style={{ fontSize: '0.875rem' }}
-              >
-                {s.name}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
 
       {safeEntities.length > 0 && (
         <>

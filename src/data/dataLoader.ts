@@ -213,3 +213,19 @@ export async function getCbdcById(id: string): Promise<Cbdc | null> {
   const cbdc = (cbdcsData as unknown as Cbdc[]).find((c) => c.id === id);
   return cbdc ?? null;
 }
+
+// ── Per-country aggregation helpers ──
+
+/** Stablecoins that list this country code in majorJurisdictions */
+export function getStablecoinsByCountry(code: string): Stablecoin[] {
+  const upper = code.toUpperCase();
+  return (stablecoinsData as unknown as Stablecoin[]).filter((s) =>
+    s.majorJurisdictions.some((j) => j.code.toUpperCase() === upper),
+  );
+}
+
+/** CBDCs issued by this country */
+export function getCbdcsByCountry(code: string): Cbdc[] {
+  const upper = code.toUpperCase();
+  return (cbdcsData as unknown as Cbdc[]).filter((c) => c.countryCode.toUpperCase() === upper);
+}

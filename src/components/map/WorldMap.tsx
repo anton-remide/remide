@@ -4,11 +4,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 import { Plus, Minus } from 'lucide-react';
-import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS } from '../../theme';
+import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_MAP_COLORS } from '../../theme';
 import { numericToAlpha2 } from '../../data/isoMapping';
 import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../../types';
 
-export type MapColorMode = 'regime' | 'travelRule';
+export type MapColorMode = 'regime' | 'travelRule' | 'stablecoin';
 
 interface Props {
   height?: string;
@@ -17,15 +17,27 @@ interface Props {
   selectedTravelRules?: TravelRuleStatus[];
   onCountryClick?: (code: string) => void;
   onMiniStatClick?: (label: string) => void;
-  activeMiniStat?: string | null;
+  activeMiniStats?: string[];
   compact?: boolean;
   colorMode?: MapColorMode;
   /** Alpha-2 code — zoom map to this country on load */
   focusCountry?: string;
+  /** Stablecoin count per country code (alpha2 uppercase) — used in stablecoin mode */
+  stablecoinCounts?: Map<string, number>;
 }
 
 /* Build a MapLibre match expression for fill-color */
 function buildFillExpression(mode: MapColorMode): maplibregl.ExpressionSpecification {
+  if (mode === 'stablecoin') {
+    // Use stablecoinCount property (number) to color-code
+    return [
+      'case',
+      ['>=', ['get', 'stablecoinCount'], 6], STABLECOIN_MAP_COLORS['6+'],
+      ['>=', ['get', 'stablecoinCount'], 3], STABLECOIN_MAP_COLORS['3–5'],
+      ['>=', ['get', 'stablecoinCount'], 1], STABLECOIN_MAP_COLORS['1–2'],
+      STABLECOIN_MAP_COLORS['None'],
+    ];
+  }
   if (mode === 'travelRule') {
     return [
       'match', ['get', 'travelRule'],
@@ -54,10 +66,11 @@ export default function WorldMap({
   selectedTravelRules = [],
   onCountryClick,
   onMiniStatClick,
-  activeMiniStat = null,
+  activeMiniStats = [],
   compact = false,
   colorMode = 'regime',
   focusCountry,
+  stablecoinCounts,
 }: Props) {
   const mapHeight = height ?? (compact ? '360px' : '65vh');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,11 +96,30 @@ export default function WorldMap({
 
   // Dynamic mini-stats based on colorMode
   const miniStats = useMemo(() => {
+    if (colorMode === 'stablecoin') {
+      const counts = stablecoinCounts ?? new Map<string, number>();
+      let six = 0, three = 0, one = 0, none = 0;
+      jurisdictions.forEach((j) => {
+        const c = counts.get(j.code.toUpperCase()) ?? 0;
+        if (c >= 6) six++;
+        else if (c >= 3) three++;
+        else if (c >= 1) one++;
+        else none++;
+      });
+      return [
+        { value: six, label: '6+ stablecoins' },
+        { value: three, label: '3–5 stablecoins' },
+        { value: one, label: '1–2 stablecoins' },
+        { value: none, label: 'none' },
+      ];
+    }
     if (colorMode === 'travelRule') {
+      const notImpl = jurisdictions.filter((j) => j.travelRule === 'Not Implemented' || j.travelRule === 'N/A').length;
       return [
         { value: jurisdictions.filter((j) => j.travelRule === 'Enforced').length, label: 'enforced' },
         { value: jurisdictions.filter((j) => j.travelRule === 'Legislated').length, label: 'legislated' },
         { value: jurisdictions.filter((j) => j.travelRule === 'In Progress').length, label: 'in progress' },
+        { value: notImpl, label: 'not implemented' },
       ];
     }
     const noneUnclear = jurisdictions.filter((j) => j.regime === 'None' || j.regime === 'Unclear').length;
@@ -98,7 +130,7 @@ export default function WorldMap({
       { value: jurisdictions.filter((j) => j.regime === 'Ban').length, label: 'ban' },
       { value: noneUnclear, label: 'none / unclear' },
     ];
-  }, [jurisdictions, colorMode]);
+  }, [jurisdictions, colorMode, stablecoinCounts]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -165,6 +197,7 @@ export default function WorldMap({
               entityCount: j?.entityCount ?? 0,
               regulator: j?.regulator ?? '',
               countryName: j?.name ?? (f.properties as Record<string, string>)?.name ?? '',
+              stablecoinCount: stablecoinCounts?.get(alpha2) ?? 0,
             },
           };
         });
@@ -209,6 +242,22 @@ export default function WorldMap({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update stablecoinCount in GeoJSON source when counts change
+  useEffect(() => {
+    if (!loaded || !mapRef.current || !stablecoinCounts) return;
+    const source = mapRef.current.getSource('countries') as maplibregl.GeoJSONSource | undefined;
+    if (!source || !featuresRef.current.length) return;
+    const updated = featuresRef.current.map((f) => {
+      const alpha2 = (f.properties as Record<string, unknown>)?.alpha2 as string;
+      return {
+        ...f,
+        properties: { ...f.properties, stablecoinCount: stablecoinCounts.get(alpha2) ?? 0 },
+      };
+    });
+    featuresRef.current = updated as GeoJSON.Feature[];
+    source.setData({ type: 'FeatureCollection', features: updated } as GeoJSON.FeatureCollection);
+  }, [loaded, stablecoinCounts]);
 
   // Update fill color when colorMode changes
   useEffect(() => {
@@ -281,11 +330,12 @@ export default function WorldMap({
           const travelRule = f.properties?.travelRule || '';
           const entities = f.properties?.entityCount || 0;
           const regulator = f.properties?.regulator || '';
+          const stablecoins = f.properties?.stablecoinCount || 0;
           tooltip.innerHTML = `
             <strong>${name}</strong>
             <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
               ${regime} · ${travelRule}
-              <br/>${entities} entities
+              <br/>${entities} entities · ${stablecoins} stablecoins
               ${regulator ? `<br/>${regulator}` : ''}
             </div>
           `;
@@ -341,8 +391,16 @@ export default function WorldMap({
   const handleZoomOut = (e: React.MouseEvent) => { e.stopPropagation(); mapRef.current?.zoomOut(); };
 
   // Choose legend colors based on mode
-  const legendColors = colorMode === 'travelRule' ? TRAVEL_RULE_MAP_COLORS : REGIME_COLORS;
-  const legendTitle = colorMode === 'travelRule' ? 'Travel Rule Status' : 'Regulatory Regime';
+  const legendColors = colorMode === 'stablecoin'
+    ? STABLECOIN_MAP_COLORS
+    : colorMode === 'travelRule'
+      ? TRAVEL_RULE_MAP_COLORS
+      : REGIME_COLORS;
+  const legendTitle = colorMode === 'stablecoin'
+    ? 'Stablecoin Coverage'
+    : colorMode === 'travelRule'
+      ? 'Travel Rule Status'
+      : 'Regulatory Regime';
 
   // Tooltip descriptions for each legend item
   const legendTooltips: Record<string, string> = {
@@ -357,6 +415,9 @@ export default function WorldMap({
     'In Progress': 'The jurisdiction is working on implementing Travel Rule requirements.',
     'Not Implemented': 'No Travel Rule requirements currently in place.',
     'N/A': 'Travel Rule status is not applicable or not tracked for this jurisdiction.',
+    '6+': 'Six or more major stablecoins available in this jurisdiction.',
+    '3–5': 'Three to five major stablecoins available.',
+    '1–2': 'One or two major stablecoins available.',
   };
 
   return (
@@ -391,13 +452,13 @@ export default function WorldMap({
         </div>
       )}
 
-      {/* Mini-Stats Overlay — clickable toggle filters */}
+      {/* Mini-Stats Overlay — clickable toggle filters (multi-select) */}
       {!compact && (
         <div className="st-map-mini-stats">
           {miniStats.map((s) => (
             <button
               key={s.label}
-              className={`st-map-mini-stat${activeMiniStat === s.label ? ' active' : ''}`}
+              className={`st-map-mini-stat${activeMiniStats.includes(s.label) ? ' active' : ''}`}
               onClick={() => onMiniStatClick?.(s.label)}
               type="button"
             >

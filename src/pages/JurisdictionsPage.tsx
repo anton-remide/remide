@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getJurisdictions } from '../data/dataLoader';
-import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../types';
+import stablecoinsData from '../data/stablecoins.json';
+import type { Jurisdiction, RegimeType, TravelRuleStatus, Stablecoin } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -20,9 +21,21 @@ export default function JurisdictionsPage() {
   const revealRef = useReveal(loading);
 
   const [mapColorMode, setMapColorMode] = useState<MapColorMode>('regime');
-  const [activeMiniStat, setActiveMiniStat] = useState<string | null>(null);
+  const [activeMiniStats, setActiveMiniStats] = useState<string[]>([]);
 
   const safeJurisdictions = allJurisdictions ?? [];
+
+  // Build stablecoin-per-country counts (synchronous — static JSON)
+  const stablecoinCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    (stablecoinsData as unknown as Stablecoin[]).forEach((s) => {
+      s.majorJurisdictions.forEach((j) => {
+        const code = j.code.toUpperCase();
+        m.set(code, (m.get(code) ?? 0) + 1);
+      });
+    });
+    return m;
+  }, []);
 
   // Column filters hook (works on full dataset)
   const colFilters = useColumnFilters<Jurisdiction & Record<string, unknown>>(
@@ -34,28 +47,34 @@ export default function JurisdictionsPage() {
   const travelRules = (colFilters.filters['travelRule'] ?? []) as TravelRuleStatus[];
 
   // Map mini-stat label (lowercase) → filter field values (title-case)
-  // "none / unclear" maps to TWO regime values
+  // "none / unclear" maps to TWO regime values, "not implemented" maps to two travel rule values
   const miniStatLabelToValues: Record<string, string[]> = {
     licensing: ['Licensing'], registration: ['Registration'], sandbox: ['Sandbox'], ban: ['Ban'],
     'none / unclear': ['None', 'Unclear'],
     enforced: ['Enforced'], legislated: ['Legislated'], 'in progress': ['In Progress'],
+    'not implemented': ['Not Implemented', 'N/A'],
+    '6+ stablecoins': [], '3–5 stablecoins': [], '1–2 stablecoins': [], none: [],
   };
 
   const handleMiniStatClick = useCallback((label: string) => {
     const filterField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
-    const values = miniStatLabelToValues[label] ?? [label];
 
-    if (activeMiniStat === label) {
-      // Toggle off — clear filter
-      colFilters.clearFilter(filterField);
-      setActiveMiniStat(null);
-    } else {
-      // Toggle on — set filter to matching values
-      colFilters.applyFilter(filterField, values);
-      setActiveMiniStat(label);
-    }
+    setActiveMiniStats((prev) => {
+      const isActive = prev.includes(label);
+      const next = isActive ? prev.filter((l) => l !== label) : [...prev, label];
+
+      if (next.length === 0) {
+        // No active filters — clear
+        colFilters.clearFilter(filterField);
+      } else {
+        // Combine all selected mini-stat values
+        const combined = next.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+        colFilters.applyFilter(filterField, combined);
+      }
+      return next;
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapColorMode, activeMiniStat, colFilters.applyFilter, colFilters.clearFilter]);
+  }, [mapColorMode, colFilters.applyFilter, colFilters.clearFilter]);
 
   const filterFn = useCallback((j: Jurisdiction, q: string) => {
     return j.name.toLowerCase().includes(q) || j.regulator.toLowerCase().includes(q);
@@ -140,24 +159,26 @@ export default function JurisdictionsPage() {
           selectedTravelRules={travelRules}
           onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
           onMiniStatClick={handleMiniStatClick}
-          activeMiniStat={activeMiniStat}
+          activeMiniStats={activeMiniStats}
           colorMode={mapColorMode}
+          stablecoinCounts={stablecoinCounts}
         />
         {/* Toggles overlay — top-left */}
         <div className="st-map-toggles-overlay">
           <SegmentedControl
             options={[
-              { value: 'regime', label: 'Crypto Regulation' },
+              { value: 'regime', label: 'Regulation' },
               { value: 'travelRule', label: 'Travel Rule' },
+              { value: 'stablecoin', label: 'Stablecoins' },
             ]}
             value={mapColorMode}
             onChange={(v) => {
               setMapColorMode(v as MapColorMode);
               // Reset mini-stat filter when switching mode
-              if (activeMiniStat) {
-                const oldField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
-                colFilters.clearFilter(oldField);
-                setActiveMiniStat(null);
+              if (activeMiniStats.length > 0) {
+                const filterField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
+                colFilters.clearFilter(filterField);
+                setActiveMiniStats([]);
               }
             }}
           />
