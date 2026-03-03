@@ -11,6 +11,9 @@ import EntityDetailPage from './pages/EntityDetailPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
+import StablecoinsPage from './pages/StablecoinsPage';
+import StablecoinDetailPage from './pages/StablecoinDetailPage';
+import CbdcDetailPage from './pages/CbdcDetailPage';
 
 export default function App() {
   return (
@@ -23,6 +26,7 @@ export default function App() {
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/jurisdictions" element={<JurisdictionsPage />} />
+              <Route path="/stablecoins" element={<StablecoinsPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
@@ -36,6 +40,12 @@ export default function App() {
               } />
               <Route path="/entities/:id" element={
                 <ProtectedRoute><EntityDetailPage /></ProtectedRoute>
+              } />
+              <Route path="/stablecoins/:id" element={
+                <ProtectedRoute><StablecoinDetailPage /></ProtectedRoute>
+              } />
+              <Route path="/cbdcs/:id" element={
+                <ProtectedRoute><CbdcDetailPage /></ProtectedRoute>
               } />
             </Routes>
           </ErrorBoundary>

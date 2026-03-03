@@ -81,6 +81,76 @@ export interface Profile {
   updatedAt: string;
 }
 
+/* ── Stablecoin types ── */
+
+export type StablecoinType = 'Fiat-Backed' | 'Crypto-Backed' | 'Synthetic' | 'Hybrid';
+
+export type StablecoinJurisdictionStatus =
+  | 'Compliant'
+  | 'Allowed'
+  | 'Restricted'
+  | 'Non-Compliant'
+  | 'Pending'
+  | 'Discontinued'
+  | 'Unclear';
+
+export interface StablecoinJurisdiction {
+  code: string;
+  status: StablecoinJurisdictionStatus;
+  notes: string;
+}
+
+export interface Stablecoin {
+  id: string;
+  name: string;
+  ticker: string;
+  type: StablecoinType;
+  pegCurrency: string;
+  issuer: string;
+  issuerCountry: string;
+  launchDate: string;
+  marketCapBn: number;
+  chains: string[];
+  reserveType: string;
+  auditStatus: string;
+  regulatoryStatus: string;
+  website: string;
+  notes: string;
+  majorJurisdictions: StablecoinJurisdiction[];
+}
+
+/* ── CBDC types ── */
+
+export type CbdcStatus =
+  | 'Launched'
+  | 'Pilot'
+  | 'Development'
+  | 'Research'
+  | 'Cancelled'
+  | 'Inactive';
+
+export interface Cbdc {
+  id: string;
+  countryCode: string;
+  country: string;
+  name: string;
+  currency: string;
+  status: CbdcStatus;
+  phase: string;
+  centralBank: string;
+  launchDate: string | null;
+  technology: string;
+  retailOrWholesale: string;
+  crossBorder: boolean;
+  crossBorderProjects: string[];
+  programmable: boolean;
+  privacyModel: string;
+  interestBearing: boolean;
+  offlineCapable: boolean;
+  notes: string;
+  sources: Source[];
+}
+
 export type SortDirection = 'asc' | 'desc' | null;
 
 export interface SortConfig {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Scale, BookOpen, Search, ArrowRight, ChevronDown } from 'lucide-react';
+import { Scale, BookOpen, Search, ArrowRight, ChevronDown, Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getJurisdictions } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
@@ -49,6 +49,7 @@ export default function LandingPage() {
     { icon: Scale, title: 'Regulatory Regimes', desc: 'Instantly see how each jurisdiction classifies crypto — Licensing, Registration, Sandbox, or Ban — so you know where you can operate' },
     { icon: BookOpen, title: 'Travel Rule Tracking', desc: 'Know exactly which countries enforce FATF Travel Rule, which have legislated it, and which are still in progress — critical for compliance teams' },
     { icon: Search, title: 'Entity Directory', desc: `Search ${totalEntities}+ licensed VASPs, exchanges, custodians, and EMIs with direct links to regulators and license details` },
+    { icon: Coins, title: 'Stablecoins & CBDCs', desc: 'Track regulatory status of major stablecoins across jurisdictions and follow 25+ central bank digital currency projects from research to launch' },
   ];
 
   if (loading) {
@@ -123,7 +124,7 @@ export default function LandingPage() {
         </div>
         <div className="row g-3">
           {features.map((f) => (
-            <div key={f.title} className="col-12 col-md-4">
+            <div key={f.title} className="col-12 col-md-6 col-lg-3">
               <div className="st-feature-card clip-lg stagger-in">
                 <div className="st-feature-icon">
                   <f.icon size={24} color="var(--black)" strokeWidth={2} />

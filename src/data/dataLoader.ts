@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
-import type { Entity, Jurisdiction } from '../types';
+import type { Entity, Jurisdiction, Stablecoin, Cbdc } from '../types';
+import stablecoinsData from './stablecoins.json';
+import cbdcsData from './cbdcs.json';
 
 // ── Snake_case DB row → camelCase TypeScript ──
 
@@ -166,4 +168,29 @@ export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
 
   if (error) throw new Error(`Failed to load entities: ${error.message}`);
   return (data as EntityRow[]).map(mapEntity);
+}
+
+// ── Stablecoins & CBDCs (static JSON for now) ──
+
+export async function getStablecoins(): Promise<Stablecoin[]> {
+  return (stablecoinsData as unknown as Stablecoin[]).sort(
+    (a, b) => b.marketCapBn - a.marketCapBn,
+  );
+}
+
+export async function getStablecoinById(id: string): Promise<Stablecoin | null> {
+  const coin = (stablecoinsData as unknown as Stablecoin[]).find((s) => s.id === id);
+  return coin ?? null;
+}
+
+export async function getCbdcs(): Promise<Cbdc[]> {
+  const order: Record<string, number> = { Launched: 0, Pilot: 1, Development: 2, Research: 3, Cancelled: 4, Inactive: 5 };
+  return (cbdcsData as unknown as Cbdc[]).sort(
+    (a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9),
+  );
+}
+
+export async function getCbdcById(id: string): Promise<Cbdc | null> {
+  const cbdc = (cbdcsData as unknown as Cbdc[]).find((c) => c.id === id);
+  return cbdc ?? null;
 }

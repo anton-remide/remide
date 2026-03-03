@@ -51,6 +51,7 @@ export default function Header() {
   const navLinks = [
     { to: '/jurisdictions', label: 'Jurisdictions' },
     { to: '/entities', label: 'Entities' },
+    { to: '/stablecoins', label: 'Stablecoins & CBDCs' },
   ];
 
   const handleSignOut = async () => {
