@@ -53,38 +53,42 @@ export default function Header() {
       <header ref={headerRef} className={cls.join(' ')}>
         <div className="st-header-inner">
           {/* Left: Logo */}
-          <Link to="/" className="st-header-brand" aria-label="RemiDe Home">
-            <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={28} className="st-header-logo" />
-          </Link>
+          <div className="st-header-left">
+            <Link to="/" className="st-header-brand" aria-label="RemiDe Home">
+              <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={28} className="st-header-logo" />
+            </Link>
+          </div>
 
           {/* Center: Search */}
           <HeaderSearch />
 
           {/* Right: Nav + Auth */}
-          <nav className="st-header-nav">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={location.pathname.startsWith(link.to) ? 'active' : ''}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {user ? (
-              <button className="st-header-auth-btn" onClick={handleSignOut}>
-                <span className="st-header-avatar">
-                  {(user.email ?? '?')[0].toUpperCase()}
-                </span>
-                Sign Out
-              </button>
-            ) : (
-              <>
-                <Link to="/login" className="st-header-auth-link">Sign In</Link>
-                <Link to="/signup" className="st-btn st-btn-sm">Sign Up</Link>
-              </>
-            )}
-          </nav>
+          <div className="st-header-right">
+            <nav className="st-header-nav">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={location.pathname.startsWith(link.to) ? 'active' : ''}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              {user ? (
+                <button className="st-header-auth-btn" onClick={handleSignOut}>
+                  <span className="st-header-avatar">
+                    {(user.email ?? '?')[0].toUpperCase()}
+                  </span>
+                  Sign Out
+                </button>
+              ) : (
+                <>
+                  <Link to="/login" className="st-header-auth-link">Sign In</Link>
+                  <Link to="/signup" className="st-btn st-btn-sm">Sign Up</Link>
+                </>
+              )}
+            </nav>
+          </div>
 
           <button
             className={`st-hamburger${menuOpen ? ' open' : ''}`}

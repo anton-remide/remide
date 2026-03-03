@@ -129,62 +129,58 @@ export default function JurisdictionsPage() {
   }
 
   return (
-    <div ref={revealRef}>
-      {/* Map Frame — toggles inside map on the left */}
-      <div style={{ paddingTop: 64 }}>
-        <div className="st-map-frame" style={{ borderRadius: 0 }}>
-          <WorldMap
-            jurisdictions={safeJurisdictions}
-            selectedRegimes={regimes}
-            selectedTravelRules={travelRules}
-            onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
-            onMiniStatClick={handleMiniStatClick}
-            activeMiniStat={activeMiniStat}
-            colorMode={mapColorMode}
+    <div ref={revealRef} className="st-page" style={{ paddingBottom: 48 }}>
+      {/* Map Frame — rounded corners, inside max-width container */}
+      <div className="st-map-frame">
+        <WorldMap
+          jurisdictions={safeJurisdictions}
+          selectedRegimes={regimes}
+          selectedTravelRules={travelRules}
+          onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
+          onMiniStatClick={handleMiniStatClick}
+          activeMiniStat={activeMiniStat}
+          colorMode={mapColorMode}
+        />
+        {/* Toggles overlay — top-left */}
+        <div className="st-map-toggles-overlay">
+          <SegmentedControl
+            options={[
+              { value: 'regime', label: 'Crypto Regulation' },
+              { value: 'travelRule', label: 'Travel Rule' },
+            ]}
+            value={mapColorMode}
+            onChange={(v) => {
+              setMapColorMode(v as MapColorMode);
+              // Reset mini-stat filter when switching mode
+              if (activeMiniStat) {
+                const oldField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
+                colFilters.clearFilter(oldField);
+                setActiveMiniStat(null);
+              }
+            }}
           />
-          {/* Toggles overlay — top-left */}
-          <div className="st-map-toggles-overlay">
-            <SegmentedControl
-              options={[
-                { value: 'regime', label: 'Crypto Regulation' },
-                { value: 'travelRule', label: 'Travel Rule' },
-              ]}
-              value={mapColorMode}
-              onChange={(v) => {
-                setMapColorMode(v as MapColorMode);
-                // Reset mini-stat filter when switching mode
-                if (activeMiniStat) {
-                  const oldField = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
-                  colFilters.clearFilter(oldField);
-                  setActiveMiniStat(null);
-                }
-              }}
-            />
-          </div>
         </div>
       </div>
 
-      {/* Table — no separate search, use header search */}
-      <div className="st-page" style={{ paddingTop: 24, paddingBottom: 48 }}>
-        <div className="reveal">
-          <DataTable
-            columns={columns}
-            data={table.paginated as (Jurisdiction & Record<string, unknown>)[]}
-            sort={table.sort}
-            onSort={table.toggleSort}
-            onRowClick={(row) => navigate(`/jurisdictions/${(row as unknown as Jurisdiction).code}`)}
-            page={table.page}
-            totalPages={table.totalPages}
-            onPageChange={table.setPage}
-            totalFiltered={table.totalFiltered}
-            totalCount={safeJurisdictions.length}
-            pageSize={table.pageSize}
-            onPageSizeChange={table.setPageSize}
-            search={table.search}
-            onSearchChange={table.setSearch}
-            searchPlaceholder="Search countries..."
-          />
-        </div>
+      {/* Table */}
+      <div style={{ marginTop: 24 }} className="reveal">
+        <DataTable
+          columns={columns}
+          data={table.paginated as (Jurisdiction & Record<string, unknown>)[]}
+          sort={table.sort}
+          onSort={table.toggleSort}
+          onRowClick={(row) => navigate(`/jurisdictions/${(row as unknown as Jurisdiction).code}`)}
+          page={table.page}
+          totalPages={table.totalPages}
+          onPageChange={table.setPage}
+          totalFiltered={table.totalFiltered}
+          totalCount={safeJurisdictions.length}
+          pageSize={table.pageSize}
+          onPageSizeChange={table.setPageSize}
+          search={table.search}
+          onSearchChange={table.setSearch}
+          searchPlaceholder="Search countries..."
+        />
       </div>
     </div>
   );

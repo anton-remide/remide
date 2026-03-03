@@ -365,12 +365,25 @@ ul {
 }
 
 .st-header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   width: 100%;
   max-width: 100%;
   padding: 0 32px;
   gap: 24px;
+}
+
+.st-header-left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.st-header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .st-header-brand {
@@ -1473,8 +1486,9 @@ ul {
 .st-map-frame {
   position: relative;
   border: 1px solid rgba(10, 37, 64, 0.08);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(10, 37, 64, 0.04);
 }
 
 .st-map-toolbar {
@@ -1990,9 +2004,8 @@ a, button, input, select, textarea {
 
 .st-header-search-wrapper {
   position: relative;
-  flex: 1;
+  width: 100%;
   max-width: 420px;
-  margin: 0 auto;
 }
 
 .st-header-search {
@@ -2187,15 +2200,22 @@ a, button, input, select, textarea {
 /* Mobile adjustments for header */
 @media (max-width: 767px) {
   .st-header-inner {
+    display: flex;
     padding: 0 16px;
     gap: 12px;
+  }
+
+  .st-header-left {
+    flex: 1;
+  }
+
+  .st-header-right {
+    flex: 0;
   }
 
   .st-header-search-wrapper {
     display: none;
   }
-
-  /* brand-text removed — using single SVG logo */
 
   .st-header-nav {
     gap: 16px;
