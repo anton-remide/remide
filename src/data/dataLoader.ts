@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase';
-import type { Entity, Jurisdiction, Stablecoin, Cbdc, StablecoinJurisdiction } from '../types';
+import type {
+  Entity, Jurisdiction, Stablecoin, Cbdc, StablecoinJurisdiction,
+  StablecoinIssuer, StablecoinLaw, StablecoinEvent,
+  IssuerSubsidiary, IssuerLicense, StablecoinBlockchain,
+} from '../types';
 
 // ── Snake_case DB row → camelCase TypeScript ──
 
@@ -14,6 +18,21 @@ interface JurisdictionRow {
   sources: { name: string; url: string }[] | string;
   notes: string;
   description: string;
+  /* Stride stablecoin columns */
+  stablecoin_stage: number | null;
+  is_stablecoin_specific: boolean | null;
+  yield_allowed: boolean | null;
+  fiat_backed: number | null;
+  fiat_alert: string | null;
+  crypto_backed: number | null;
+  crypto_alert: string | null;
+  commodity_backed: number | null;
+  commodity_alert: string | null;
+  algorithm_backed: number | null;
+  algorithm_alert: string | null;
+  stablecoin_description: string | null;
+  regulator_description: string | null;
+  currency: string | null;
 }
 
 interface EntityRawData {
@@ -53,6 +72,21 @@ function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
     sources: typeof row.sources === 'string' ? JSON.parse(row.sources) : row.sources,
     notes: row.notes,
     description: row.description ?? '',
+    /* Stride stablecoin regulatory data */
+    stablecoinStage: row.stablecoin_stage ?? null,
+    isStablecoinSpecific: row.is_stablecoin_specific ?? null,
+    yieldAllowed: row.yield_allowed ?? null,
+    fiatBacked: row.fiat_backed ?? null,
+    fiatAlert: row.fiat_alert ?? '',
+    cryptoBacked: row.crypto_backed ?? null,
+    cryptoAlert: row.crypto_alert ?? '',
+    commodityBacked: row.commodity_backed ?? null,
+    commodityAlert: row.commodity_alert ?? '',
+    algorithmBacked: row.algorithm_backed ?? null,
+    algorithmAlert: row.algorithm_alert ?? '',
+    stablecoinDescription: row.stablecoin_description ?? '',
+    regulatorDescription: row.regulator_description ?? '',
+    currency: row.currency ?? '',
   };
 }
 
@@ -221,6 +255,11 @@ interface StablecoinRow {
   regulatory_status: string;
   website: string;
   notes: string;
+  /* Stride enrichment */
+  whitepaper_url: string | null;
+  coinmarketcap_id: number | null;
+  collateral_method: string | null;
+  issuer_id: number | null;
 }
 
 interface StablecoinJurisdictionRow {
@@ -270,6 +309,11 @@ function mapStablecoin(row: StablecoinRow, jurisdictions: StablecoinJurisdiction
     website: row.website ?? '',
     notes: row.notes ?? '',
     majorJurisdictions: jurisdictions,
+    /* Stride enrichment */
+    whitepaperUrl: row.whitepaper_url ?? '',
+    coinmarketcapId: row.coinmarketcap_id ?? null,
+    collateralMethod: row.collateral_method ?? '',
+    issuerId: row.issuer_id ?? null,
   };
 }
 
@@ -416,4 +460,263 @@ export async function getCbdcsByCountry(code: string): Promise<Cbdc[]> {
 
   if (error) throw new Error(`Failed to load CBDCs: ${error.message}`);
   return (data as CbdcRow[]).map(mapCbdc);
+}
+
+// ── Stride: Stablecoin Issuers ──
+
+interface StablecoinIssuerRow {
+  id: number;
+  stride_id: number;
+  name: string;
+  official_name: string;
+  former_names: string;
+  lei: string;
+  cik: string;
+  auditor: string;
+  description: string;
+  assurance_frequency: string;
+  redemption_policy: string;
+  website: string;
+  country_code: string;
+  country: string;
+  is_verified: boolean;
+}
+
+function mapIssuer(row: StablecoinIssuerRow): StablecoinIssuer {
+  return {
+    id: row.id,
+    strideId: row.stride_id,
+    name: row.name,
+    officialName: row.official_name ?? '',
+    formerNames: row.former_names ?? '',
+    lei: row.lei ?? '',
+    cik: row.cik ?? '',
+    auditor: row.auditor ?? '',
+    description: row.description ?? '',
+    assuranceFrequency: row.assurance_frequency ?? '',
+    redemptionPolicy: row.redemption_policy ?? '',
+    website: row.website ?? '',
+    countryCode: row.country_code ?? '',
+    country: row.country ?? '',
+    isVerified: row.is_verified ?? false,
+  };
+}
+
+export async function getStablecoinIssuers(): Promise<StablecoinIssuer[]> {
+  const { data, error } = await supabase
+    .from('stablecoin_issuers')
+    .select('*')
+    .order('name');
+
+  if (error) throw new Error(`Failed to load stablecoin issuers: ${error.message}`);
+  return (data as StablecoinIssuerRow[]).map(mapIssuer);
+}
+
+export async function getStablecoinIssuerByStrideId(strideId: number): Promise<StablecoinIssuer | null> {
+  const { data, error } = await supabase
+    .from('stablecoin_issuers')
+    .select('*')
+    .eq('stride_id', strideId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(`Failed to load issuer: ${error.message}`);
+  }
+  return mapIssuer(data as StablecoinIssuerRow);
+}
+
+// ── Stride: Stablecoin Laws ──
+
+interface StablecoinLawRow {
+  id: number;
+  stride_id: number;
+  country_code: string;
+  title: string;
+  enacted_date: string | null;
+  description: string;
+  citation_url: string;
+}
+
+function mapLaw(row: StablecoinLawRow): StablecoinLaw {
+  return {
+    id: row.id,
+    strideId: row.stride_id,
+    countryCode: row.country_code,
+    title: row.title,
+    enactedDate: row.enacted_date,
+    description: row.description ?? '',
+    citationUrl: row.citation_url ?? '',
+  };
+}
+
+export async function getStablecoinLawsByCountry(code: string): Promise<StablecoinLaw[]> {
+  const { data, error } = await supabase
+    .from('stablecoin_laws')
+    .select('*')
+    .eq('country_code', code.toUpperCase())
+    .order('enacted_date', { ascending: false });
+
+  if (error) throw new Error(`Failed to load stablecoin laws: ${error.message}`);
+  return (data as StablecoinLawRow[]).map(mapLaw);
+}
+
+// ── Stride: Regulatory Events ──
+
+interface StablecoinEventRow {
+  id: number;
+  stride_id: number;
+  country_code: string;
+  event_date: string | null;
+  event_type: number | null;
+  title: string;
+  details: string;
+  citation_url: string;
+}
+
+function mapEvent(row: StablecoinEventRow): StablecoinEvent {
+  return {
+    id: row.id,
+    strideId: row.stride_id,
+    countryCode: row.country_code,
+    eventDate: row.event_date,
+    eventType: row.event_type,
+    title: row.title,
+    details: row.details ?? '',
+    citationUrl: row.citation_url ?? '',
+  };
+}
+
+export async function getStablecoinEventsByCountry(code: string): Promise<StablecoinEvent[]> {
+  const { data, error } = await supabase
+    .from('stablecoin_events')
+    .select('*')
+    .eq('country_code', code.toUpperCase())
+    .order('event_date', { ascending: false });
+
+  if (error) throw new Error(`Failed to load stablecoin events: ${error.message}`);
+  return (data as StablecoinEventRow[]).map(mapEvent);
+}
+
+// ── Stride: Issuer Subsidiaries ──
+
+interface IssuerSubsidiaryRow {
+  id: number;
+  stride_id: number;
+  issuer_stride_id: number;
+  name: string;
+  lei: string;
+  country_code: string;
+  country: string;
+  can_issue: boolean;
+  incorporation_date: string | null;
+  description: string;
+}
+
+function mapSubsidiary(row: IssuerSubsidiaryRow): IssuerSubsidiary {
+  return {
+    id: row.id,
+    strideId: row.stride_id,
+    issuerStrideId: row.issuer_stride_id,
+    name: row.name,
+    lei: row.lei ?? '',
+    countryCode: row.country_code ?? '',
+    country: row.country ?? '',
+    canIssue: row.can_issue ?? false,
+    incorporationDate: row.incorporation_date,
+    description: row.description ?? '',
+  };
+}
+
+export async function getSubsidiariesByIssuer(issuerStrideId: number): Promise<IssuerSubsidiary[]> {
+  const { data, error } = await supabase
+    .from('issuer_subsidiaries')
+    .select('*')
+    .eq('issuer_stride_id', issuerStrideId)
+    .order('name');
+
+  if (error) throw new Error(`Failed to load subsidiaries: ${error.message}`);
+  return (data as IssuerSubsidiaryRow[]).map(mapSubsidiary);
+}
+
+// ── Stride: Issuer Licenses ──
+
+interface IssuerLicenseRow {
+  id: number;
+  stride_id: number;
+  issuer_stride_id: number;
+  title: string;
+  detail: string;
+  can_issue: boolean;
+  country_code: string;
+  country: string;
+  subsidiary_name: string;
+}
+
+function mapLicense(row: IssuerLicenseRow): IssuerLicense {
+  return {
+    id: row.id,
+    strideId: row.stride_id,
+    issuerStrideId: row.issuer_stride_id,
+    title: row.title,
+    detail: row.detail ?? '',
+    canIssue: row.can_issue ?? false,
+    countryCode: row.country_code ?? '',
+    country: row.country ?? '',
+    subsidiaryName: row.subsidiary_name ?? '',
+  };
+}
+
+export async function getLicensesByIssuer(issuerStrideId: number): Promise<IssuerLicense[]> {
+  const { data, error } = await supabase
+    .from('issuer_licenses')
+    .select('*')
+    .eq('issuer_stride_id', issuerStrideId)
+    .order('title');
+
+  if (error) throw new Error(`Failed to load licenses: ${error.message}`);
+  return (data as IssuerLicenseRow[]).map(mapLicense);
+}
+
+// ── Stride: Blockchain Deployments ──
+
+interface StablecoinBlockchainRow {
+  id: number;
+  stablecoin_ticker: string;
+  blockchain_name: string;
+  contract_address: string;
+  deploy_date: string | null;
+  stride_blockchain_id: number | null;
+}
+
+function mapBlockchain(row: StablecoinBlockchainRow): StablecoinBlockchain {
+  return {
+    id: row.id,
+    stablecoinTicker: row.stablecoin_ticker,
+    blockchainName: row.blockchain_name,
+    contractAddress: row.contract_address ?? '',
+    deployDate: row.deploy_date,
+  };
+}
+
+export async function getBlockchainsByStablecoin(ticker: string): Promise<StablecoinBlockchain[]> {
+  const { data, error } = await supabase
+    .from('stablecoin_blockchains')
+    .select('*')
+    .eq('stablecoin_ticker', ticker.toUpperCase())
+    .order('blockchain_name');
+
+  if (error) throw new Error(`Failed to load blockchain deployments: ${error.message}`);
+  return (data as StablecoinBlockchainRow[]).map(mapBlockchain);
+}
+
+export async function getLicensesByCountry(code: string): Promise<IssuerLicense[]> {
+  const { data, error } = await supabase
+    .from('issuer_licenses')
+    .select('*')
+    .eq('country_code', code.toUpperCase())
+    .order('title');
+
+  if (error) throw new Error(`Failed to load licenses: ${error.message}`);
+  return (data as IssuerLicenseRow[]).map(mapLicense);
 }

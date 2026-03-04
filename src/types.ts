@@ -35,6 +35,21 @@ export interface Jurisdiction {
   sources: Source[];
   notes: string;
   description: string;
+  /* ── Stride stablecoin regulatory data ── */
+  stablecoinStage: number | null;        // 0=No Framework, 1=Developing, 2=In Progress, 3=Live
+  isStablecoinSpecific: boolean | null;
+  yieldAllowed: boolean | null;
+  fiatBacked: number | null;             // 0=Prohibited, 1=Permitted, 2=Unclear
+  fiatAlert: string;
+  cryptoBacked: number | null;
+  cryptoAlert: string;
+  commodityBacked: number | null;
+  commodityAlert: string;
+  algorithmBacked: number | null;
+  algorithmAlert: string;
+  stablecoinDescription: string;
+  regulatorDescription: string;
+  currency: string;
 }
 
 export type RegimeType =
@@ -118,6 +133,11 @@ export interface Stablecoin {
   website: string;
   notes: string;
   majorJurisdictions: StablecoinJurisdiction[];
+  /* ── Stride enrichment ── */
+  whitepaperUrl: string;
+  coinmarketcapId: number | null;
+  collateralMethod: string;
+  issuerId: number | null;
 }
 
 /* ── CBDC types ── */
@@ -150,6 +170,90 @@ export interface Cbdc {
   offlineCapable: boolean;
   notes: string;
   sources: Source[];
+}
+
+/* ── Stride: Stablecoin Issuers ── */
+
+export interface StablecoinIssuer {
+  id: number;
+  strideId: number;
+  name: string;
+  officialName: string;
+  formerNames: string;
+  lei: string;
+  cik: string;
+  auditor: string;
+  description: string;
+  assuranceFrequency: string;
+  redemptionPolicy: string;
+  website: string;
+  countryCode: string;
+  country: string;
+  isVerified: boolean;
+}
+
+/* ── Stride: Stablecoin Laws ── */
+
+export interface StablecoinLaw {
+  id: number;
+  strideId: number;
+  countryCode: string;
+  title: string;
+  enactedDate: string | null;
+  description: string;
+  citationUrl: string;
+}
+
+/* ── Stride: Regulatory Events ── */
+
+export interface StablecoinEvent {
+  id: number;
+  strideId: number;
+  countryCode: string;
+  eventDate: string | null;
+  eventType: number | null; // 2=Legislative, 3=Regulatory/News
+  title: string;
+  details: string;
+  citationUrl: string;
+}
+
+/* ── Stride: Issuer Subsidiaries ── */
+
+export interface IssuerSubsidiary {
+  id: number;
+  strideId: number;
+  issuerStrideId: number;
+  name: string;
+  lei: string;
+  countryCode: string;
+  country: string;
+  canIssue: boolean;
+  incorporationDate: string | null;
+  description: string;
+}
+
+/* ── Stride: Issuer Licenses ── */
+
+export interface IssuerLicense {
+  id: number;
+  strideId: number;
+  issuerStrideId: number;
+  title: string;
+  detail: string;
+  canIssue: boolean;
+  countryCode: string;
+  country: string;
+  subsidiaryName: string;
+}
+
+/* ── Stride: Blockchain Deployments ── */
+
+export interface StablecoinBlockchain {
+  id: number;
+  stablecoinTicker: string;
+  blockchainName: string;
+  contractAddress: string;
+  deployDate: string | null;
 }
 
 export type SortDirection = 'asc' | 'desc' | null;
