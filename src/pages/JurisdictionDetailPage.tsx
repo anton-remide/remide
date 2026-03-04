@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   getJurisdictionByCode, getEntitiesByCountry, getStablecoinsByCountry,
   getCbdcsByCountry, getStablecoinLawsByCountry, getStablecoinEventsByCountry,
-  getLicensesByCountry,
+  getLicensesByCountry, getJurisdictions, getCbdcs,
 } from '../data/dataLoader';
-import type { Entity, StablecoinLaw, StablecoinEvent, IssuerLicense } from '../types';
+import { expandRegionalCode } from '../data/regionCodes';
+import type { Entity, Jurisdiction, Cbdc, StablecoinLaw, StablecoinEvent, IssuerLicense } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS, STABLECOIN_STAGE_COLORS, CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -15,7 +16,8 @@ import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
-import WorldMap from '../components/map/WorldMap';
+import SegmentedControl from '../components/ui/SegmentedControl';
+import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
 
 /* ── Helpers ── */
 
@@ -106,11 +108,45 @@ export default function JurisdictionDetailPage() {
   const countryEvents = useMemo(() => eventsData ?? [], [eventsData]);
   const countryLicenses = useMemo(() => licensesData ?? [], [licensesData]);
 
-  // Mini-map needs just this jurisdiction for coloring
-  const jurisdictionList = useMemo(
-    () => jurisdiction ? [jurisdiction] : [],
-    [jurisdiction],
-  );
+  // Mini-map: all jurisdictions + CBDCs for full map coloring
+  const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
+  const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
+  const safeAllJurisdictions = allJurisdictions ?? [];
+
+  const [mapColorMode, setMapColorMode] = useState<MapColorMode>('regime');
+
+  // Stablecoin regulatory stage per country
+  const STAGE_MAP_LABELS: Record<number, string> = {
+    3: 'Live', 2: 'In Progress', 1: 'Developing', 0: 'No Framework',
+  };
+  const stablecoinStatuses = useMemo(() => {
+    const m = new Map<string, string>();
+    safeAllJurisdictions.forEach((j: Jurisdiction) => {
+      if (j.stablecoinStage !== null && j.stablecoinStage !== undefined) {
+        m.set(j.code.toUpperCase(), STAGE_MAP_LABELS[j.stablecoinStage] ?? 'No Data');
+      }
+    });
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeAllJurisdictions]);
+
+  // CBDC statuses per country
+  const cbdcStatuses = useMemo(() => {
+    const m = new Map<string, string>();
+    (allCbdcsForMap ?? []).forEach((c: Cbdc) => {
+      const codes = expandRegionalCode(c.countryCode);
+      codes.forEach((cc) => { if (!m.has(cc)) m.set(cc, c.status); });
+    });
+    return m;
+  }, [allCbdcsForMap]);
+
+  // Choose which map statuses to show
+  const mapStatuses = mapColorMode === 'stablecoin' ? stablecoinStatuses
+    : mapColorMode === 'cbdc' ? cbdcStatuses
+    : undefined;
+
+  // For regime/travelRule modes, pass all jurisdictions; for stablecoin/cbdc, also need all
+  const jurisdictionList = safeAllJurisdictions.length > 0 ? safeAllJurisdictions : (jurisdiction ? [jurisdiction] : []);
 
   const filterFn = useCallback((e: Entity, q: string) => {
     return e.name.toLowerCase().includes(q) || (e.licenseType ?? '').toLowerCase().includes(q);
@@ -244,14 +280,28 @@ export default function JurisdictionDetailPage() {
         </div>
 
         {/* Mini map — same height as info card */}
-        <div className="st-detail-hero-map">
+        <div className="st-detail-hero-map" style={{ position: 'relative' }}>
           <WorldMap
             height="100%"
             jurisdictions={jurisdictionList}
             compact
             focusCountry={code?.toUpperCase()}
+            colorMode={mapColorMode}
+            stablecoinStatuses={mapStatuses}
             onCountryClick={(c) => c !== code?.toUpperCase() && navigate(`/jurisdictions/${c}`)}
           />
+          <div className="st-map-toggles-overlay" style={{ top: 8, left: 8 }}>
+            <SegmentedControl
+              options={[
+                { value: 'regime', label: 'Regulation' },
+                { value: 'travelRule', label: 'Travel Rule' },
+                { value: 'stablecoin', label: 'Stablecoins' },
+                { value: 'cbdc', label: 'CBDCs' },
+              ]}
+              value={mapColorMode}
+              onChange={(v) => setMapColorMode(v as MapColorMode)}
+            />
+          </div>
         </div>
       </div>
 

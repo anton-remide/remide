@@ -20,18 +20,6 @@ import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
 
 type TabMode = 'stablecoins' | 'cbdcs';
 
-/* ── Stat pill ── */
-function MiniStat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="st-card clip-lg" style={{ textAlign: 'center', padding: '16px 20px', minWidth: 120 }}>
-      <div style={{ fontFamily: 'var(--font2)', fontSize: 28, fontWeight: 700, lineHeight: 1 }}>
-        {typeof value === 'number' ? value.toLocaleString() : value}
-      </div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>{label}</div>
-    </div>
-  );
-}
-
 /* ── Stablecoins Table ── */
 function StablecoinsTab() {
   const navigate = useNavigate();
@@ -104,8 +92,19 @@ function StablecoinsTab() {
       sortable: true,
     },
     {
+      key: 'issuerCountry',
+      label: 'Country',
+      sortable: true,
+      filterable: true,
+      filterValues: colFilters.getUniqueValues('issuerCountry'),
+      selectedFilters: colFilters.filters['issuerCountry'] ?? [],
+      onFilterApply: colFilters.applyFilter,
+      onFilterClear: colFilters.clearFilter,
+      render: (r) => r.issuerCountry || '—',
+    },
+    {
       key: 'regulatoryStatus',
-      label: 'Regulatory Status',
+      label: 'Reg. Status',
       sortable: true,
       render: (r) => (
         <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
@@ -128,20 +127,8 @@ function StablecoinsTab() {
     );
   }
 
-  // Stats
-  const totalMktCap = safeData.reduce((s, c) => s + c.marketCapBn, 0);
-  const fiatBacked = safeData.filter((s) => s.type === 'Fiat-Backed').length;
-  const micaCompliant = safeData.filter((s) => s.regulatoryStatus.toLowerCase().includes('mica')).length;
-
   return (
     <>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-        <MiniStat label="Stablecoins Tracked" value={safeData.length} />
-        <MiniStat label="Total Market Cap" value={`$${totalMktCap.toFixed(0)}B`} />
-        <MiniStat label="Fiat-Backed" value={fiatBacked} />
-        <MiniStat label="MiCA Licensed" value={micaCompliant} />
-      </div>
-
       <DataTable
         columns={columns}
         data={table.paginated as (Stablecoin & Record<string, unknown>)[]}
@@ -253,20 +240,8 @@ function CbdcsTab() {
     );
   }
 
-  // Stats
-  const launched = safeData.filter((c) => c.status === 'Launched').length;
-  const pilot = safeData.filter((c) => c.status === 'Pilot').length;
-  const crossBorder = safeData.filter((c) => c.crossBorder).length;
-
   return (
     <>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-        <MiniStat label="CBDCs Tracked" value={safeData.length} />
-        <MiniStat label="Launched" value={launched} />
-        <MiniStat label="In Pilot" value={pilot} />
-        <MiniStat label="Cross-Border" value={crossBorder} />
-      </div>
-
       <DataTable
         columns={columns}
         data={table.paginated as (Cbdc & Record<string, unknown>)[]}
@@ -375,20 +350,6 @@ export default function StablecoinsPage() {
         </p>
       </div>
 
-      <div style={{ marginBottom: 24 }}>
-        <SegmentedControl
-          options={[
-            { value: 'stablecoins', label: 'Stablecoins' },
-            { value: 'cbdcs', label: 'CBDCs' },
-          ]}
-          value={tab}
-          onChange={(v) => {
-            setTab(v as TabMode);
-            setActiveMiniStats([]);
-          }}
-        />
-      </div>
-
       {/* Map */}
       <div className="reveal st-map-frame" style={{ marginBottom: 24 }}>
         <WorldMap
@@ -400,6 +361,20 @@ export default function StablecoinsPage() {
           onMiniStatClick={handleMiniStatClick}
           activeMiniStats={activeMiniStats}
         />
+        {/* Toggles overlay — top-left */}
+        <div className="st-map-toggles-overlay">
+          <SegmentedControl
+            options={[
+              { value: 'stablecoins', label: 'Stablecoins' },
+              { value: 'cbdcs', label: 'CBDCs' },
+            ]}
+            value={tab}
+            onChange={(v) => {
+              setTab(v as TabMode);
+              setActiveMiniStats([]);
+            }}
+          />
+        </div>
       </div>
 
       {tab === 'stablecoins' ? <StablecoinsTab /> : <CbdcsTab />}
