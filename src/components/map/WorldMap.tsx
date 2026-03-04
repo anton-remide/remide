@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 import { Plus, Minus } from 'lucide-react';
-import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_MAP_COLORS, CBDC_MAP_COLORS } from '../../theme';
+import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_STAGE_MAP_COLORS, CBDC_MAP_COLORS } from '../../theme';
 import { numericToAlpha2 } from '../../data/isoMapping';
 import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../../types';
 
@@ -44,14 +44,11 @@ function buildFillExpression(mode: MapColorMode): maplibregl.ExpressionSpecifica
   if (mode === 'stablecoin') {
     return [
       'match', ['get', 'stablecoinStatus'],
-      'Compliant', STABLECOIN_MAP_COLORS['Compliant'],
-      'Allowed', STABLECOIN_MAP_COLORS['Allowed'],
-      'Pending', STABLECOIN_MAP_COLORS['Pending'],
-      'Restricted', STABLECOIN_MAP_COLORS['Restricted'],
-      'Non-Compliant', STABLECOIN_MAP_COLORS['Non-Compliant'],
-      'Discontinued', STABLECOIN_MAP_COLORS['Discontinued'],
-      'Unclear', STABLECOIN_MAP_COLORS['Unclear'],
-      STABLECOIN_MAP_COLORS['None'],
+      'Live', STABLECOIN_STAGE_MAP_COLORS['Live'],
+      'In Progress', STABLECOIN_STAGE_MAP_COLORS['In Progress'],
+      'Developing', STABLECOIN_STAGE_MAP_COLORS['Developing'],
+      'No Framework', STABLECOIN_STAGE_MAP_COLORS['No Framework'],
+      STABLECOIN_STAGE_MAP_COLORS['No Data'],
     ];
   }
   if (mode === 'travelRule') {
@@ -129,15 +126,14 @@ export default function WorldMap({
       const statuses = stablecoinStatuses ?? new Map<string, string>();
       const countByStatus: Record<string, number> = {};
       jurisdictions.forEach((j) => {
-        const st = statuses.get(j.code.toUpperCase()) ?? 'None';
+        const st = statuses.get(j.code.toUpperCase()) ?? 'No Data';
         countByStatus[st] = (countByStatus[st] ?? 0) + 1;
       });
       return [
-        { value: (countByStatus['Compliant'] ?? 0) + (countByStatus['Allowed'] ?? 0), label: 'compliant / allowed' },
-        { value: countByStatus['Pending'] ?? 0, label: 'pending' },
-        { value: countByStatus['Restricted'] ?? 0, label: 'restricted' },
-        { value: (countByStatus['Non-Compliant'] ?? 0) + (countByStatus['Discontinued'] ?? 0), label: 'non-compliant' },
-        { value: (countByStatus['Unclear'] ?? 0) + (countByStatus['None'] ?? 0), label: 'no data' },
+        { value: countByStatus['Live'] ?? 0, label: 'live' },
+        { value: countByStatus['In Progress'] ?? 0, label: 'in progress' },
+        { value: countByStatus['Developing'] ?? 0, label: 'developing' },
+        { value: countByStatus['No Framework'] ?? 0, label: 'no framework' },
       ];
     }
     if (colorMode === 'travelRule') {
@@ -224,7 +220,7 @@ export default function WorldMap({
               entityCount: j?.entityCount ?? 0,
               regulator: j?.regulator ?? '',
               countryName: j?.name ?? (f.properties as Record<string, string>)?.name ?? '',
-              stablecoinStatus: stablecoinStatuses?.get(alpha2) ?? 'None',
+              stablecoinStatus: stablecoinStatuses?.get(alpha2) ?? 'No Data',
             },
           };
         });
@@ -279,7 +275,7 @@ export default function WorldMap({
       const alpha2 = (f.properties as Record<string, unknown>)?.alpha2 as string;
       return {
         ...f,
-        properties: { ...f.properties, stablecoinStatus: stablecoinStatuses.get(alpha2) ?? 'None' },
+        properties: { ...f.properties, stablecoinStatus: stablecoinStatuses.get(alpha2) ?? 'No Data' },
       };
     });
     featuresRef.current = updated as GeoJSON.Feature[];
@@ -303,8 +299,8 @@ export default function WorldMap({
     stablecoinStatuses.forEach((status, code) => {
       if (selectedStablecoinStatuses.includes(status)) codes.add(code);
     });
-    // "None" status — countries not in stablecoinStatuses
-    if (selectedStablecoinStatuses.includes('None')) {
+    // "No Data" status — countries not in stablecoinStatuses
+    if (selectedStablecoinStatuses.includes('No Data')) {
       jurisdictions.forEach((j) => {
         if (!stablecoinStatuses.has(j.code.toUpperCase())) codes.add(j.code.toUpperCase());
       });
@@ -376,12 +372,12 @@ export default function WorldMap({
           const travelRule = f.properties?.travelRule || '';
           const entities = f.properties?.entityCount || 0;
           const regulator = f.properties?.regulator || '';
-          const stablecoinStatus = f.properties?.stablecoinStatus || 'None';
+          const stablecoinStatus = f.properties?.stablecoinStatus || 'No Data';
           tooltip.innerHTML = `
             <strong>${name}</strong>
             <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
               ${regime} · ${travelRule}
-              <br/>${entities} entities${stablecoinStatus !== 'None' ? ` · Stablecoins: ${stablecoinStatus}` : ''}
+              <br/>${entities} entities${stablecoinStatus !== 'No Data' ? ` · Stablecoins: ${stablecoinStatus}` : ''}
               ${regulator ? `<br/>${regulator}` : ''}
             </div>
           `;
@@ -440,14 +436,14 @@ export default function WorldMap({
   const legendColors = colorMode === 'cbdc'
     ? CBDC_MAP_COLORS
     : colorMode === 'stablecoin'
-      ? STABLECOIN_MAP_COLORS
+      ? STABLECOIN_STAGE_MAP_COLORS
       : colorMode === 'travelRule'
         ? TRAVEL_RULE_MAP_COLORS
         : REGIME_COLORS;
   const legendTitle = colorMode === 'cbdc'
     ? 'CBDC Status'
     : colorMode === 'stablecoin'
-      ? 'Stablecoin Status'
+      ? 'Stablecoin Regulation'
       : colorMode === 'travelRule'
         ? 'Travel Rule Status'
         : 'Regulatory Regime';
@@ -462,15 +458,13 @@ export default function WorldMap({
     Unclear: 'Regulatory status is ambiguous, under development, or not yet clearly defined.',
     Enforced: 'FATF Travel Rule is actively enforced by regulators. VASPs must share originator/beneficiary data.',
     Legislated: 'Travel Rule has been passed into law, but active enforcement may still be developing.',
-    'In Progress': 'The jurisdiction is working on implementing Travel Rule requirements.',
+    'In Progress': 'Regulatory framework is being implemented or in legislative process.',
     'Not Implemented': 'No Travel Rule requirements currently in place.',
     'N/A': 'Travel Rule status is not applicable or not tracked for this jurisdiction.',
-    Compliant: 'Stablecoins are fully compliant with local regulations.',
-    Allowed: 'Stablecoins are permitted and available on regulated exchanges.',
-    Pending: 'Stablecoin regulatory framework is under development.',
-    Restricted: 'Stablecoins face usage restrictions or regulatory scrutiny.',
-    'Non-Compliant': 'Stablecoins do not meet local regulatory requirements.',
-    Discontinued: 'Stablecoin operations have been discontinued in this jurisdiction.',
+    Live: 'Stablecoin-specific regulatory framework is active and enforced.',
+    Developing: 'Early-stage development of stablecoin regulatory framework.',
+    'No Framework': 'No specific stablecoin regulatory framework in place.',
+    'No Data': 'Stablecoin regulatory status is not tracked for this jurisdiction.',
     Launched: 'CBDC is fully launched and available for public use.',
     Pilot: 'CBDC is in pilot/trial phase with limited rollout.',
     Development: 'CBDC is under active technical development.',

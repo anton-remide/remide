@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getJurisdictions, getStablecoins } from '../data/dataLoader';
-import { expandRegionalCode } from '../data/regionCodes';
-import type { Jurisdiction, RegimeType, TravelRuleStatus, Stablecoin, StablecoinJurisdictionStatus } from '../types';
+import { getJurisdictions } from '../data/dataLoader';
+import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -33,7 +32,6 @@ export default function JurisdictionsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: allJurisdictions, loading: jLoading, error, refetch } = useSupabaseQuery(getJurisdictions);
-  const { data: allStablecoins } = useSupabaseQuery(getStablecoins);
   const loading = jLoading;
   const revealRef = useReveal(loading);
 
@@ -42,28 +40,21 @@ export default function JurisdictionsPage() {
 
   const safeJurisdictions = allJurisdictions ?? [];
 
-  // Build best stablecoin regulatory status per country (from Supabase data)
-  // Priority: Compliant > Allowed > Pending > Restricted > Non-Compliant > Discontinued > Unclear
+  // Stablecoin regulatory stage per country (Stride data: 0=No Framework, 1=Developing, 2=In Progress, 3=Live)
+  const stageLabels: Record<number, string> = {
+    3: 'Live', 2: 'In Progress', 1: 'Developing', 0: 'No Framework',
+  };
+
   const stablecoinStatuses = useMemo(() => {
-    const priority: Record<string, number> = {
-      Compliant: 1, Allowed: 2, Pending: 3, Restricted: 4,
-      'Non-Compliant': 5, Discontinued: 6, Unclear: 7,
-    };
     const m = new Map<string, string>();
-    (allStablecoins ?? []).forEach((s: Stablecoin) => {
-      s.majorJurisdictions.forEach((j) => {
-        // Expand "EU" → 27 member states so map renders correctly
-        const codes = expandRegionalCode(j.code);
-        codes.forEach((code) => {
-          const current = m.get(code);
-          const currentP = current ? (priority[current] ?? 99) : 99;
-          const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
-          if (newP < currentP) m.set(code, j.status);
-        });
-      });
+    safeJurisdictions.forEach((j: Jurisdiction) => {
+      if (j.stablecoinStage !== null && j.stablecoinStage !== undefined) {
+        m.set(j.code.toUpperCase(), stageLabels[j.stablecoinStage] ?? 'No Data');
+      }
     });
     return m;
-  }, [allStablecoins]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeJurisdictions]);
 
   // Column filters hook (works on full dataset)
   const colFilters = useColumnFilters<Jurisdiction & Record<string, unknown>>(
@@ -81,12 +72,11 @@ export default function JurisdictionsPage() {
     'none / unclear': ['None', 'Unclear'],
     enforced: ['Enforced'], legislated: ['Legislated'], 'in progress': ['In Progress'],
     'not implemented': ['Not Implemented', 'N/A'],
-    // Stablecoin status labels → status values
-    'compliant / allowed': ['Compliant', 'Allowed'],
-    pending: ['Pending'],
-    restricted: ['Restricted'],
-    'non-compliant': ['Non-Compliant', 'Discontinued'],
-    'no data': ['Unclear', 'None'],
+    // Stablecoin stage labels → stage values (Stride)
+    live: ['Live'],
+    developing: ['Developing'],
+    'no framework': ['No Framework'],
+    'no data': ['No Data'],
   };
 
   // Derive stablecoin status filters from activeMiniStats when in stablecoin mode

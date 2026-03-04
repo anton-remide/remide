@@ -1,8 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCallback, useMemo } from 'react';
-import { getJurisdictionByCode, getEntitiesByCountry, getStablecoinsByCountry, getCbdcsByCountry } from '../data/dataLoader';
-import type { Entity } from '../types';
-import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS } from '../theme';
+import {
+  getJurisdictionByCode, getEntitiesByCountry, getStablecoinsByCountry,
+  getCbdcsByCountry, getStablecoinLawsByCountry, getStablecoinEventsByCountry,
+  getLicensesByCountry,
+} from '../data/dataLoader';
+import type { Entity, StablecoinLaw, StablecoinEvent, IssuerLicense } from '../types';
+import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS, STABLECOIN_STAGE_COLORS, CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
@@ -12,6 +16,38 @@ import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
 import WorldMap from '../components/map/WorldMap';
+
+/* ── Helpers ── */
+
+const STAGE_LABELS: Record<number, string> = {
+  3: 'Live', 2: 'In Progress', 1: 'Developing', 0: 'No Framework',
+};
+
+const BACKING_LABELS: Record<number, string> = {
+  1: 'Permitted', 0: 'Prohibited', 2: 'Unclear',
+};
+
+const BACKING_COLORS: Record<number, { color: string; bg: string }> = {
+  1: { color: '#2B7A4B', bg: '#ECFDF3' },  // Permitted — green
+  0: { color: '#A93F3F', bg: '#FFF0F0' },  // Prohibited — red
+  2: { color: '#586B82', bg: '#F1F5F9' },  // Unclear — gray
+};
+
+function BackingBadge({ value, alert }: { value: number | null; alert?: string }) {
+  if (value === null) return <span style={{ color: 'var(--text-muted)' }}>—</span>;
+  const c = BACKING_COLORS[value] ?? { color: '#586B82', bg: '#F1F5F9' };
+  return (
+    <span>
+      <span style={{
+        display: 'inline-block', padding: '2px 10px', borderRadius: 6,
+        fontSize: '0.8125rem', fontWeight: 500, backgroundColor: c.bg, color: c.color,
+      }}>
+        {BACKING_LABELS[value] ?? 'Unknown'}
+      </span>
+      {alert && <span style={{ marginLeft: 6, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{alert}</span>}
+    </span>
+  );
+}
 
 export default function JurisdictionDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -49,6 +85,26 @@ export default function JurisdictionDetailPage() {
   const { data: countryCbdcsData } = useSupabaseQuery(cbdcsFetcher, [code]);
   const countryStablecoins = useMemo(() => countryStablecoinsData ?? [], [countryStablecoinsData]);
   const countryCbdcs = useMemo(() => countryCbdcsData ?? [], [countryCbdcsData]);
+
+  // Stride: stablecoin laws, events, issuer licenses per country
+  const lawsFetcher = useCallback(
+    () => code ? getStablecoinLawsByCountry(code) : Promise.resolve([]),
+    [code],
+  );
+  const eventsFetcher = useCallback(
+    () => code ? getStablecoinEventsByCountry(code) : Promise.resolve([]),
+    [code],
+  );
+  const licensesFetcher = useCallback(
+    () => code ? getLicensesByCountry(code) : Promise.resolve([]),
+    [code],
+  );
+  const { data: lawsData } = useSupabaseQuery(lawsFetcher, [code]);
+  const { data: eventsData } = useSupabaseQuery(eventsFetcher, [code]);
+  const { data: licensesData } = useSupabaseQuery(licensesFetcher, [code]);
+  const countryLaws = useMemo(() => lawsData ?? [], [lawsData]);
+  const countryEvents = useMemo(() => eventsData ?? [], [eventsData]);
+  const countryLicenses = useMemo(() => licensesData ?? [], [licensesData]);
 
   // Mini-map needs just this jurisdiction for coloring
   const jurisdictionList = useMemo(
@@ -198,6 +254,313 @@ export default function JurisdictionDetailPage() {
           />
         </div>
       </div>
+
+      {/* ── Stablecoin Regulation (Stride data) ── */}
+      {jurisdiction.stablecoinStage !== null && jurisdiction.stablecoinStage !== undefined && (
+        <div className="reveal" style={{ marginTop: 32 }}>
+          <h5 style={{ marginBottom: 16 }}>Stablecoin Regulation</h5>
+
+          {/* Stage badge + yield */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
+            <Badge
+              label={STAGE_LABELS[jurisdiction.stablecoinStage] ?? 'Unknown'}
+              colorMap={STABLECOIN_STAGE_COLORS}
+            />
+            {jurisdiction.yieldAllowed !== null && (
+              <span style={{
+                display: 'inline-block', padding: '2px 10px', borderRadius: 6,
+                fontSize: '0.8125rem', fontWeight: 500,
+                backgroundColor: jurisdiction.yieldAllowed ? '#ECFDF3' : '#FFF0F0',
+                color: jurisdiction.yieldAllowed ? '#2B7A4B' : '#A93F3F',
+              }}>
+                Yield {jurisdiction.yieldAllowed ? 'Allowed' : 'Prohibited'}
+              </span>
+            )}
+            {jurisdiction.isStablecoinSpecific && (
+              <span style={{
+                display: 'inline-block', padding: '2px 10px', borderRadius: 6,
+                fontSize: '0.8125rem', fontWeight: 500, backgroundColor: '#EEF0FF', color: '#4B5CC4',
+              }}>
+                Stablecoin-Specific Law
+              </span>
+            )}
+          </div>
+
+          {/* Backing rules grid */}
+          <div className="st-info-card clip-lg" style={{ margin: 0, marginBottom: 16 }}>
+            <div className="st-info-row">
+              <span className="st-info-label">Fiat-Backed</span>
+              <span className="st-info-value">
+                <BackingBadge value={jurisdiction.fiatBacked} alert={jurisdiction.fiatAlert} />
+              </span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Crypto-Backed</span>
+              <span className="st-info-value">
+                <BackingBadge value={jurisdiction.cryptoBacked} alert={jurisdiction.cryptoAlert} />
+              </span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Commodity-Backed</span>
+              <span className="st-info-value">
+                <BackingBadge value={jurisdiction.commodityBacked} alert={jurisdiction.commodityAlert} />
+              </span>
+            </div>
+            <div className="st-info-row">
+              <span className="st-info-label">Algorithmic</span>
+              <span className="st-info-value">
+                <BackingBadge value={jurisdiction.algorithmBacked} alert={jurisdiction.algorithmAlert} />
+              </span>
+            </div>
+          </div>
+
+          {/* Description */}
+          {jurisdiction.stablecoinDescription && (
+            <p style={{ color: 'var(--text)', lineHeight: 1.65, fontSize: '0.875rem', marginBottom: 16 }}>
+              {jurisdiction.stablecoinDescription}
+            </p>
+          )}
+          {jurisdiction.regulatorDescription && (
+            <p style={{ color: 'var(--text-muted)', lineHeight: 1.55, fontSize: '0.8125rem', marginBottom: 16 }}>
+              {jurisdiction.regulatorDescription}
+            </p>
+          )}
+
+          {/* Laws */}
+          {countryLaws.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <h6 style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                Stablecoin Laws
+              </h6>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {countryLaws.map((law: StablecoinLaw) => (
+                  <div key={law.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
+                          {law.citationUrl ? (
+                            <a href={law.citationUrl} target="_blank" rel="noopener noreferrer" className="st-inline-link">
+                              {law.title}
+                            </a>
+                          ) : law.title}
+                        </div>
+                        {law.description && (
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                            {law.description}
+                          </div>
+                        )}
+                      </div>
+                      {law.enactedDate && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                          {new Date(law.enactedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Events timeline */}
+          {countryEvents.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <h6 style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                Regulatory Events
+              </h6>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {countryEvents
+                  .sort((a: StablecoinEvent, b: StablecoinEvent) =>
+                    (b.eventDate ?? '').localeCompare(a.eventDate ?? ''))
+                  .map((ev: StablecoinEvent) => (
+                  <div key={ev.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
+                          {ev.citationUrl ? (
+                            <a href={ev.citationUrl} target="_blank" rel="noopener noreferrer" className="st-inline-link">
+                              {ev.title}
+                            </a>
+                          ) : ev.title}
+                        </div>
+                        {ev.details && (
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                            {ev.details}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 4 }}>
+                        {ev.eventDate && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            {new Date(ev.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                        {ev.eventType !== null && (
+                          <span style={{
+                            fontSize: '0.6875rem', padding: '1px 6px', borderRadius: 4,
+                            backgroundColor: ev.eventType === 2 ? '#EEF0FF' : '#F0FDFA',
+                            color: ev.eventType === 2 ? '#4B5CC4' : '#0D6857',
+                          }}>
+                            {ev.eventType === 2 ? 'Legislative' : 'Regulatory'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Issuer Licenses in this jurisdiction */}
+          {countryLicenses.length > 0 && (
+            <div>
+              <h6 style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                Issuer Licenses
+              </h6>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {countryLicenses.map((lic: IssuerLicense) => (
+                  <div key={lic.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
+                      {lic.title}
+                    </div>
+                    {lic.subsidiaryName && (
+                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 2 }}>
+                        {lic.subsidiaryName}
+                      </div>
+                    )}
+                    {lic.detail && (
+                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                        {lic.detail}
+                      </div>
+                    )}
+                    {lic.canIssue && (
+                      <span style={{
+                        display: 'inline-block', marginTop: 4, padding: '1px 8px', borderRadius: 4,
+                        fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#ECFDF3', color: '#2B7A4B',
+                      }}>
+                        Can Issue
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── CBDCs ── */}
+      {countryCbdcs.length > 0 && (
+        <div className="reveal" style={{ marginTop: 32 }}>
+          <h5 style={{ marginBottom: 16 }}>Central Bank Digital Currencies</h5>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {countryCbdcs.map((cbdc) => (
+              <div key={cbdc.id} className="st-info-card clip-lg" style={{ margin: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <h6 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>
+                    {cbdc.name}
+                  </h6>
+                  <Badge label={cbdc.status} colorMap={CBDC_STATUS_COLORS} />
+                </div>
+                <div className="st-info-row">
+                  <span className="st-info-label">Currency</span>
+                  <span className="st-info-value">{cbdc.currency || '—'}</span>
+                </div>
+                <div className="st-info-row">
+                  <span className="st-info-label">Central Bank</span>
+                  <span className="st-info-value">{cbdc.centralBank || '—'}</span>
+                </div>
+                <div className="st-info-row">
+                  <span className="st-info-label">Type</span>
+                  <span className="st-info-value">{cbdc.retailOrWholesale || '—'}</span>
+                </div>
+                {cbdc.technology && (
+                  <div className="st-info-row">
+                    <span className="st-info-label">Technology</span>
+                    <span className="st-info-value">{cbdc.technology}</span>
+                  </div>
+                )}
+                {cbdc.launchDate && (
+                  <div className="st-info-row">
+                    <span className="st-info-label">Launch Date</span>
+                    <span className="st-info-value">
+                      {new Date(cbdc.launchDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                    </span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  {cbdc.crossBorder && (
+                    <span style={{
+                      display: 'inline-block', padding: '2px 8px', borderRadius: 4,
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#ECFDF3', color: '#2B7A4B',
+                    }}>
+                      Cross-Border
+                    </span>
+                  )}
+                  {cbdc.programmable && (
+                    <span style={{
+                      display: 'inline-block', padding: '2px 8px', borderRadius: 4,
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#EEF0FF', color: '#4B5CC4',
+                    }}>
+                      Programmable
+                    </span>
+                  )}
+                  {cbdc.offlineCapable && (
+                    <span style={{
+                      display: 'inline-block', padding: '2px 8px', borderRadius: 4,
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#FFF8EB', color: '#92610B',
+                    }}>
+                      Offline Capable
+                    </span>
+                  )}
+                  {cbdc.interestBearing && (
+                    <span style={{
+                      display: 'inline-block', padding: '2px 8px', borderRadius: 4,
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#F0FDFA', color: '#0D6857',
+                    }}>
+                      Interest-Bearing
+                    </span>
+                  )}
+                </div>
+                {cbdc.privacyModel && (
+                  <div className="st-info-row" style={{ marginTop: 4 }}>
+                    <span className="st-info-label">Privacy</span>
+                    <span className="st-info-value">{cbdc.privacyModel}</span>
+                  </div>
+                )}
+                {cbdc.crossBorderProjects.length > 0 && (
+                  <div className="st-info-row">
+                    <span className="st-info-label">Cross-Border Projects</span>
+                    <span className="st-info-value">{cbdc.crossBorderProjects.join(', ')}</span>
+                  </div>
+                )}
+                {cbdc.notes && (
+                  <div className="st-info-row">
+                    <span className="st-info-label">Notes</span>
+                    <span className="st-info-value" style={{ fontSize: '0.8125rem' }}>{cbdc.notes}</span>
+                  </div>
+                )}
+                {cbdc.sources.length > 0 && (
+                  <div className="st-info-row">
+                    <span className="st-info-label">Sources</span>
+                    <span className="st-info-value">
+                      {cbdc.sources.map((s, i) => (
+                        <span key={i}>
+                          {i > 0 && <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>·</span>}
+                          <a href={s.url} target="_blank" rel="noopener noreferrer" className="st-inline-link">
+                            {s.name}
+                          </a>
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {safeEntities.length > 0 && (
         <>

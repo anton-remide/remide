@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStablecoins, getCbdcs, getJurisdictions } from '../data/dataLoader';
 import { expandRegionalCode } from '../data/regionCodes';
-import type { Stablecoin, Cbdc, StablecoinJurisdictionStatus } from '../types';
+import type { Stablecoin, Cbdc, Jurisdiction } from '../types';
 import {
   STABLECOIN_TYPE_COLORS,
   CBDC_STATUS_COLORS,
@@ -298,35 +298,30 @@ export default function StablecoinsPage() {
 
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabMode>('stablecoins');
+  const [activeMiniStats, setActiveMiniStats] = useState<string[]>([]);
   const revealRef = useReveal(false);
 
-  // Load jurisdictions + stablecoins + CBDCs for the map
+  // Load jurisdictions + CBDCs for the map
   const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
-  const { data: allStablecoinsForMap } = useSupabaseQuery(getStablecoins);
   const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
   const safeJurisdictions = allJurisdictions ?? [];
 
-  // Stablecoin statuses per country (best status)
+  // Stablecoin regulatory stage per country (from Stride data on jurisdictions)
+  // Stage: 0=No Framework, 1=Developing, 2=In Progress, 3=Live
+  const stageLabels: Record<number, string> = {
+    3: 'Live', 2: 'In Progress', 1: 'Developing', 0: 'No Framework',
+  };
+
   const stablecoinStatuses = useMemo(() => {
-    const priority: Record<string, number> = {
-      Compliant: 1, Allowed: 2, Pending: 3, Restricted: 4,
-      'Non-Compliant': 5, Discontinued: 6, Unclear: 7,
-    };
     const m = new Map<string, string>();
-    (allStablecoinsForMap ?? []).forEach((s: Stablecoin) => {
-      s.majorJurisdictions.forEach((j) => {
-        // Expand "EU" → 27 member states so map renders correctly
-        const codes = expandRegionalCode(j.code);
-        codes.forEach((code) => {
-          const current = m.get(code);
-          const currentP = current ? (priority[current] ?? 99) : 99;
-          const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
-          if (newP < currentP) m.set(code, j.status);
-        });
-      });
+    safeJurisdictions.forEach((j: Jurisdiction) => {
+      if (j.stablecoinStage !== null && j.stablecoinStage !== undefined) {
+        m.set(j.code.toUpperCase(), stageLabels[j.stablecoinStage] ?? 'No Data');
+      }
     });
     return m;
-  }, [allStablecoinsForMap]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeJurisdictions]);
 
   // CBDC statuses per country (expand "EU" → 27 member states for Digital Euro)
   const cbdcStatuses = useMemo(() => {
@@ -345,6 +340,32 @@ export default function StablecoinsPage() {
   const mapStatuses = tab === 'stablecoins' ? stablecoinStatuses : cbdcStatuses;
   const mapMode: MapColorMode = tab === 'stablecoins' ? 'stablecoin' : 'cbdc';
 
+  // Mini-stat label (lowercase) → stablecoinStatus value mapping for map filtering
+  const miniStatLabelToValues: Record<string, string[]> = {
+    live: ['Live'],
+    'in progress': ['In Progress'],
+    developing: ['Developing'],
+    'no framework': ['No Framework'],
+    // CBDC labels
+    launched: ['Launched'],
+    pilot: ['Pilot'],
+    development: ['Development'],
+    research: ['Research'],
+  };
+
+  // Derive stablecoin/CBDC status filters from activeMiniStats
+  const selectedStablecoinStatuses = useMemo(() => {
+    if (activeMiniStats.length === 0) return [] as string[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMiniStats]);
+
+  const handleMiniStatClick = useCallback((label: string) => {
+    setActiveMiniStats((prev) => {
+      return prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label];
+    });
+  }, []);
+
   return (
     <div ref={revealRef} className="st-page">
       <div className="reveal" style={{ marginBottom: 24 }}>
@@ -361,7 +382,10 @@ export default function StablecoinsPage() {
             { value: 'cbdcs', label: 'CBDCs' },
           ]}
           value={tab}
-          onChange={(v) => setTab(v as TabMode)}
+          onChange={(v) => {
+            setTab(v as TabMode);
+            setActiveMiniStats([]);
+          }}
         />
       </div>
 
@@ -371,8 +395,10 @@ export default function StablecoinsPage() {
           jurisdictions={safeJurisdictions}
           colorMode={mapMode}
           stablecoinStatuses={mapStatuses}
+          selectedStablecoinStatuses={selectedStablecoinStatuses}
           onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
-          compact
+          onMiniStatClick={handleMiniStatClick}
+          activeMiniStats={activeMiniStats}
         />
       </div>
 

@@ -91,7 +91,7 @@ export const CBDC_MAP_COLORS: Record<string, string> = {
   Inactive: '#CBD5E1',
 };
 
-/* ── Stablecoin regulatory status map fill colors ── */
+/* ── Stablecoin regulatory status map fill colors (LEGACY — old stablecoin_jurisdictions) ── */
 export const STABLECOIN_MAP_COLORS: Record<string, string> = {
   Compliant: '#5BB98C',
   Allowed: '#7B93DB',
@@ -101,4 +101,22 @@ export const STABLECOIN_MAP_COLORS: Record<string, string> = {
   Discontinued: '#94A3B8',
   Unclear: '#CBD5E1',
   None: '#E2E8F0',
+};
+
+/* ── Stablecoin STAGE map fill colors (Stride regulatory framework stage 0-3) ── */
+export const STABLECOIN_STAGE_MAP_COLORS: Record<string, string> = {
+  Live: '#5BB98C',          // Green — full regulatory framework active
+  'In Progress': '#D4A55A', // Amber — framework being implemented
+  Developing: '#7B93DB',    // Blue — early stage development
+  'No Framework': '#CBD5E1', // Gray — no specific framework
+  'No Data': '#E2E8F0',     // Light gray — not tracked
+};
+
+/* ── Stablecoin STAGE chip/badge colors ── */
+export const STABLECOIN_STAGE_COLORS: Record<string, { bg: string; text: string }> = {
+  Live: { bg: '#ECFDF3', text: '#2B7A4B' },
+  'In Progress': { bg: '#FFF8EB', text: '#92610B' },
+  Developing: { bg: '#EEF0FF', text: '#4B5CC4' },
+  'No Framework': { bg: '#F1F5F9', text: '#586B82' },
+  'No Data': { bg: '#F8FAFC', text: '#94A3B8' },
 };
