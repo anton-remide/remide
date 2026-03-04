@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import StickyBar from './components/layout/StickyBar';
@@ -12,7 +12,6 @@ import EntityDetailPage from './pages/EntityDetailPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
-import StablecoinsPage from './pages/StablecoinsPage';
 import StablecoinDetailPage from './pages/StablecoinDetailPage';
 import CbdcDetailPage from './pages/CbdcDetailPage';
 
@@ -32,17 +31,17 @@ export default function App() {
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/jurisdictions" element={<JurisdictionsPage />} />
-              <Route path="/stablecoins" element={<StablecoinsPage />} />
+              <Route path="/entities" element={<EntitiesPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
+              {/* Redirects from old routes */}
+              <Route path="/stablecoins" element={<Navigate to="/entities?tab=stablecoins" replace />} />
+
               {/* Protected routes */}
               <Route path="/jurisdictions/:code" element={
                 <ProtectedRoute><JurisdictionDetailPage /></ProtectedRoute>
-              } />
-              <Route path="/entities" element={
-                <ProtectedRoute><EntitiesPage /></ProtectedRoute>
               } />
               <Route path="/entities/:id" element={
                 <ProtectedRoute><EntityDetailPage /></ProtectedRoute>
