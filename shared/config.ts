@@ -9,7 +9,11 @@
  *   const sb = createClient(config.supabase.url, config.supabase.serviceKey);
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+// Load .env.local first (project convention), then .env as fallback
+dotenv.config({ path: '.env.local' });
+dotenv.config(); // .env (won't overwrite existing vars)
 
 /* ── Types ── */
 

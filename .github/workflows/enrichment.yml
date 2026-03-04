@@ -1,0 +1,56 @@
+name: Entity Enrichment (Firecrawl)
+
+on:
+  schedule:
+    # Wednesday and Saturday at 04:00 UTC (avoids parser Monday run)
+    - cron: '0 4 * * 3,6'
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country code to enrich (e.g. DE, CA, or leave empty for all)'
+        required: false
+        default: ''
+      limit:
+        description: 'Max entities to process per run'
+        required: false
+        default: '100'
+      dry_run:
+        description: 'Dry run (validate only, no DB writes)'
+        type: boolean
+        default: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run enrichment worker
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DRY_RUN: ${{ inputs.dry_run && 'true' || '' }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.country }}" ]; then
+            ARGS="$ARGS --country ${{ inputs.country }}"
+          fi
+          ARGS="$ARGS --limit ${{ inputs.limit || '100' }}"
+          echo "Running enrichment: $ARGS"
+          npx tsx workers/enrichment/run.ts $ARGS
+
+      - name: Summary
+        if: always()
+        run: echo "Enrichment run completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

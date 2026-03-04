@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@mendable/firecrawl-js": "^4.15.2",
     "@notionhq/client": "^5.11.1",
     "@supabase/supabase-js": "^2.98.0",
     "bootstrap": "^5.3.8",
