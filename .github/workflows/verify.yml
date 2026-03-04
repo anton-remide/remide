@@ -1,0 +1,42 @@
+name: Data Verification
+
+on:
+  schedule:
+    # Daily at 08:00 UTC (after parsers run on Monday)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      check:
+        description: 'Check type (staleness, url-health, data-quality, full)'
+        required: false
+        default: 'full'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run verification
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          CHECK="${{ inputs.check || 'full' }}"
+          echo "Running verification: $CHECK"
+          npx tsx parsers/workers/verify.ts --check "$CHECK"
+
+      - name: Summary
+        if: always()
+        run: echo "Verification completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

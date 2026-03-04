@@ -1,0 +1,51 @@
+name: Registry Parsers
+
+on:
+  schedule:
+    # Weekly on Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Registry to run (e.g. za-fsca, jp-fsa, or "all")'
+        required: false
+        default: 'all'
+      dry_run:
+        description: 'Dry run (validate only, no DB writes)'
+        type: boolean
+        default: false
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run parser tests
+        run: npx vitest run --config parsers/vitest.config.ts
+
+      - name: Run parsers
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FCA_API_KEY: ${{ secrets.FCA_API_KEY }}
+          DRY_RUN: ${{ inputs.dry_run && 'true' || '' }}
+        run: |
+          REGISTRY="${{ inputs.registry || 'all' }}"
+          echo "Running parsers: $REGISTRY"
+          npx tsx parsers/run.ts --registry "$REGISTRY" ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Summary
+        if: always()
+        run: echo "Parser run completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

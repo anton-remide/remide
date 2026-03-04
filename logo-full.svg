@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 286 52">
+  <!-- Cross mark -->
+  <g transform="translate(0,2) scale(0.578)">
+    <path d="M83 27.99H54.88V0H27.93C27.93 15.96 15.43 27.99 0 27.99V55.01H27.93V83H54.88C54.88 67.54 68.32 55.01 83 55.01V27.99Z" fill="#0A2540"/>
+  </g>
+  <!-- RemiDe text — DM Sans Bold -->
+  <text x="62" y="38" font-family="'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif" font-size="40" font-weight="700" fill="#0A2540" letter-spacing="-0.5">RemiDe</text>
+</svg>
