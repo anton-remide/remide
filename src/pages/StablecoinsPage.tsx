@@ -1,8 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStablecoins, getCbdcs, getJurisdictions } from '../data/dataLoader';
-import stablecoinsData from '../data/stablecoins.json';
-import cbdcsData from '../data/cbdcs.json';
 import type { Stablecoin, Cbdc, StablecoinJurisdictionStatus } from '../types';
 import {
   STABLECOIN_TYPE_COLORS,
@@ -301,8 +299,10 @@ export default function StablecoinsPage() {
   const [tab, setTab] = useState<TabMode>('stablecoins');
   const revealRef = useReveal(false);
 
-  // Load jurisdictions for the map
+  // Load jurisdictions + stablecoins + CBDCs for the map
   const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
+  const { data: allStablecoinsForMap } = useSupabaseQuery(getStablecoins);
+  const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
   const safeJurisdictions = allJurisdictions ?? [];
 
   // Stablecoin statuses per country (best status)
@@ -312,7 +312,7 @@ export default function StablecoinsPage() {
       'Non-Compliant': 5, Discontinued: 6, Unclear: 7,
     };
     const m = new Map<string, string>();
-    (stablecoinsData as unknown as Stablecoin[]).forEach((s) => {
+    (allStablecoinsForMap ?? []).forEach((s: Stablecoin) => {
       s.majorJurisdictions.forEach((j) => {
         const code = j.code.toUpperCase();
         const current = m.get(code);
@@ -322,16 +322,16 @@ export default function StablecoinsPage() {
       });
     });
     return m;
-  }, []);
+  }, [allStablecoinsForMap]);
 
   // CBDC statuses per country
   const cbdcStatuses = useMemo(() => {
     const m = new Map<string, string>();
-    (cbdcsData as unknown as Cbdc[]).forEach((c) => {
+    (allCbdcsForMap ?? []).forEach((c: Cbdc) => {
       m.set(c.countryCode.toUpperCase(), c.status);
     });
     return m;
-  }, []);
+  }, [allCbdcsForMap]);
 
   // Choose which map data to show based on tab
   const mapStatuses = tab === 'stablecoins' ? stablecoinStatuses : cbdcStatuses;

@@ -1,7 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Entity, Jurisdiction, Stablecoin, Cbdc } from '../types';
-import stablecoinsData from './stablecoins.json';
-import cbdcsData from './cbdcs.json';
+import type { Entity, Jurisdiction, Stablecoin, Cbdc, StablecoinJurisdiction } from '../types';
 
 // ── Snake_case DB row → camelCase TypeScript ──
 
@@ -189,43 +187,217 @@ export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
   return all.map(mapEntity);
 }
 
-// ── Stablecoins & CBDCs (static JSON for now) ──
+// ── Stablecoins & CBDCs (Supabase) ──
+
+interface StablecoinRow {
+  id: string;
+  name: string;
+  ticker: string;
+  type: string;
+  peg_currency: string;
+  issuer: string;
+  issuer_country: string;
+  launch_date: string;
+  market_cap_bn: number;
+  chains: string[];
+  reserve_type: string;
+  audit_status: string;
+  regulatory_status: string;
+  website: string;
+  notes: string;
+}
+
+interface StablecoinJurisdictionRow {
+  stablecoin_id: string;
+  country_code: string;
+  status: string;
+  notes: string;
+}
+
+interface CbdcRow {
+  id: string;
+  country_code: string;
+  country: string;
+  name: string;
+  currency: string;
+  status: string;
+  phase: string;
+  central_bank: string;
+  launch_date: string | null;
+  technology: string;
+  retail_or_wholesale: string;
+  cross_border: boolean;
+  cross_border_projects: string[];
+  programmable: boolean;
+  privacy_model: string;
+  interest_bearing: boolean;
+  offline_capable: boolean;
+  notes: string;
+  sources: { name: string; url: string }[] | string;
+}
+
+function mapStablecoin(row: StablecoinRow, jurisdictions: StablecoinJurisdiction[]): Stablecoin {
+  return {
+    id: row.id,
+    name: row.name,
+    ticker: row.ticker,
+    type: row.type as Stablecoin['type'],
+    pegCurrency: row.peg_currency,
+    issuer: row.issuer,
+    issuerCountry: row.issuer_country,
+    launchDate: row.launch_date,
+    marketCapBn: Number(row.market_cap_bn),
+    chains: row.chains ?? [],
+    reserveType: row.reserve_type ?? '',
+    auditStatus: row.audit_status ?? '',
+    regulatoryStatus: row.regulatory_status ?? '',
+    website: row.website ?? '',
+    notes: row.notes ?? '',
+    majorJurisdictions: jurisdictions,
+  };
+}
+
+function mapCbdc(row: CbdcRow): Cbdc {
+  return {
+    id: row.id,
+    countryCode: row.country_code,
+    country: row.country,
+    name: row.name,
+    currency: row.currency,
+    status: row.status as Cbdc['status'],
+    phase: row.phase ?? '',
+    centralBank: row.central_bank,
+    launchDate: row.launch_date,
+    technology: row.technology ?? '',
+    retailOrWholesale: row.retail_or_wholesale ?? '',
+    crossBorder: row.cross_border ?? false,
+    crossBorderProjects: row.cross_border_projects ?? [],
+    programmable: row.programmable ?? false,
+    privacyModel: row.privacy_model ?? '',
+    interestBearing: row.interest_bearing ?? false,
+    offlineCapable: row.offline_capable ?? false,
+    notes: row.notes ?? '',
+    sources: typeof row.sources === 'string' ? JSON.parse(row.sources) : (row.sources ?? []),
+  };
+}
 
 export async function getStablecoins(): Promise<Stablecoin[]> {
-  return (stablecoinsData as unknown as Stablecoin[]).sort(
-    (a, b) => b.marketCapBn - a.marketCapBn,
+  // Fetch stablecoins + all jurisdictions in parallel
+  const [scRes, sjRes] = await Promise.all([
+    supabase.from('stablecoins').select('*').order('market_cap_bn', { ascending: false }),
+    supabase.from('stablecoin_jurisdictions').select('*'),
+  ]);
+
+  if (scRes.error) throw new Error(`Failed to load stablecoins: ${scRes.error.message}`);
+  if (sjRes.error) throw new Error(`Failed to load stablecoin jurisdictions: ${sjRes.error.message}`);
+
+  // Group jurisdictions by stablecoin_id
+  const jMap = new Map<string, StablecoinJurisdiction[]>();
+  for (const j of sjRes.data as StablecoinJurisdictionRow[]) {
+    const arr = jMap.get(j.stablecoin_id) ?? [];
+    arr.push({ code: j.country_code, status: j.status as StablecoinJurisdiction['status'], notes: j.notes ?? '' });
+    jMap.set(j.stablecoin_id, arr);
+  }
+
+  return (scRes.data as StablecoinRow[]).map((row) =>
+    mapStablecoin(row, jMap.get(row.id) ?? []),
   );
 }
 
 export async function getStablecoinById(id: string): Promise<Stablecoin | null> {
-  const coin = (stablecoinsData as unknown as Stablecoin[]).find((s) => s.id === id);
-  return coin ?? null;
+  const [scRes, sjRes] = await Promise.all([
+    supabase.from('stablecoins').select('*').eq('id', id).single(),
+    supabase.from('stablecoin_jurisdictions').select('*').eq('stablecoin_id', id),
+  ]);
+
+  if (scRes.error) {
+    if (scRes.error.code === 'PGRST116') return null;
+    throw new Error(`Failed to load stablecoin: ${scRes.error.message}`);
+  }
+  if (sjRes.error) throw new Error(`Failed to load stablecoin jurisdictions: ${sjRes.error.message}`);
+
+  const jurisdictions: StablecoinJurisdiction[] = (sjRes.data as StablecoinJurisdictionRow[]).map((j) => ({
+    code: j.country_code,
+    status: j.status as StablecoinJurisdiction['status'],
+    notes: j.notes ?? '',
+  }));
+
+  return mapStablecoin(scRes.data as StablecoinRow, jurisdictions);
 }
 
 export async function getCbdcs(): Promise<Cbdc[]> {
+  const { data, error } = await supabase
+    .from('cbdcs')
+    .select('*');
+
+  if (error) throw new Error(`Failed to load CBDCs: ${error.message}`);
+
+  const cbdcs = (data as CbdcRow[]).map(mapCbdc);
+
+  // Sort by status priority
   const order: Record<string, number> = { Launched: 0, Pilot: 1, Development: 2, Research: 3, Cancelled: 4, Inactive: 5 };
-  return (cbdcsData as unknown as Cbdc[]).sort(
-    (a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9),
-  );
+  return cbdcs.sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
 }
 
 export async function getCbdcById(id: string): Promise<Cbdc | null> {
-  const cbdc = (cbdcsData as unknown as Cbdc[]).find((c) => c.id === id);
-  return cbdc ?? null;
+  const { data, error } = await supabase
+    .from('cbdcs')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(`Failed to load CBDC: ${error.message}`);
+  }
+  return mapCbdc(data as CbdcRow);
 }
 
-// ── Per-country aggregation helpers ──
+// ── Per-country aggregation helpers (async Supabase) ──
 
 /** Stablecoins that list this country code in majorJurisdictions */
-export function getStablecoinsByCountry(code: string): Stablecoin[] {
+export async function getStablecoinsByCountry(code: string): Promise<Stablecoin[]> {
   const upper = code.toUpperCase();
-  return (stablecoinsData as unknown as Stablecoin[]).filter((s) =>
-    s.majorJurisdictions.some((j) => j.code.toUpperCase() === upper),
+
+  // Find stablecoin IDs for this country from the junction table
+  const { data: jRows, error: jErr } = await supabase
+    .from('stablecoin_jurisdictions')
+    .select('stablecoin_id')
+    .eq('country_code', upper);
+
+  if (jErr) throw new Error(`Failed to load stablecoin jurisdictions: ${jErr.message}`);
+  if (!jRows || jRows.length === 0) return [];
+
+  const ids = [...new Set((jRows as { stablecoin_id: string }[]).map((r) => r.stablecoin_id))];
+
+  // Fetch the stablecoins + all their jurisdictions
+  const [scRes, sjRes] = await Promise.all([
+    supabase.from('stablecoins').select('*').in('id', ids),
+    supabase.from('stablecoin_jurisdictions').select('*').in('stablecoin_id', ids),
+  ]);
+
+  if (scRes.error) throw new Error(`Failed to load stablecoins: ${scRes.error.message}`);
+  if (sjRes.error) throw new Error(`Failed to load jurisdictions: ${sjRes.error.message}`);
+
+  const jMap = new Map<string, StablecoinJurisdiction[]>();
+  for (const j of sjRes.data as StablecoinJurisdictionRow[]) {
+    const arr = jMap.get(j.stablecoin_id) ?? [];
+    arr.push({ code: j.country_code, status: j.status as StablecoinJurisdiction['status'], notes: j.notes ?? '' });
+    jMap.set(j.stablecoin_id, arr);
+  }
+
+  return (scRes.data as StablecoinRow[]).map((row) =>
+    mapStablecoin(row, jMap.get(row.id) ?? []),
   );
 }
 
 /** CBDCs issued by this country */
-export function getCbdcsByCountry(code: string): Cbdc[] {
-  const upper = code.toUpperCase();
-  return (cbdcsData as unknown as Cbdc[]).filter((c) => c.countryCode.toUpperCase() === upper);
+export async function getCbdcsByCountry(code: string): Promise<Cbdc[]> {
+  const { data, error } = await supabase
+    .from('cbdcs')
+    .select('*')
+    .eq('country_code', code.toUpperCase());
+
+  if (error) throw new Error(`Failed to load CBDCs: ${error.message}`);
+  return (data as CbdcRow[]).map(mapCbdc);
 }

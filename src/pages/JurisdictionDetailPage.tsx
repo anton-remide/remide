@@ -36,15 +36,19 @@ export default function JurisdictionDetailPage() {
 
   const safeEntities = useMemo(() => entities ?? [], [entities]);
 
-  // Stablecoins & CBDCs per country (synchronous — static JSON)
-  const countryStablecoins = useMemo(
-    () => code ? getStablecoinsByCountry(code) : [],
+  // Stablecoins & CBDCs per country (async Supabase)
+  const stablecoinsFetcher = useCallback(
+    () => code ? getStablecoinsByCountry(code) : Promise.resolve([]),
     [code],
   );
-  const countryCbdcs = useMemo(
-    () => code ? getCbdcsByCountry(code) : [],
+  const cbdcsFetcher = useCallback(
+    () => code ? getCbdcsByCountry(code) : Promise.resolve([]),
     [code],
   );
+  const { data: countryStablecoinsData } = useSupabaseQuery(stablecoinsFetcher, [code]);
+  const { data: countryCbdcsData } = useSupabaseQuery(cbdcsFetcher, [code]);
+  const countryStablecoins = useMemo(() => countryStablecoinsData ?? [], [countryStablecoinsData]);
+  const countryCbdcs = useMemo(() => countryCbdcsData ?? [], [countryCbdcsData]);
 
   // Mini-map needs just this jurisdiction for coloring
   const jurisdictionList = useMemo(

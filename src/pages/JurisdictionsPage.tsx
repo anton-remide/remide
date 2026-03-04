@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getJurisdictions } from '../data/dataLoader';
-import stablecoinsData from '../data/stablecoins.json';
+import { getJurisdictions, getStablecoins } from '../data/dataLoader';
 import type { Jurisdiction, RegimeType, TravelRuleStatus, Stablecoin, StablecoinJurisdictionStatus } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
@@ -32,7 +31,9 @@ export default function JurisdictionsPage() {
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: allJurisdictions, loading, error, refetch } = useSupabaseQuery(getJurisdictions);
+  const { data: allJurisdictions, loading: jLoading, error, refetch } = useSupabaseQuery(getJurisdictions);
+  const { data: allStablecoins } = useSupabaseQuery(getStablecoins);
+  const loading = jLoading;
   const revealRef = useReveal(loading);
 
   const [mapColorMode, setMapColorMode] = useState<MapColorMode>('regime');
@@ -40,7 +41,7 @@ export default function JurisdictionsPage() {
 
   const safeJurisdictions = allJurisdictions ?? [];
 
-  // Build best stablecoin regulatory status per country (synchronous — static JSON)
+  // Build best stablecoin regulatory status per country (from Supabase data)
   // Priority: Compliant > Allowed > Pending > Restricted > Non-Compliant > Discontinued > Unclear
   const stablecoinStatuses = useMemo(() => {
     const priority: Record<string, number> = {
@@ -48,7 +49,7 @@ export default function JurisdictionsPage() {
       'Non-Compliant': 5, Discontinued: 6, Unclear: 7,
     };
     const m = new Map<string, string>();
-    (stablecoinsData as unknown as Stablecoin[]).forEach((s) => {
+    (allStablecoins ?? []).forEach((s: Stablecoin) => {
       s.majorJurisdictions.forEach((j) => {
         const code = j.code.toUpperCase();
         const current = m.get(code);
@@ -58,7 +59,7 @@ export default function JurisdictionsPage() {
       });
     });
     return m;
-  }, []);
+  }, [allStablecoins]);
 
   // Column filters hook (works on full dataset)
   const colFilters = useColumnFilters<Jurisdiction & Record<string, unknown>>(
