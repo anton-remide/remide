@@ -44,6 +44,8 @@ interface Props<T> {
   onSearchChange?: (value: string) => void;
   /** Search placeholder */
   searchPlaceholder?: string;
+  /** Content rendered before search in toolbar (e.g. tab switcher) */
+  toolbarPrefix?: React.ReactNode;
 }
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500];
@@ -64,6 +66,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   search,
   onSearchChange,
   searchPlaceholder = 'Search...',
+  toolbarPrefix,
 }: Props<T>) {
   const startIndex = (page - 1) * pageSize + 1;
   const endIndex = Math.min(page * pageSize, totalFiltered);
@@ -105,8 +108,11 @@ export default function DataTable<T extends Record<string, unknown>>({
   return (
     <div className="st-card" style={{ padding: 0, overflow: 'hidden', borderRadius: 10 }}>
       {/* Header bar */}
-      <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+      <div className="st-table-toolbar">
+        {toolbarPrefix && (
+          <div className="st-table-toolbar-prefix">{toolbarPrefix}</div>
+        )}
+        <div className="st-table-toolbar-controls">
           {onSearchChange && (
             <div className="st-table-search">
               <Search size={14} className="st-table-search-icon" />
@@ -148,7 +154,7 @@ export default function DataTable<T extends Record<string, unknown>>({
             </button>
           )}
         </div>
-        <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+        <span className="st-table-toolbar-count">
           {totalFiltered > 0
             ? `Showing ${startIndex}–${endIndex} of ${totalFiltered.toLocaleString()}`
             : 'No results'

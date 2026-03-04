@@ -16,7 +16,7 @@ import SegmentedControl from '../components/ui/SegmentedControl';
 type EntityTab = 'vasps' | 'stablecoins' | 'cbdcs';
 
 /* ── VASPs Tab ── */
-function VaspsTab({ searchQuery }: { searchQuery?: string }) {
+function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitcher: React.ReactNode }) {
   const navigate = useNavigate();
   const { data: allEntities, loading, error, refetch } = useSupabaseQuery(getEntities);
   const safeEntities = allEntities ?? [];
@@ -114,12 +114,13 @@ function VaspsTab({ searchQuery }: { searchQuery?: string }) {
       search={table.search}
       onSearchChange={table.setSearch}
       searchPlaceholder="Search entities..."
+      toolbarPrefix={tabSwitcher}
     />
   );
 }
 
 /* ── Stablecoins Tab ── */
-function StablecoinsTab({ codeToName }: { codeToName: Map<string, string> }) {
+function StablecoinsTab({ codeToName, tabSwitcher }: { codeToName: Map<string, string>; tabSwitcher: React.ReactNode }) {
   const navigate = useNavigate();
   const { data: allStablecoins, loading, error, refetch } = useSupabaseQuery(getStablecoins);
   const safeData = allStablecoins ?? [];
@@ -250,12 +251,13 @@ function StablecoinsTab({ codeToName }: { codeToName: Map<string, string> }) {
       search={table.search}
       onSearchChange={table.setSearch}
       searchPlaceholder="Search stablecoins..."
+      toolbarPrefix={tabSwitcher}
     />
   );
 }
 
 /* ── CBDCs Tab ── */
-function CbdcsTab() {
+function CbdcsTab({ tabSwitcher }: { tabSwitcher: React.ReactNode }) {
   const navigate = useNavigate();
   const { data: allCbdcs, loading, error, refetch } = useSupabaseQuery(getCbdcs);
   const safeData = allCbdcs ?? [];
@@ -361,6 +363,7 @@ function CbdcsTab() {
       search={table.search}
       onSearchChange={table.setSearch}
       searchPlaceholder="Search CBDCs..."
+      toolbarPrefix={tabSwitcher}
     />
   );
 }
@@ -413,25 +416,24 @@ export default function EntitiesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Tab switcher — rendered inside each tab's DataTable toolbar
+  const tabSwitcher = (
+    <SegmentedControl
+      options={[
+        { value: 'vasps', label: 'VASPs' },
+        { value: 'stablecoins', label: 'Stablecoins' },
+        { value: 'cbdcs', label: 'CBDCs' },
+      ]}
+      value={activeTab}
+      onChange={handleTabChange}
+    />
+  );
+
   return (
     <div ref={revealRef} className="st-page" style={{ paddingTop: 100 }}>
-      {/* Tab switcher */}
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
-        <SegmentedControl
-          options={[
-            { value: 'vasps', label: 'VASPs' },
-            { value: 'stablecoins', label: 'Stablecoins' },
-            { value: 'cbdcs', label: 'CBDCs' },
-          ]}
-          value={activeTab}
-          onChange={handleTabChange}
-        />
-      </div>
-
-      {/* Active tab content */}
-      {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} />}
-      {activeTab === 'stablecoins' && <StablecoinsTab codeToName={codeToName} />}
-      {activeTab === 'cbdcs' && <CbdcsTab />}
+      {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} tabSwitcher={tabSwitcher} />}
+      {activeTab === 'stablecoins' && <StablecoinsTab codeToName={codeToName} tabSwitcher={tabSwitcher} />}
+      {activeTab === 'cbdcs' && <CbdcsTab tabSwitcher={tabSwitcher} />}
     </div>
   );
 }

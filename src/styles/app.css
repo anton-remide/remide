@@ -1034,6 +1034,38 @@ ul {
 }
 
 /* ==========================================================================
+   Table Toolbar (header bar inside DataTable card)
+   ========================================================================== */
+
+.st-table-toolbar {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.st-table-toolbar-prefix {
+  flex: 0 0 auto;
+}
+
+.st-table-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.st-table-toolbar-count {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
    Table Inline Search
    ========================================================================== */
 
@@ -2277,9 +2309,27 @@ a, button, input, select, textarea {
     background: var(--bg-light);
   }
 
-  /* DataTable header bar */
-  .st-card > div:first-child {
-    /* inherits — just reduce padding on mobile if needed */
+  /* DataTable toolbar: stack prefix + search vertically on mobile */
+  .st-table-toolbar {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .st-table-toolbar-prefix {
+    flex: 0 0 100%;
+  }
+
+  .st-table-toolbar-prefix .st-segmented {
+    width: 100%;
+    display: flex;
+  }
+
+  .st-table-toolbar-prefix .st-segmented-btn {
+    flex: 1;
+  }
+
+  .st-table-toolbar-count {
+    font-size: 0.75rem;
   }
 
   /* --- Pagination compact --- */
