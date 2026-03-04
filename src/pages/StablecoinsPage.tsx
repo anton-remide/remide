@@ -397,7 +397,14 @@ export default function StablecoinsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapColorMode, activeMiniStats, stablecoinStatuses, cbdcStatuses, safeJurisdictions]);
 
-  const filterCountryCodes = matchingCountryCodes.length > 0 ? matchingCountryCodes : undefined;
+  // Only filter the table in regime/travelRule modes.
+  // In stablecoin/cbdc modes the map shows jurisdiction regulation landscape,
+  // but the table shows tokens — cross-filtering produces empty results
+  // because issuers are concentrated in a few countries (VG, US, KY, HK).
+  const filterCountryCodes =
+    (mapColorMode === 'regime' || mapColorMode === 'travelRule') && matchingCountryCodes.length > 0
+      ? matchingCountryCodes
+      : undefined;
 
   // Derive which table to show from map mode (cbdc → CBDCs, everything else → Stablecoins)
   const showCbdcs = mapColorMode === 'cbdc';
