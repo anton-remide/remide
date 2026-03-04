@@ -43,7 +43,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         data: metadata,
-        emailRedirectTo: `${window.location.origin}${window.location.pathname}#/auth/callback`,
+        emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
       },
     });
     return { error: error?.message ?? null };

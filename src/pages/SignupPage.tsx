@@ -2,8 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReveal } from '../hooks/useAnimations';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 export default function SignupPage() {
+  useDocumentMeta({
+    title: 'Sign Up — Free Access',
+    description: 'Create a free RemiDe account to access detailed crypto regulation data, jurisdiction reports, and entity profiles.',
+    path: '/signup',
+  });
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
   const revealRef = useReveal();

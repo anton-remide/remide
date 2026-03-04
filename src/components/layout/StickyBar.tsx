@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 
 const COOKIE_KEY = 'remide_cookies_accepted';
@@ -32,7 +33,7 @@ export default function StickyBar() {
         <div className="st-sticky-bar-row">
           <span className="st-sticky-bar-text">
             🚧 RemiDe Register is a continuous work in progress.{' '}
-            <a href="#/signup">Subscribe</a> to get notified about updates.
+            <Link to="/signup">Subscribe</Link> to get notified about updates.
           </span>
           <button
             className="st-sticky-bar-close"

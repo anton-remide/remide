@@ -5,6 +5,7 @@ import { getEntityById, getEntitiesByCountry, getJurisdictionByCode } from '../d
 import { STATUS_COLORS, REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
@@ -16,6 +17,14 @@ export default function EntityDetailPage() {
   const entityFetcher = useCallback(() => getEntityById(id ?? ''), [id]);
   const { data: entity, loading, error } = useSupabaseQuery(entityFetcher, [id]);
   const revealRef = useReveal(loading);
+
+  useDocumentMeta({
+    title: entity ? `${entity.name} — Licensed VASP` : 'Entity',
+    description: entity
+      ? `${entity.name} is a ${entity.status} crypto service provider in ${entity.country}. License: ${entity.licenseNumber ?? 'N/A'}.`
+      : 'Loading entity details...',
+    path: id ? `/entities/${id}` : undefined,
+  });
 
   // Fetch related data once we have the entity
   const jurisdictionFetcher = useCallback(

@@ -6,6 +6,7 @@ import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS } from '../theme'
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
@@ -24,6 +25,14 @@ export default function JurisdictionDetailPage() {
 
   const loading = jLoading || eLoading;
   const revealRef = useReveal(loading);
+
+  useDocumentMeta({
+    title: jurisdiction ? `${jurisdiction.name} — Crypto Regulation` : 'Jurisdiction',
+    description: jurisdiction
+      ? `Cryptocurrency regulation in ${jurisdiction.name}: ${jurisdiction.regime} regime, ${(entities ?? []).length} licensed VASPs. Travel Rule: ${jurisdiction.travelRule}.`
+      : 'Loading jurisdiction details...',
+    path: code ? `/jurisdictions/${code}` : undefined,
+  });
 
   const safeEntities = useMemo(() => entities ?? [], [entities]);
 

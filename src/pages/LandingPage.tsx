@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getJurisdictions, getEntities, getStablecoins, getCbdcs } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 /* Minimal stat card — number + label, no icon */
 function NumberStat({ label, value }: { label: string; value: number }) {
@@ -17,6 +18,22 @@ function NumberStat({ label, value }: { label: string; value: number }) {
 }
 
 export default function LandingPage() {
+  useDocumentMeta({
+    title: 'Global Crypto Registry',
+    description: 'Track cryptocurrency regulations, VASP licensing, stablecoins, CBDCs, and Travel Rule compliance across 206 countries worldwide.',
+    path: '/',
+    noSuffix: true,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'RemiDe',
+      description: 'Global cryptocurrency regulatory intelligence platform tracking VASP licensing across 206 jurisdictions.',
+      url: 'https://anton-remide.github.io/remide',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+    },
+  });
+
   const navigate = useNavigate();
   const { data: jurisdictions, loading: jLoading, error, refetch } = useSupabaseQuery(getJurisdictions);
   const { data: entities, loading: eLoading } = useSupabaseQuery(getEntities);

@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import StickyBar from './components/layout/StickyBar';
@@ -16,9 +16,14 @@ import StablecoinsPage from './pages/StablecoinsPage';
 import StablecoinDetailPage from './pages/StablecoinDetailPage';
 import CbdcDetailPage from './pages/CbdcDetailPage';
 
+/* BrowserRouter basename — matches Vite base config.
+   Dev: BASE_URL = '/'  →  basename = ''
+   Prod: BASE_URL = '/remide/'  →  basename = '/remide' */
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 export default function App() {
   return (
-    <HashRouter>
+    <BrowserRouter basename={basename}>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Header />
         <main style={{ flexGrow: 1 }}>
@@ -54,6 +59,6 @@ export default function App() {
         <Footer />
         <StickyBar />
       </div>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

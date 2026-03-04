@@ -5,6 +5,7 @@ import { getStablecoinById } from '../data/dataLoader';
 import { STABLECOIN_TYPE_COLORS, STABLECOIN_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
@@ -16,6 +17,14 @@ export default function StablecoinDetailPage() {
   const fetcher = useCallback(() => getStablecoinById(id ?? ''), [id]);
   const { data: coin, loading, error } = useSupabaseQuery(fetcher, [id]);
   const revealRef = useReveal(loading);
+
+  useDocumentMeta({
+    title: coin ? `${coin.name} (${coin.ticker}) — Stablecoin Profile` : 'Stablecoin',
+    description: coin
+      ? `${coin.name} (${coin.ticker}): ${coin.type} stablecoin. Market cap: $${coin.marketCapBn.toFixed(1)}B. Issuer: ${coin.issuer}.`
+      : 'Loading stablecoin details...',
+    path: id ? `/stablecoins/${id}` : undefined,
+  });
 
   if (loading) {
     return (

@@ -12,6 +12,7 @@ import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useColumnFilters } from '../hooks/useColumnFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
@@ -290,6 +291,12 @@ function CbdcsTab() {
 
 /* ── Main Page ── */
 export default function StablecoinsPage() {
+  useDocumentMeta({
+    title: 'Stablecoins & CBDCs — Digital Currency Tracker',
+    description: 'Track 15 major stablecoins and 24 central bank digital currencies (CBDCs). Compare regulatory status, market caps, and jurisdiction coverage.',
+    path: '/stablecoins',
+  });
+
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabMode>('stablecoins');
   const revealRef = useReveal(false);

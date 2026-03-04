@@ -7,11 +7,18 @@ import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useColumnFilters } from '../hooks/useColumnFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
 
 export default function EntitiesPage() {
+  useDocumentMeta({
+    title: 'Licensed Crypto Entities — VASP Registry',
+    description: 'Browse 4,000+ licensed cryptocurrency service providers (VASPs) across 82 countries. Filter by status, country, and license type.',
+    path: '/entities',
+  });
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: allEntities, loading, error, refetch } = useSupabaseQuery(getEntities);

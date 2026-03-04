@@ -5,6 +5,7 @@ import { getCbdcById } from '../data/dataLoader';
 import { CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
@@ -31,6 +32,14 @@ export default function CbdcDetailPage() {
   const fetcher = useCallback(() => getCbdcById(id ?? ''), [id]);
   const { data: cbdc, loading, error } = useSupabaseQuery(fetcher, [id]);
   const revealRef = useReveal(loading);
+
+  useDocumentMeta({
+    title: cbdc ? `${cbdc.name} — CBDC Profile` : 'CBDC',
+    description: cbdc
+      ? `${cbdc.name}: ${cbdc.status} central bank digital currency from ${cbdc.country}. Technology: ${cbdc.technology}.`
+      : 'Loading CBDC details...',
+    path: id ? `/cbdcs/${id}` : undefined,
+  });
 
   if (loading) {
     return (

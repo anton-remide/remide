@@ -2,8 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReveal } from '../hooks/useAnimations';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 export default function LoginPage() {
+  useDocumentMeta({
+    title: 'Log In',
+    description: 'Sign in to RemiDe to access jurisdiction detail pages, entity profiles, and premium regulatory data.',
+    path: '/login',
+  });
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

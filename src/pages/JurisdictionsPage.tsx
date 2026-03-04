@@ -8,6 +8,7 @@ import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useColumnFilters } from '../hooks/useColumnFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
@@ -15,6 +16,20 @@ import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
 import SegmentedControl from '../components/ui/SegmentedControl';
 
 export default function JurisdictionsPage() {
+  useDocumentMeta({
+    title: 'Crypto Regulation Map — 206 Countries',
+    description: 'Interactive world map of cryptocurrency regulations. Compare VASP licensing regimes, Travel Rule compliance, and stablecoin status across 206 jurisdictions.',
+    path: '/jurisdictions',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: 'RemiDe Crypto Jurisdictions Dataset',
+      description: 'Regulatory classification of 206 countries for cryptocurrency and VASP licensing.',
+      url: 'https://anton-remide.github.io/remide/jurisdictions',
+      license: 'https://creativecommons.org/licenses/by-nc/4.0/',
+    },
+  });
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: allJurisdictions, loading, error, refetch } = useSupabaseQuery(getJurisdictions);
