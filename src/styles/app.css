@@ -2387,11 +2387,20 @@ a, button, input, select, textarea {
   .st-map-container {
     height: 45vh;
     min-height: 260px;
+    /* Space for mini-stats that overflow below the fixed-height container */
+    margin-bottom: 48px;
   }
 
   .st-map-container--compact {
     height: 280px;
     min-height: 180px;
+    margin-bottom: 0;
+  }
+
+  /* Clip map canvas for rounded corners (instead of overflow:hidden on container) */
+  .st-map-canvas {
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
   }
 
   /* --- Map --- */
@@ -2401,6 +2410,8 @@ a, button, input, select, textarea {
 
   .st-map-frame {
     border-radius: 8px;
+    /* Allow mini-stats + toggles overlay to overflow outside frame */
+    overflow: visible;
   }
 
   .st-map-mini-stats {
@@ -2410,6 +2421,7 @@ a, button, input, select, textarea {
     flex-wrap: wrap;
     padding: 8px 12px;
     justify-content: flex-start;
+    z-index: 1;
   }
 
   .st-map-mini-stat {
@@ -2441,6 +2453,7 @@ a, button, input, select, textarea {
   .st-map-toggles-overlay {
     position: static;
     padding: 8px 12px;
+    z-index: 2;
   }
 
   /* --- Segmented control: full-width on mobile --- */
@@ -2567,11 +2580,15 @@ a, button, input, select, textarea {
     flex: 1;
   }
 
-  /* --- Sticky bottom bar --- */
+  /* --- Sticky bottom bar: compact on mobile --- */
   .st-sticky-bar-row {
+    padding: 4px 12px;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .st-sticky-bar-cookies {
     padding: 6px 12px;
-    flex-wrap: wrap;
-    gap: 8px;
   }
 
   .st-sticky-bar-text {
@@ -2630,11 +2647,13 @@ a, button, input, select, textarea {
   .st-map-container {
     height: 280px;
     min-height: 220px;
+    margin-bottom: 48px;
   }
 
   .st-map-container--compact {
     height: 240px;
     min-height: 180px;
+    margin-bottom: 0;
   }
 
   .st-map-zoom-controls {
@@ -2718,11 +2737,13 @@ a, button, input, select, textarea {
   .st-map-container {
     height: 250px;
     min-height: 200px;
+    margin-bottom: 44px;
   }
 
   .st-map-container--compact {
     height: 200px;
     min-height: 160px;
+    margin-bottom: 0;
   }
 
   /* --- Map section edge-to-edge --- */
@@ -2736,14 +2757,14 @@ a, button, input, select, textarea {
     border-right: none;
   }
 
-  /* Legend: compact, hide title */
+  /* Legend: compact, hide title on phone */
   .st-map-legend {
-    max-width: 120px;
+    max-width: 110px;
     padding: 6px 8px;
   }
 
   .st-map-legend-title {
-    font-size: 0.5625rem;
+    display: none;
   }
 
   /* --- Table: compact --- */
@@ -2786,6 +2807,13 @@ a, button, input, select, textarea {
   .st-mobile-menu nav {
     gap: 20px;
     padding: 0 20px;
+  }
+
+  /* --- Auth form: stack 2-column fields on phone --- */
+  .st-auth-form .col-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    width: 100%;
   }
 }
 
@@ -2912,22 +2940,33 @@ a, button, input, select, textarea {
   .st-map-container {
     height: 220px;
     min-height: 180px;
+    margin-bottom: 40px;
   }
 
   .st-map-container--compact {
     height: 180px;
     min-height: 140px;
+    margin-bottom: 0;
   }
 
-  /* Map section */
+  /* Map section: mini-stats horizontal scroll on very small screens */
   .st-map-mini-stats {
     padding: 6px 8px;
     gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .st-map-mini-stats::-webkit-scrollbar {
+    display: none;
   }
 
   .st-map-mini-stat {
     min-width: 60px;
     padding: 6px 8px;
+    flex-shrink: 0;
   }
 
   .st-map-mini-stat-value {
@@ -2936,6 +2975,13 @@ a, button, input, select, textarea {
 
   .st-map-mini-stat-label {
     font-size: 0.5rem;
+  }
+
+  /* Legend: even more compact */
+  .st-map-legend {
+    max-width: 100px;
+    padding: 4px 6px;
+    font-size: 0.5625rem;
   }
 
   /* Page container: minimal padding */
