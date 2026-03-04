@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCallback, useMemo } from 'react';
-import { ExternalLink, Linkedin } from 'lucide-react';
+import { ExternalLink, Linkedin, Twitter } from 'lucide-react';
 import { getEntityById, getEntitiesByCountry, getJurisdictionByCode } from '../data/dataLoader';
 import { STATUS_COLORS, REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
@@ -21,7 +21,7 @@ export default function EntityDetailPage() {
   useDocumentMeta({
     title: entity ? `${entity.name} — Licensed VASP` : 'Entity',
     description: entity
-      ? `${entity.name} is a ${entity.status} crypto service provider in ${entity.country}. License: ${entity.licenseNumber ?? 'N/A'}.`
+      ? (entity.description || `${entity.name} is a ${entity.status} crypto service provider in ${entity.country}. License: ${entity.licenseNumber ?? 'N/A'}.`)
       : 'Loading entity details...',
     path: id ? `/entities/${id}` : undefined,
   });
@@ -153,6 +153,18 @@ export default function EntityDetailPage() {
               <a href={entity.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Linkedin size={14} />
                 Company page
+                <ExternalLink size={12} />
+              </a>
+            </span>
+          </div>
+        )}
+        {entity.twitterUrl && (
+          <div className="st-info-row">
+            <span className="st-info-label">Twitter / X</span>
+            <span className="st-info-value">
+              <a href={entity.twitterUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Twitter size={14} />
+                @{entity.twitterUrl.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\//, '')}
                 <ExternalLink size={12} />
               </a>
             </span>

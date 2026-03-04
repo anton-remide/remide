@@ -16,6 +16,13 @@ interface JurisdictionRow {
   description: string;
 }
 
+interface EntityRawData {
+  enrichment_description?: string;
+  enrichment_linkedin_url?: string;
+  enrichment_twitter_url?: string;
+  [key: string]: unknown;
+}
+
 interface EntityRow {
   id: string;
   name: string;
@@ -31,6 +38,7 @@ interface EntityRow {
   description: string;
   registry_url: string;
   linkedin_url: string;
+  raw_data: EntityRawData | null;
 }
 
 function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
@@ -49,6 +57,13 @@ function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
 }
 
 function mapEntity(row: EntityRow): Entity {
+  // Enrichment data: prefer dedicated columns, fallback to raw_data JSONB
+  const rd = row.raw_data;
+  const description = row.description || rd?.enrichment_description || '';
+  const linkedinUrl = row.linkedin_url || rd?.enrichment_linkedin_url || '';
+  const twitterUrl = rd?.enrichment_twitter_url || '';
+  const registryUrl = row.registry_url || '';
+
   return {
     id: row.id,
     name: row.name,
@@ -61,9 +76,10 @@ function mapEntity(row: EntityRow): Entity {
     status: row.status as Entity['status'],
     regulator: row.regulator,
     website: row.website,
-    description: row.description ?? '',
-    registryUrl: row.registry_url ?? '',
-    linkedinUrl: row.linkedin_url ?? '',
+    description,
+    registryUrl,
+    linkedinUrl,
+    twitterUrl,
   };
 }
 

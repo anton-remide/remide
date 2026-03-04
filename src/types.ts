@@ -13,6 +13,7 @@ export interface Entity {
   description: string;
   registryUrl: string;
   linkedinUrl: string;
+  twitterUrl: string;
 }
 
 export type EntityStatus =
