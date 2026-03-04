@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getJurisdictions, getStablecoins } from '../data/dataLoader';
+import { expandRegionalCode } from '../data/regionCodes';
 import type { Jurisdiction, RegimeType, TravelRuleStatus, Stablecoin, StablecoinJurisdictionStatus } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
@@ -51,11 +52,14 @@ export default function JurisdictionsPage() {
     const m = new Map<string, string>();
     (allStablecoins ?? []).forEach((s: Stablecoin) => {
       s.majorJurisdictions.forEach((j) => {
-        const code = j.code.toUpperCase();
-        const current = m.get(code);
-        const currentP = current ? (priority[current] ?? 99) : 99;
-        const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
-        if (newP < currentP) m.set(code, j.status);
+        // Expand "EU" → 27 member states so map renders correctly
+        const codes = expandRegionalCode(j.code);
+        codes.forEach((code) => {
+          const current = m.get(code);
+          const currentP = current ? (priority[current] ?? 99) : 99;
+          const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
+          if (newP < currentP) m.set(code, j.status);
+        });
       });
     });
     return m;

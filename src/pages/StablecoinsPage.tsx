@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStablecoins, getCbdcs, getJurisdictions } from '../data/dataLoader';
+import { expandRegionalCode } from '../data/regionCodes';
 import type { Stablecoin, Cbdc, StablecoinJurisdictionStatus } from '../types';
 import {
   STABLECOIN_TYPE_COLORS,
@@ -314,21 +315,28 @@ export default function StablecoinsPage() {
     const m = new Map<string, string>();
     (allStablecoinsForMap ?? []).forEach((s: Stablecoin) => {
       s.majorJurisdictions.forEach((j) => {
-        const code = j.code.toUpperCase();
-        const current = m.get(code);
-        const currentP = current ? (priority[current] ?? 99) : 99;
-        const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
-        if (newP < currentP) m.set(code, j.status);
+        // Expand "EU" → 27 member states so map renders correctly
+        const codes = expandRegionalCode(j.code);
+        codes.forEach((code) => {
+          const current = m.get(code);
+          const currentP = current ? (priority[current] ?? 99) : 99;
+          const newP = priority[j.status as StablecoinJurisdictionStatus] ?? 99;
+          if (newP < currentP) m.set(code, j.status);
+        });
       });
     });
     return m;
   }, [allStablecoinsForMap]);
 
-  // CBDC statuses per country
+  // CBDC statuses per country (expand "EU" → 27 member states for Digital Euro)
   const cbdcStatuses = useMemo(() => {
     const m = new Map<string, string>();
     (allCbdcsForMap ?? []).forEach((c: Cbdc) => {
-      m.set(c.countryCode.toUpperCase(), c.status);
+      const codes = expandRegionalCode(c.countryCode);
+      codes.forEach((code) => {
+        // Don't overwrite a country's own CBDC status with EU-level status
+        if (!m.has(code)) m.set(code, c.status);
+      });
     });
     return m;
   }, [allCbdcsForMap]);
