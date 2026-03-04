@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStablecoins, getCbdcs, getJurisdictions } from '../data/dataLoader';
 import { expandRegionalCode } from '../data/regionCodes';
-import type { Stablecoin, Cbdc, Jurisdiction } from '../types';
+import type { Stablecoin, Cbdc, Jurisdiction, RegimeType, TravelRuleStatus } from '../types';
 import {
   STABLECOIN_TYPE_COLORS,
   CBDC_STATUS_COLORS,
@@ -21,13 +21,20 @@ import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
 type TabMode = 'stablecoins' | 'cbdcs';
 
 /* ── Stablecoins Table ── */
-function StablecoinsTab() {
+function StablecoinsTab({ filterCountryNames }: { filterCountryNames?: string[] }) {
   const navigate = useNavigate();
   const { data: allStablecoins, loading, error, refetch } = useSupabaseQuery(getStablecoins);
   const safeData = allStablecoins ?? [];
 
+  // Pre-filter by country names from map (if any)
+  const mapFilteredData = useMemo(() => {
+    if (!filterCountryNames || filterCountryNames.length === 0) return safeData;
+    const nameSet = new Set(filterCountryNames);
+    return safeData.filter((s) => nameSet.has(s.issuerCountry));
+  }, [safeData, filterCountryNames]);
+
   const colFilters = useColumnFilters<Stablecoin & Record<string, unknown>>(
-    safeData as (Stablecoin & Record<string, unknown>)[],
+    mapFilteredData as (Stablecoin & Record<string, unknown>)[],
   );
 
   const filterFn = useCallback((s: Stablecoin, q: string) => {
@@ -128,36 +135,44 @@ function StablecoinsTab() {
   }
 
   return (
-    <>
-      <DataTable
-        columns={columns}
-        data={table.paginated as (Stablecoin & Record<string, unknown>)[]}
-        sort={table.sort}
-        onSort={table.toggleSort}
-        onRowClick={(row) => navigate(`/stablecoins/${(row as unknown as Stablecoin).id}`)}
-        page={table.page}
-        totalPages={table.totalPages}
-        onPageChange={table.setPage}
-        totalFiltered={table.totalFiltered}
-        totalCount={safeData.length}
-        pageSize={table.pageSize}
-        onPageSizeChange={table.setPageSize}
-        search={table.search}
-        onSearchChange={table.setSearch}
-        searchPlaceholder="Search stablecoins..."
-      />
-    </>
+    <DataTable
+      columns={columns}
+      data={table.paginated as (Stablecoin & Record<string, unknown>)[]}
+      sort={table.sort}
+      onSort={table.toggleSort}
+      onRowClick={(row) => navigate(`/stablecoins/${(row as unknown as Stablecoin).id}`)}
+      page={table.page}
+      totalPages={table.totalPages}
+      onPageChange={table.setPage}
+      totalFiltered={table.totalFiltered}
+      totalCount={mapFilteredData.length}
+      pageSize={table.pageSize}
+      onPageSizeChange={table.setPageSize}
+      search={table.search}
+      onSearchChange={table.setSearch}
+      searchPlaceholder="Search stablecoins..."
+    />
   );
 }
 
 /* ── CBDCs Table ── */
-function CbdcsTab() {
+function CbdcsTab({ filterCountryCodes }: { filterCountryCodes?: string[] }) {
   const navigate = useNavigate();
   const { data: allCbdcs, loading, error, refetch } = useSupabaseQuery(getCbdcs);
   const safeData = allCbdcs ?? [];
 
+  // Pre-filter by country codes from map (if any) — handle EU expansion
+  const mapFilteredData = useMemo(() => {
+    if (!filterCountryCodes || filterCountryCodes.length === 0) return safeData;
+    const codeSet = new Set(filterCountryCodes);
+    return safeData.filter((c) => {
+      const codes = expandRegionalCode(c.countryCode);
+      return codes.some((code) => codeSet.has(code));
+    });
+  }, [safeData, filterCountryCodes]);
+
   const colFilters = useColumnFilters<Cbdc & Record<string, unknown>>(
-    safeData as (Cbdc & Record<string, unknown>)[],
+    mapFilteredData as (Cbdc & Record<string, unknown>)[],
   );
 
   const filterFn = useCallback((c: Cbdc, q: string) => {
@@ -241,25 +256,23 @@ function CbdcsTab() {
   }
 
   return (
-    <>
-      <DataTable
-        columns={columns}
-        data={table.paginated as (Cbdc & Record<string, unknown>)[]}
-        sort={table.sort}
-        onSort={table.toggleSort}
-        onRowClick={(row) => navigate(`/cbdcs/${(row as unknown as Cbdc).id}`)}
-        page={table.page}
-        totalPages={table.totalPages}
-        onPageChange={table.setPage}
-        totalFiltered={table.totalFiltered}
-        totalCount={safeData.length}
-        pageSize={table.pageSize}
-        onPageSizeChange={table.setPageSize}
-        search={table.search}
-        onSearchChange={table.setSearch}
-        searchPlaceholder="Search CBDCs..."
-      />
-    </>
+    <DataTable
+      columns={columns}
+      data={table.paginated as (Cbdc & Record<string, unknown>)[]}
+      sort={table.sort}
+      onSort={table.toggleSort}
+      onRowClick={(row) => navigate(`/cbdcs/${(row as unknown as Cbdc).id}`)}
+      page={table.page}
+      totalPages={table.totalPages}
+      onPageChange={table.setPage}
+      totalFiltered={table.totalFiltered}
+      totalCount={mapFilteredData.length}
+      pageSize={table.pageSize}
+      onPageSizeChange={table.setPageSize}
+      search={table.search}
+      onSearchChange={table.setSearch}
+      searchPlaceholder="Search CBDCs..."
+    />
   );
 }
 
@@ -273,6 +286,7 @@ export default function StablecoinsPage() {
 
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabMode>('stablecoins');
+  const [mapColorMode, setMapColorMode] = useState<MapColorMode>('stablecoin');
   const [activeMiniStats, setActiveMiniStats] = useState<string[]>([]);
   const revealRef = useReveal(false);
 
@@ -281,8 +295,7 @@ export default function StablecoinsPage() {
   const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
   const safeJurisdictions = allJurisdictions ?? [];
 
-  // Stablecoin regulatory stage per country (from Stride data on jurisdictions)
-  // Stage: 0=No Framework, 1=Developing, 2=In Progress, 3=Live
+  // Stablecoin regulatory stage per country
   const stageLabels: Record<number, string> = {
     3: 'Live', 2: 'In Progress', 1: 'Developing', 0: 'No Framework',
   };
@@ -298,42 +311,85 @@ export default function StablecoinsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeJurisdictions]);
 
-  // CBDC statuses per country (expand "EU" → 27 member states for Digital Euro)
+  // CBDC statuses per country (expand "EU" → 27 member states)
   const cbdcStatuses = useMemo(() => {
     const m = new Map<string, string>();
     (allCbdcsForMap ?? []).forEach((c: Cbdc) => {
       const codes = expandRegionalCode(c.countryCode);
       codes.forEach((code) => {
-        // Don't overwrite a country's own CBDC status with EU-level status
         if (!m.has(code)) m.set(code, c.status);
       });
     });
     return m;
   }, [allCbdcsForMap]);
 
-  // Choose which map data to show based on tab
-  const mapStatuses = tab === 'stablecoins' ? stablecoinStatuses : cbdcStatuses;
-  const mapMode: MapColorMode = tab === 'stablecoins' ? 'stablecoin' : 'cbdc';
+  const mapStatuses = mapColorMode === 'cbdc' ? cbdcStatuses
+    : mapColorMode === 'stablecoin' ? stablecoinStatuses
+    : stablecoinStatuses;
 
-  // Mini-stat label (lowercase) → stablecoinStatus value mapping for map filtering
+  // Mini-stat label (lowercase) → status values
   const miniStatLabelToValues: Record<string, string[]> = {
-    live: ['Live'],
-    'in progress': ['In Progress'],
-    developing: ['Developing'],
-    'no framework': ['No Framework'],
-    // CBDC labels
-    launched: ['Launched'],
-    pilot: ['Pilot'],
-    development: ['Development'],
-    research: ['Research'],
+    licensing: ['Licensing'], registration: ['Registration'], sandbox: ['Sandbox'], ban: ['Ban'],
+    'none / unclear': ['None', 'Unclear'],
+    enforced: ['Enforced'], legislated: ['Legislated'], 'in progress': ['In Progress'],
+    'not implemented': ['Not Implemented', 'N/A'],
+    live: ['Live'], developing: ['Developing'], 'no framework': ['No Framework'], 'no data': ['No Data'],
+    launched: ['Launched'], pilot: ['Pilot'], development: ['Development'], research: ['Research'],
   };
 
-  // Derive stablecoin/CBDC status filters from activeMiniStats
-  const selectedStablecoinStatuses = useMemo(() => {
-    if (activeMiniStats.length === 0) return [] as string[];
+  // For map highlighting
+  const mapRegimes = useMemo(() => {
+    if (mapColorMode !== 'regime' || activeMiniStats.length === 0) return [] as RegimeType[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]) as RegimeType[];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats]);
+
+  const mapTravelRules = useMemo(() => {
+    if (mapColorMode !== 'travelRule' || activeMiniStats.length === 0) return [] as TravelRuleStatus[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]) as TravelRuleStatus[];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats]);
+
+  const stablecoinStatusFilters = useMemo(() => {
+    if ((mapColorMode !== 'stablecoin' && mapColorMode !== 'cbdc') || activeMiniStats.length === 0) return [] as string[];
     return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMiniStats]);
+  }, [mapColorMode, activeMiniStats]);
+
+  // Compute matching country codes from mini-stat selection (for all modes)
+  const matchingCountryCodes = useMemo(() => {
+    if (activeMiniStats.length === 0) return [] as string[];
+    const statusValues = activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+
+    if (mapColorMode === 'stablecoin') {
+      const codes: string[] = [];
+      stablecoinStatuses.forEach((status, code) => { if (statusValues.includes(status)) codes.push(code); });
+      return codes;
+    }
+    if (mapColorMode === 'cbdc') {
+      const codes: string[] = [];
+      cbdcStatuses.forEach((status, code) => { if (statusValues.includes(status)) codes.push(code); });
+      return codes;
+    }
+    // regime / travelRule — get codes from jurisdictions
+    const field = mapColorMode === 'travelRule' ? 'travelRule' : 'regime';
+    return safeJurisdictions
+      .filter((j) => statusValues.includes(String(j[field])))
+      .map((j) => j.code.toUpperCase());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats, stablecoinStatuses, cbdcStatuses, safeJurisdictions]);
+
+  // Convert country codes to country names (for stablecoins tab filtering by issuerCountry)
+  const matchingCountryNames = useMemo(() => {
+    if (matchingCountryCodes.length === 0) return undefined;
+    const codeSet = new Set(matchingCountryCodes);
+    const names = safeJurisdictions
+      .filter((j) => codeSet.has(j.code.toUpperCase()))
+      .map((j) => j.name);
+    return names.length > 0 ? names : undefined;
+  }, [matchingCountryCodes, safeJurisdictions]);
+
+  const filterCountryCodes = matchingCountryCodes.length > 0 ? matchingCountryCodes : undefined;
 
   const handleMiniStatClick = useCallback((label: string) => {
     setActiveMiniStats((prev) => {
@@ -342,42 +398,54 @@ export default function StablecoinsPage() {
   }, []);
 
   return (
-    <div ref={revealRef} className="st-page">
-      <div className="reveal" style={{ marginBottom: 24 }}>
-        <h2 style={{ marginBottom: 4 }}>Stablecoins & CBDCs</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          Track stablecoin regulatory status and central bank digital currency projects worldwide
-        </p>
-      </div>
-
+    <div ref={revealRef} className="st-map-section">
       {/* Map */}
-      <div className="reveal st-map-frame" style={{ marginBottom: 24 }}>
+      <div className="st-map-frame">
         <WorldMap
           jurisdictions={safeJurisdictions}
-          colorMode={mapMode}
+          colorMode={mapColorMode}
           stablecoinStatuses={mapStatuses}
-          selectedStablecoinStatuses={selectedStablecoinStatuses}
+          selectedRegimes={mapRegimes}
+          selectedTravelRules={mapTravelRules}
+          selectedStablecoinStatuses={stablecoinStatusFilters}
           onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
           onMiniStatClick={handleMiniStatClick}
           activeMiniStats={activeMiniStats}
         />
-        {/* Toggles overlay — top-left */}
+        {/* Map mode toggles — top-left */}
         <div className="st-map-toggles-overlay">
           <SegmentedControl
             options={[
-              { value: 'stablecoins', label: 'Stablecoins' },
-              { value: 'cbdcs', label: 'CBDCs' },
+              { value: 'regime', label: 'Regulation' },
+              { value: 'travelRule', label: 'Travel Rule' },
+              { value: 'stablecoin', label: 'Stablecoins' },
+              { value: 'cbdc', label: 'CBDCs' },
             ]}
-            value={tab}
+            value={mapColorMode}
             onChange={(v) => {
-              setTab(v as TabMode);
-              setActiveMiniStats([]);
+              if (activeMiniStats.length > 0) setActiveMiniStats([]);
+              setMapColorMode(v as MapColorMode);
             }}
           />
         </div>
       </div>
 
-      {tab === 'stablecoins' ? <StablecoinsTab /> : <CbdcsTab />}
+      {/* Tab switcher for table */}
+      <div style={{ marginTop: 16, marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
+        <SegmentedControl
+          options={[
+            { value: 'stablecoins', label: 'Stablecoins' },
+            { value: 'cbdcs', label: 'CBDCs' },
+          ]}
+          value={tab}
+          onChange={(v) => setTab(v as TabMode)}
+        />
+      </div>
+
+      {tab === 'stablecoins'
+        ? <StablecoinsTab filterCountryNames={matchingCountryNames} />
+        : <CbdcsTab filterCountryCodes={filterCountryCodes} />
+      }
     </div>
   );
 }

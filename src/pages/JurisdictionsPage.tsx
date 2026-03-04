@@ -113,8 +113,19 @@ export default function JurisdictionsPage() {
       const isActive = prev.includes(label);
       const next = isActive ? prev.filter((l) => l !== label) : [...prev, label];
 
-      // In stablecoin/cbdc mode, we only update activeMiniStats — map handles it via selectedStablecoinStatuses
+      // In stablecoin/cbdc mode, filter jurisdictions by matching country codes
       if (mapColorMode === 'stablecoin' || mapColorMode === 'cbdc') {
+        if (next.length === 0) {
+          colFilters.clearFilter('code');
+        } else {
+          const statusValues = next.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+          const statusMap = mapColorMode === 'cbdc' ? cbdcStatuses : stablecoinStatuses;
+          const matchingCodes: string[] = [];
+          statusMap.forEach((status, code) => {
+            if (statusValues.includes(status)) matchingCodes.push(code);
+          });
+          colFilters.applyFilter('code', matchingCodes);
+        }
         return next;
       }
 
@@ -129,7 +140,7 @@ export default function JurisdictionsPage() {
       return next;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapColorMode, colFilters.applyFilter, colFilters.clearFilter]);
+  }, [mapColorMode, colFilters.applyFilter, colFilters.clearFilter, stablecoinStatuses, cbdcStatuses]);
 
   const filterFn = useCallback((j: Jurisdiction, q: string) => {
     return j.name.toLowerCase().includes(q) || j.regulator.toLowerCase().includes(q);
@@ -232,9 +243,10 @@ export default function JurisdictionsPage() {
             onChange={(v) => {
               // Reset mini-stat filter when switching mode
               if (activeMiniStats.length > 0) {
-                // Clear column filters for previous mode (stablecoin mode doesn't use column filters)
+                // Clear column filters for previous mode
                 if (mapColorMode === 'travelRule') colFilters.clearFilter('travelRule');
                 else if (mapColorMode === 'regime') colFilters.clearFilter('regime');
+                else colFilters.clearFilter('code'); // stablecoin/cbdc mode filters by code
                 setActiveMiniStats([]);
               }
               setMapColorMode(v as MapColorMode);

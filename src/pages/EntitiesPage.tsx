@@ -1,7 +1,8 @@
-import { useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getEntities } from '../data/dataLoader';
-import type { Entity } from '../types';
+import { getEntities, getJurisdictions, getCbdcs } from '../data/dataLoader';
+import { expandRegionalCode } from '../data/regionCodes';
+import type { Entity, Jurisdiction, Cbdc, RegimeType, TravelRuleStatus } from '../types';
 import { STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -11,6 +12,8 @@ import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
+import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
+import SegmentedControl from '../components/ui/SegmentedControl';
 
 export default function EntitiesPage() {
   useDocumentMeta({
@@ -26,10 +29,121 @@ export default function EntitiesPage() {
 
   const safeEntities = allEntities ?? [];
 
-  // Column filters hook (works on full dataset)
+  // ── Map data ──
+  const [mapColorMode, setMapColorMode] = useState<MapColorMode>('regime');
+  const [activeMiniStats, setActiveMiniStats] = useState<string[]>([]);
+
+  const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
+  const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
+  const safeJurisdictions = allJurisdictions ?? [];
+
+  // Stablecoin regulatory stage per country
+  const stageLabels: Record<number, string> = {
+    3: 'Live', 2: 'In Progress', 1: 'Developing', 0: 'No Framework',
+  };
+
+  const stablecoinStatuses = useMemo(() => {
+    const m = new Map<string, string>();
+    safeJurisdictions.forEach((j: Jurisdiction) => {
+      if (j.stablecoinStage !== null && j.stablecoinStage !== undefined) {
+        m.set(j.code.toUpperCase(), stageLabels[j.stablecoinStage] ?? 'No Data');
+      }
+    });
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeJurisdictions]);
+
+  // CBDC statuses per country (expand "EU" → member states)
+  const cbdcStatuses = useMemo(() => {
+    const m = new Map<string, string>();
+    (allCbdcsForMap ?? []).forEach((c: Cbdc) => {
+      const codes = expandRegionalCode(c.countryCode);
+      codes.forEach((cc) => { if (!m.has(cc)) m.set(cc, c.status); });
+    });
+    return m;
+  }, [allCbdcsForMap]);
+
+  const mapStatuses = mapColorMode === 'cbdc' ? cbdcStatuses
+    : mapColorMode === 'stablecoin' ? stablecoinStatuses
+    : stablecoinStatuses;
+
+  // Derive regime/travelRule selections for the map from column filters
   const colFilters = useColumnFilters<Entity & Record<string, unknown>>(
     safeEntities as (Entity & Record<string, unknown>)[],
   );
+
+  // Mini-stat label (lowercase) → filter field values
+  const miniStatLabelToValues: Record<string, string[]> = {
+    licensing: ['Licensing'], registration: ['Registration'], sandbox: ['Sandbox'], ban: ['Ban'],
+    'none / unclear': ['None', 'Unclear'],
+    enforced: ['Enforced'], legislated: ['Legislated'], 'in progress': ['In Progress'],
+    'not implemented': ['Not Implemented', 'N/A'],
+    live: ['Live'], developing: ['Developing'], 'no framework': ['No Framework'], 'no data': ['No Data'],
+    launched: ['Launched'], pilot: ['Pilot'], development: ['Development'], research: ['Research'],
+  };
+
+  // For map highlighting: derive regime/travelRule from active mini-stats when in those modes
+  const mapRegimes = useMemo(() => {
+    if (mapColorMode !== 'regime' || activeMiniStats.length === 0) return [] as RegimeType[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]) as RegimeType[];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats]);
+
+  const mapTravelRules = useMemo(() => {
+    if (mapColorMode !== 'travelRule' || activeMiniStats.length === 0) return [] as TravelRuleStatus[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]) as TravelRuleStatus[];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats]);
+
+  const stablecoinStatusFilters = useMemo(() => {
+    if ((mapColorMode !== 'stablecoin' && mapColorMode !== 'cbdc') || activeMiniStats.length === 0) return [] as string[];
+    return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, activeMiniStats]);
+
+  // Helper: get matching country codes for a set of status values from a Map
+  const getMatchingCodes = useCallback((statusMap: Map<string, string>, statusValues: string[]) => {
+    const codes: string[] = [];
+    statusMap.forEach((status, code) => {
+      if (statusValues.includes(status)) codes.push(code);
+    });
+    return codes;
+  }, []);
+
+  // Helper: get matching country codes from jurisdictions for regime/travelRule modes
+  const getMatchingCodesFromJurisdictions = useCallback((field: 'regime' | 'travelRule', values: string[]) => {
+    return safeJurisdictions
+      .filter((j) => values.includes(String(j[field])))
+      .map((j) => j.code.toUpperCase());
+  }, [safeJurisdictions]);
+
+  const handleMiniStatClick = useCallback((label: string) => {
+    setActiveMiniStats((prev) => {
+      const next = prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label];
+
+      if (next.length === 0) {
+        colFilters.clearFilter('countryCode');
+        return next;
+      }
+
+      const statusValues = next.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
+      let matchingCodes: string[];
+
+      if (mapColorMode === 'stablecoin') {
+        matchingCodes = getMatchingCodes(stablecoinStatuses, statusValues);
+      } else if (mapColorMode === 'cbdc') {
+        matchingCodes = getMatchingCodes(cbdcStatuses, statusValues);
+      } else if (mapColorMode === 'travelRule') {
+        matchingCodes = getMatchingCodesFromJurisdictions('travelRule', statusValues);
+      } else {
+        matchingCodes = getMatchingCodesFromJurisdictions('regime', statusValues);
+      }
+
+      colFilters.applyFilter('countryCode', matchingCodes);
+      return next;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapColorMode, colFilters.applyFilter, colFilters.clearFilter, stablecoinStatuses, cbdcStatuses, getMatchingCodes, getMatchingCodesFromJurisdictions]);
 
   const filterFn = useCallback((e: Entity, q: string) => {
     return e.name.toLowerCase().includes(q) || e.country.toLowerCase().includes(q);
@@ -113,15 +227,43 @@ export default function EntitiesPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page">
-      <div className="reveal" style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 4 }}>Entity Directory</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          {safeEntities.length.toLocaleString()} licensed entities worldwide
-        </p>
+    <div ref={revealRef} className="st-map-section">
+      {/* Map Frame */}
+      <div className="st-map-frame">
+        <WorldMap
+          jurisdictions={safeJurisdictions}
+          selectedRegimes={mapRegimes}
+          selectedTravelRules={mapTravelRules}
+          selectedStablecoinStatuses={stablecoinStatusFilters}
+          onCountryClick={(code) => navigate(`/jurisdictions/${code}`)}
+          onMiniStatClick={handleMiniStatClick}
+          activeMiniStats={activeMiniStats}
+          colorMode={mapColorMode}
+          stablecoinStatuses={mapStatuses}
+        />
+        {/* Toggles overlay — top-left */}
+        <div className="st-map-toggles-overlay">
+          <SegmentedControl
+            options={[
+              { value: 'regime', label: 'Regulation' },
+              { value: 'travelRule', label: 'Travel Rule' },
+              { value: 'stablecoin', label: 'Stablecoins' },
+              { value: 'cbdc', label: 'CBDCs' },
+            ]}
+            value={mapColorMode}
+            onChange={(v) => {
+              if (activeMiniStats.length > 0) {
+                colFilters.clearFilter('countryCode');
+                setActiveMiniStats([]);
+              }
+              setMapColorMode(v as MapColorMode);
+            }}
+          />
+        </div>
       </div>
 
-      <div>
+      {/* Table */}
+      <div style={{ marginTop: 24 }}>
         <DataTable
           columns={columns}
           data={table.paginated as (Entity & Record<string, unknown>)[]}
