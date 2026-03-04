@@ -266,21 +266,30 @@ export default function WorldMap({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update stablecoinStatus in GeoJSON source when statuses change
+  // Update ALL GeoJSON feature properties when jurisdiction data or stablecoin statuses change
   useEffect(() => {
-    if (!loaded || !mapRef.current || !stablecoinStatuses) return;
+    if (!loaded || !mapRef.current) return;
     const source = mapRef.current.getSource('countries') as maplibregl.GeoJSONSource | undefined;
     if (!source || !featuresRef.current.length) return;
     const updated = featuresRef.current.map((f) => {
       const alpha2 = (f.properties as Record<string, unknown>)?.alpha2 as string;
+      const j = jurisdictionMap.get(alpha2);
       return {
         ...f,
-        properties: { ...f.properties, stablecoinStatus: stablecoinStatuses.get(alpha2) ?? 'No Data' },
+        properties: {
+          ...f.properties,
+          regime: j?.regime ?? 'None',
+          travelRule: j?.travelRule ?? 'N/A',
+          entityCount: j?.entityCount ?? 0,
+          regulator: j?.regulator ?? '',
+          countryName: j?.name ?? (f.properties as Record<string, string>)?.countryName ?? '',
+          stablecoinStatus: stablecoinStatuses?.get(alpha2) ?? 'No Data',
+        },
       };
     });
     featuresRef.current = updated as GeoJSON.Feature[];
     source.setData({ type: 'FeatureCollection', features: updated } as GeoJSON.FeatureCollection);
-  }, [loaded, stablecoinStatuses]);
+  }, [loaded, jurisdictionMap, stablecoinStatuses]);
 
   // Update fill color when colorMode changes
   useEffect(() => {
