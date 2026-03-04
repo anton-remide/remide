@@ -4,11 +4,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 import { Plus, Minus } from 'lucide-react';
-import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_MAP_COLORS } from '../../theme';
+import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_MAP_COLORS, CBDC_MAP_COLORS } from '../../theme';
 import { numericToAlpha2 } from '../../data/isoMapping';
 import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../../types';
 
-export type MapColorMode = 'regime' | 'travelRule' | 'stablecoin';
+export type MapColorMode = 'regime' | 'travelRule' | 'stablecoin' | 'cbdc';
 
 interface Props {
   height?: string;
@@ -29,6 +29,18 @@ interface Props {
 
 /* Build a MapLibre match expression for fill-color */
 function buildFillExpression(mode: MapColorMode): maplibregl.ExpressionSpecification {
+  if (mode === 'cbdc') {
+    return [
+      'match', ['get', 'stablecoinStatus'],
+      'Launched', CBDC_MAP_COLORS['Launched'],
+      'Pilot', CBDC_MAP_COLORS['Pilot'],
+      'Development', CBDC_MAP_COLORS['Development'],
+      'Research', CBDC_MAP_COLORS['Research'],
+      'Cancelled', CBDC_MAP_COLORS['Cancelled'],
+      'Inactive', CBDC_MAP_COLORS['Inactive'],
+      '#E2E8F0', // no CBDC data
+    ];
+  }
   if (mode === 'stablecoin') {
     return [
       'match', ['get', 'stablecoinStatus'],
@@ -101,6 +113,19 @@ export default function WorldMap({
 
   // Dynamic mini-stats based on colorMode
   const miniStats = useMemo(() => {
+    if (colorMode === 'cbdc') {
+      const statuses = stablecoinStatuses ?? new Map<string, string>();
+      const countByStatus: Record<string, number> = {};
+      statuses.forEach((status) => {
+        countByStatus[status] = (countByStatus[status] ?? 0) + 1;
+      });
+      return [
+        { value: countByStatus['Launched'] ?? 0, label: 'launched' },
+        { value: countByStatus['Pilot'] ?? 0, label: 'pilot' },
+        { value: countByStatus['Development'] ?? 0, label: 'development' },
+        { value: countByStatus['Research'] ?? 0, label: 'research' },
+      ];
+    }
     if (colorMode === 'stablecoin') {
       const statuses = stablecoinStatuses ?? new Map<string, string>();
       const countByStatus: Record<string, number> = {};
@@ -413,16 +438,20 @@ export default function WorldMap({
   const handleZoomOut = (e: React.MouseEvent) => { e.stopPropagation(); mapRef.current?.zoomOut(); };
 
   // Choose legend colors based on mode
-  const legendColors = colorMode === 'stablecoin'
-    ? STABLECOIN_MAP_COLORS
-    : colorMode === 'travelRule'
-      ? TRAVEL_RULE_MAP_COLORS
-      : REGIME_COLORS;
-  const legendTitle = colorMode === 'stablecoin'
-    ? 'Stablecoin Status'
-    : colorMode === 'travelRule'
-      ? 'Travel Rule Status'
-      : 'Regulatory Regime';
+  const legendColors = colorMode === 'cbdc'
+    ? CBDC_MAP_COLORS
+    : colorMode === 'stablecoin'
+      ? STABLECOIN_MAP_COLORS
+      : colorMode === 'travelRule'
+        ? TRAVEL_RULE_MAP_COLORS
+        : REGIME_COLORS;
+  const legendTitle = colorMode === 'cbdc'
+    ? 'CBDC Status'
+    : colorMode === 'stablecoin'
+      ? 'Stablecoin Status'
+      : colorMode === 'travelRule'
+        ? 'Travel Rule Status'
+        : 'Regulatory Regime';
 
   // Tooltip descriptions for each legend item
   const legendTooltips: Record<string, string> = {
@@ -443,6 +472,12 @@ export default function WorldMap({
     Restricted: 'Stablecoins face usage restrictions or regulatory scrutiny.',
     'Non-Compliant': 'Stablecoins do not meet local regulatory requirements.',
     Discontinued: 'Stablecoin operations have been discontinued in this jurisdiction.',
+    Launched: 'CBDC is fully launched and available for public use.',
+    Pilot: 'CBDC is in pilot/trial phase with limited rollout.',
+    Development: 'CBDC is under active technical development.',
+    Research: 'Central bank is researching CBDC feasibility.',
+    Cancelled: 'CBDC project has been cancelled.',
+    Inactive: 'CBDC project is currently inactive or paused.',
   };
 
   return (

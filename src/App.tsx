@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import StickyBar from './components/layout/StickyBar';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
@@ -51,6 +52,7 @@ export default function App() {
           </ErrorBoundary>
         </main>
         <Footer />
+        <StickyBar />
       </div>
     </HashRouter>
   );

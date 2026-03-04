@@ -328,7 +328,7 @@ export default function StablecoinsPage() {
 
   // Choose which map data to show based on tab
   const mapStatuses = tab === 'stablecoins' ? stablecoinStatuses : cbdcStatuses;
-  const mapMode: MapColorMode = tab === 'stablecoins' ? 'stablecoin' : 'stablecoin'; // both use stablecoin paint
+  const mapMode: MapColorMode = tab === 'stablecoins' ? 'stablecoin' : 'cbdc';
 
   return (
     <div ref={revealRef} className="st-page">
