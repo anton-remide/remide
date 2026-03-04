@@ -618,7 +618,7 @@ ul {
   align-items: center;
   gap: 24px;
   width: 100%;
-  padding: 0 24px;
+  padding: 0 32px;
 }
 
 .st-mobile-menu a {
@@ -629,16 +629,75 @@ ul {
   text-decoration: none;
   display: block;
   text-align: center;
+  padding: 4px 16px;
+  border-radius: 8px;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.st-mobile-menu a:hover,
+.st-mobile-menu a:active {
+  background: var(--bg-light);
+}
+
+.st-mobile-menu a.active {
+  color: var(--accent);
 }
 
 .st-mobile-menu-close {
   position: absolute;
-  top: 16px;
-  right: 24px;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 0;
+  border-radius: 8px;
+  transition: background 150ms ease;
+}
+
+.st-mobile-menu-close:hover {
+  background: var(--bg-light);
+}
+
+.st-mobile-menu-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+.st-mobile-menu-email {
+  font-family: var(--font1);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.st-mobile-menu-action {
+  font-family: var(--font1);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 24px;
+  border-radius: 6px;
+  transition: color 150ms ease, background 150ms ease;
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+.st-mobile-menu-action:hover {
+  color: var(--black);
+  background: var(--bg-light);
 }
 
 /* ==========================================================================
@@ -1163,6 +1222,11 @@ ul {
   color: var(--accent);
 }
 
+/* Filter backdrop (mobile only, hidden on desktop) */
+.st-col-filter-backdrop {
+  display: none;
+}
+
 /* Filter popup (portal) */
 .st-col-filter-popup {
   position: fixed;
@@ -1587,6 +1651,26 @@ ul {
 }
 
 /* ==========================================================================
+   Map Container (WorldMap component root)
+   ========================================================================== */
+
+.st-map-container {
+  position: relative;
+  height: 65vh;
+  min-height: 300px;
+}
+
+.st-map-container--compact {
+  height: 360px;
+  min-height: 200px;
+}
+
+.st-map-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
    Map Frame, Legend, Mini-Stats, Toolbar
    ========================================================================== */
 
@@ -1776,6 +1860,32 @@ ul {
   background: var(--black);
   color: var(--white);
   box-shadow: 0 1px 3px rgba(10, 37, 64, 0.12);
+}
+
+/* ==========================================================================
+   Detail Page Hero (Info card + Mini map side by side)
+   ========================================================================== */
+
+.st-detail-hero {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.st-detail-hero-info {
+  flex: 1 1 400px;
+  min-width: 0;
+}
+
+.st-detail-hero-map {
+  flex: 1 1 360px;
+  min-height: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
 }
 
 /* ==========================================================================
@@ -1983,10 +2093,46 @@ a, button, input, select, textarea {
 }
 
 /* ==========================================================================
-   Responsive
+   Responsive — Mobile-First Stripe-Quality System
+   Breakpoints: 768px (tablet), 600px (small tablet), 480px (phone), 375px (iPhone SE)
    ========================================================================== */
 
+/* --- prefers-reduced-motion: disable ALL animations & transitions --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal,
+  .stagger-in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .st-loading-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .st-scroll-hint-arrow {
+    animation: none !important;
+  }
+
+  .st-card:hover,
+  .st-feature-card:hover,
+  .stats_item:hover {
+    transform: none !important;
+  }
+}
+
+/* ===== TABLET: max-width 768px ===== */
 @media (max-width: 768px) {
+  /* --- Header --- */
   .st-header-nav {
     display: none;
   }
@@ -1995,49 +2141,9 @@ a, button, input, select, textarea {
     display: flex;
     flex-direction: column;
     justify-content: center;
-  }
-
-  .st-hero {
-    padding: 150px 24px 48px;
-  }
-
-  .stats_item {
-    flex: 1 1 calc(50% - 4px);
-    min-width: 140px;
-    padding: 32px 16px;
-  }
-
-  .stats_item .stat-value {
-    font-size: 40px;
-  }
-
-  .st-filter-chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-  }
-
-  .st-table th:first-child,
-  .st-table td:first-child {
-    position: sticky;
-    left: 0;
-    background: var(--white);
-    z-index: 1;
-  }
-
-  .st-table tbody tr:hover th:first-child,
-  .st-table tbody tr:hover td:first-child {
-    background: var(--bg-light);
-  }
-
-  .st-info-row {
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .st-info-label {
-    width: auto;
+    width: 44px;
+    height: 44px;
+    /* ensure touch target */
   }
 
   .st-header-auth-btn,
@@ -2046,12 +2152,227 @@ a, button, input, select, textarea {
     display: none;
   }
 
+  .st-header-inner {
+    display: flex;
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .st-header-left {
+    flex: 1;
+  }
+
+  .st-header-right {
+    flex: 0;
+  }
+
+  .st-header-search-wrapper {
+    display: none;
+  }
+
+  /* --- Hero --- */
+  .st-hero {
+    padding: 110px 20px 32px;
+  }
+
+  .st-hero p {
+    font-size: 1rem;
+    margin-bottom: 28px;
+  }
+
+  /* --- Stats --- */
+  .st-stats-section {
+    padding: 24px 16px;
+  }
+
+  .stats_item {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    padding: 24px 16px;
+  }
+
+  .stats_item .stat-value,
+  .stat-value {
+    font-size: 32px;
+  }
+
+  .stats_item .stat-label,
+  .stat-label {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+
+  /* --- Features grid --- */
+  .st-feature-card {
+    padding: 24px 20px;
+  }
+
+  .st-feature-card:hover {
+    transform: none;
+    /* no hover lift on touch */
+  }
+
+  /* --- Cards: no hover lift on touch --- */
+  .st-card:hover {
+    transform: none;
+  }
+
+  /* --- Filter chips: horizontal scroll --- */
+  .st-filter-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .st-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* --- DataTable mobile --- */
+  .st-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* scroll shadow indicators */
+    background:
+      linear-gradient(to right, var(--white) 30%, transparent),
+      linear-gradient(to left, var(--white) 30%, transparent),
+      linear-gradient(to right, rgba(10, 37, 64, 0.08), transparent 20px),
+      linear-gradient(to left, rgba(10, 37, 64, 0.08), transparent 20px);
+    background-position: left center, right center, left center, right center;
+    background-repeat: no-repeat;
+    background-size: 40px 100%, 40px 100%, 20px 100%, 20px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+
+  .st-table {
+    font-size: 13px;
+  }
+
+  .st-table th {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+
+  .st-table td {
+    padding: 10px 12px;
+  }
+
+  /* Sticky first column for tables */
+  .st-table th:first-child,
+  .st-table td:first-child {
+    position: sticky;
+    left: 0;
+    background: var(--white);
+    z-index: 1;
+    box-shadow: 2px 0 4px rgba(10, 37, 64, 0.04);
+  }
+
+  .st-table thead th:first-child {
+    background: var(--bg-light);
+  }
+
+  .st-table tbody tr:hover td:first-child {
+    background: var(--bg-light);
+  }
+
+  /* DataTable header bar */
+  .st-card > div:first-child {
+    /* inherits — just reduce padding on mobile if needed */
+  }
+
+  /* --- Pagination compact --- */
+  .st-pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .st-page-size-select {
+    display: none;
+  }
+
+  /* --- Info rows (detail pages) --- */
+  .st-info-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .st-info-label {
+    width: auto;
+    font-size: 12px;
+  }
+
+  .st-info-card {
+    padding: 16px;
+  }
+
+  /* --- Detail hero: stack on mobile --- */
+  .st-detail-hero {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .st-detail-hero-info {
+    flex-basis: 100%;
+  }
+
+  .st-detail-hero-map {
+    flex-basis: 100%;
+    min-height: 200px;
+  }
+
+  /* --- Related links: bigger touch targets --- */
+  .st-related-link {
+    padding: 14px 16px;
+  }
+
+  .st-related-link::after {
+    opacity: 0.5;
+    transform: translateX(0);
+  }
+
+  /* --- Map container: shorter on tablet --- */
+  .st-map-container {
+    height: 45vh;
+    min-height: 260px;
+  }
+
+  .st-map-container--compact {
+    height: 280px;
+    min-height: 180px;
+  }
+
+  /* --- Map --- */
   .st-map-section {
-    padding: 72px 12px 0;
+    padding: 72px 12px 32px;
+  }
+
+  .st-map-frame {
+    border-radius: 8px;
   }
 
   .st-map-mini-stats {
-    display: none;
+    position: relative;
+    bottom: auto;
+    left: auto;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    justify-content: flex-start;
+  }
+
+  .st-map-mini-stat {
+    min-width: 70px;
+    padding: 8px 10px;
+  }
+
+  .st-map-mini-stat-value {
+    font-size: 1rem;
+  }
+
+  .st-map-mini-stat-label {
+    font-size: 0.5625rem;
   }
 
   .st-map-legend {
@@ -2059,20 +2380,554 @@ a, button, input, select, textarea {
     right: 8px;
     padding: 8px 12px;
     font-size: 0.625rem;
+    max-width: 140px;
   }
 
+  .st-map-toolbar {
+    padding: 8px 12px;
+  }
+
+  /* --- Map toggles overlay: below map on mobile --- */
+  .st-map-toggles-overlay {
+    position: static;
+    padding: 8px 12px;
+  }
+
+  /* --- Segmented control: full-width on mobile --- */
+  .st-segmented {
+    display: flex;
+    width: 100%;
+  }
+
+  .st-segmented-btn {
+    flex: 1;
+    padding: 0 8px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* --- Auth form --- */
   .st-auth-form {
     padding: 28px 20px;
+    border-radius: 8px;
+  }
+
+  /* --- Auth blur paywall — fullscreen on mobile --- */
+  .st-auth-overlay {
+    padding: 16px;
+    align-items: flex-end;
+  }
+
+  .st-auth-popup {
+    max-width: 100%;
+    padding: 32px 20px;
+    border-radius: 16px 16px 0 0;
+    /* bottom sheet style */
+  }
+
+  /* --- Page container --- */
+  .st-page {
+    padding: 80px 16px 40px;
+  }
+
+  /* --- Breadcrumb --- */
+  .st-breadcrumb {
+    font-size: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* --- Contact form --- */
+  .st-contact-form {
+    padding: 0 4px;
+  }
+
+  /* --- Scroll hint: hide on mobile --- */
+  .st-scroll-hint {
+    display: none;
+  }
+
+  /* --- Mobile menu close button: bigger touch target --- */
+  .st-mobile-menu-close {
+    width: 44px;
+    height: 44px;
+    top: 10px;
+    right: 10px;
+  }
+
+  /* --- Column filter backdrop: show on mobile --- */
+  .st-col-filter-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 37, 64, 0.3);
+    z-index: 9998;
+    animation: st-fade-in 150ms ease-out;
+  }
+
+  @keyframes st-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* --- Column filter popup: bottom sheet on mobile --- */
+  .st-col-filter-popup {
+    position: fixed;
+    top: auto !important;
+    left: 0 !important;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 70vh;
+    overflow-y: auto;
+    animation: st-bottom-sheet-in 200ms ease-out;
+  }
+
+  @keyframes st-bottom-sheet-in {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .st-col-filter-list {
+    max-height: 40vh;
+  }
+
+  .st-col-filter-item {
+    padding: 10px 12px;
+    /* larger touch targets */
+  }
+
+  .st-col-filter-check {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+  }
+
+  .st-col-filter-actions {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .st-col-filter-btn-cancel,
+  .st-col-filter-btn-apply {
+    height: 40px;
+    font-size: 14px;
+    flex: 1;
+  }
+
+  /* --- Sticky bottom bar --- */
+  .st-sticky-bar-row {
+    padding: 6px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .st-sticky-bar-text {
+    font-size: 0.6875rem;
+    text-align: center;
   }
 }
 
-@media (max-width: 539px) {
-  .stats_item {
-    flex: 1 1 100%;
+/* ===== SMALL TABLET / LARGE PHONE: max-width 600px ===== */
+@media (max-width: 600px) {
+  h2 {
+    font-size: 1.375rem;
   }
 
+  h3 {
+    font-size: 1.125rem;
+  }
+
+  .st-section-title {
+    margin-bottom: 16px;
+  }
+
+  .st-section-title h2 {
+    margin-bottom: 4px;
+  }
+
+  /* --- Footer stack --- */
+  .st-footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 20px;
+    gap: 8px;
+  }
+
+  .st-footer-form {
+    flex-direction: column;
+  }
+
+  .st-footer-form .st-input-sm {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* --- Inputs: prevent iOS zoom (16px font minimum) --- */
+  .st-input,
+  .st-textarea,
+  .st-search input,
+  .st-header-search-input,
+  .st-table-search input,
+  .st-select {
+    font-size: 16px;
+  }
+
+  /* --- Map: shorter height --- */
+  .st-map-container {
+    height: 280px;
+    min-height: 220px;
+  }
+
+  .st-map-container--compact {
+    height: 240px;
+    min-height: 180px;
+  }
+
+  .st-map-zoom-controls {
+    bottom: 8px;
+    right: 8px;
+  }
+
+  .st-map-zoom-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ===== PHONE: max-width 480px ===== */
+@media (max-width: 480px) {
+  /* --- Typography tighter --- */
   h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    line-height: 1.12;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.0625rem;
+  }
+
+  body {
+    font-size: 15px;
+  }
+
+  /* --- Hero compact --- */
+  .st-hero {
+    padding: 100px 16px 24px;
+  }
+
+  .st-hero p {
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  .st-hero-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .st-hero-buttons .st-btn,
+  .st-hero-buttons .st-btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* --- Stats: 2x2 grid --- */
+  .stats_item {
+    padding: 20px 12px;
+  }
+
+  .stats_item .stat-value,
+  .stat-value {
+    font-size: 28px;
+  }
+
+  /* --- Auth popup: fullscreen bottom sheet --- */
+  .st-auth-popup {
+    padding: 28px 16px;
+  }
+
+  .st-auth-popup-title {
+    font-size: 1.25rem;
+  }
+
+  .st-auth-popup-benefits li {
+    font-size: 0.8125rem;
+    padding: 8px 0;
+    gap: 10px;
+  }
+
+  /* --- Map container: phone size --- */
+  .st-map-container {
+    height: 250px;
+    min-height: 200px;
+  }
+
+  .st-map-container--compact {
+    height: 200px;
+    min-height: 160px;
+  }
+
+  /* --- Map section edge-to-edge --- */
+  .st-map-section {
+    padding: 72px 0 24px;
+  }
+
+  .st-map-frame {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Legend: compact, hide title */
+  .st-map-legend {
+    max-width: 120px;
+    padding: 6px 8px;
+  }
+
+  .st-map-legend-title {
+    font-size: 0.5625rem;
+  }
+
+  /* --- Table: compact --- */
+  .st-table th {
+    padding: 6px 8px;
+  }
+
+  .st-table td {
+    padding: 8px;
+  }
+
+  /* --- DataTable header: stack search and count --- */
+  .st-table-search {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* --- Page container tighter --- */
+  .st-page {
+    padding: 72px 12px 32px;
+  }
+
+  /* --- Filter pills: scrollable --- */
+  .st-filter-pill {
+    font-size: 11px;
+  }
+
+  /* --- Segmented: smaller text --- */
+  .st-segmented-btn {
+    height: 28px;
+    font-size: 11px;
+    padding: 0 6px;
+  }
+
+  /* --- Mobile menu: adjust spacing --- */
+  .st-mobile-menu a {
+    font-size: 1.5rem;
+  }
+
+  .st-mobile-menu nav {
+    gap: 20px;
+    padding: 0 20px;
+  }
+}
+
+/* ===== SMALL PHONE: max-width 375px (iPhone SE) ===== */
+@media (max-width: 375px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  .st-hero {
+    padding: 96px 12px 20px;
+  }
+
+  .st-hero-inner {
+    max-width: 100%;
+  }
+
+  .st-hero p {
+    font-size: 0.875rem;
+    margin-bottom: 20px;
+  }
+
+  /* Stats: single column at 375px to prevent overflow */
+  .stats_item {
+    flex: 1 1 calc(50% - 4px);
+    padding: 16px 10px;
+  }
+
+  .stats_item .stat-value,
+  .stat-value {
+    font-size: 24px;
+  }
+
+  .stats_item .stat-label,
+  .stat-label {
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
+  /* Buttons: full width */
+  .st-btn,
+  .st-btn-outline {
+    padding: 0 16px;
+    font-size: 14px;
+  }
+
+  /* Feature cards: more compact */
+  .st-feature-card {
+    padding: 20px 16px;
+  }
+
+  .st-feature-header {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .st-feature-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .st-feature-card p {
+    font-size: 0.8125rem;
+  }
+
+  /* DataTable: smallest font */
+  .st-table {
+    font-size: 12px;
+  }
+
+  .st-table th {
+    font-size: 9px;
+    padding: 6px 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .st-table td {
+    padding: 8px 6px;
+  }
+
+  /* Pagination */
+  .st-pagination {
+    font-size: 12px;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .st-pagination button {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  /* Auth form */
+  .st-auth-form {
+    padding: 20px 16px;
+  }
+
+  .st-input {
+    height: 44px;
+    font-size: 16px;
+  }
+
+  /* Info card */
+  .st-info-card {
+    padding: 12px;
+  }
+
+  .st-info-row {
+    font-size: 13px;
+    padding: 8px 0;
+  }
+
+  /* Map container: smallest */
+  .st-map-container {
+    height: 220px;
+    min-height: 180px;
+  }
+
+  .st-map-container--compact {
+    height: 180px;
+    min-height: 140px;
+  }
+
+  /* Map section */
+  .st-map-mini-stats {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .st-map-mini-stat {
+    min-width: 60px;
+    padding: 6px 8px;
+  }
+
+  .st-map-mini-stat-value {
+    font-size: 0.875rem;
+  }
+
+  .st-map-mini-stat-label {
+    font-size: 0.5rem;
+  }
+
+  /* Page container: minimal padding */
+  .st-page {
+    padding: 68px 10px 24px;
+  }
+
+  /* Breadcrumb */
+  .st-breadcrumb {
+    font-size: 11px;
+    gap: 1px;
+    margin-bottom: 12px;
+  }
+
+  /* Header: tighter */
+  .st-header-inner {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  /* Mobile menu: even more compact */
+  .st-mobile-menu a {
+    font-size: 1.25rem;
+  }
+
+  .st-mobile-menu nav {
+    gap: 16px;
+  }
+
+  /* Footer */
+  .st-footer-bottom {
+    padding: 12px 16px;
+    gap: 6px;
+  }
+
+  /* Sticky bar */
+  .st-sticky-bar-row {
+    padding: 4px 8px;
+  }
+
+  .st-sticky-bar-text {
+    font-size: 0.625rem;
   }
 }
 
@@ -2334,7 +3189,29 @@ a, button, input, select, textarea {
   opacity: 0.85;
 }
 
-/* footer brand-text removed — using single SVG logo */
+.st-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.st-footer-links a {
+  font-family: var(--font1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.st-footer-links a:hover {
+  color: var(--black);
+}
+
+.st-footer-copyright {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
 
 .st-footer-logo {
   border-radius: 3px;
@@ -2361,41 +3238,7 @@ a, button, input, select, textarea {
   color: var(--text-muted);
 }
 
-/* Mobile adjustments for header */
-@media (max-width: 767px) {
-  .st-header-inner {
-    display: flex;
-    padding: 0 16px;
-    gap: 12px;
-  }
-
-  .st-header-left {
-    flex: 1;
-  }
-
-  .st-header-right {
-    flex: 0;
-  }
-
-  .st-header-search-wrapper {
-    display: none;
-  }
-
-  .st-header-nav {
-    gap: 16px;
-  }
-}
-
-@media (max-width: 600px) {
-  .st-footer-form {
-    flex-direction: column;
-  }
-
-  .st-footer-form .st-input-sm {
-    max-width: 100%;
-    width: 100%;
-  }
-}
+/* (Mobile header + footer queries consolidated into main responsive section above) */
 
 /* ==================== Auth Blur Paywall ==================== */
 
@@ -2520,15 +3363,7 @@ a, button, input, select, textarea {
   text-decoration: underline;
 }
 
-@media (max-width: 480px) {
-  .st-auth-popup {
-    padding: 32px 24px;
-  }
-
-  .st-auth-popup-title {
-    font-size: 1.25rem;
-  }
-}
+/* (480px auth popup consolidated into main responsive section above) */
 
 /* ==========================================================================
    Sticky Bottom Bar (WIP disclaimer + Cookie consent)

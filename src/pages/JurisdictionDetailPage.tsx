@@ -126,8 +126,8 @@ export default function JurisdictionDetailPage() {
       </div>
 
       {/* Info card + Mini map — aligned side by side */}
-      <div className="reveal" style={{ display: 'flex', gap: 24, alignItems: 'stretch', flexWrap: 'wrap', marginBottom: 32 }}>
-        <div style={{ flex: '1 1 400px', minWidth: 0 }}>
+      <div className="reveal st-detail-hero">
+        <div className="st-detail-hero-info">
           <div className="st-info-card clip-lg" style={{ height: '100%', margin: 0 }}>
             <div className="st-info-row">
               <span className="st-info-label">Regulator</span>
@@ -188,7 +188,7 @@ export default function JurisdictionDetailPage() {
         </div>
 
         {/* Mini map — same height as info card */}
-        <div style={{ flex: '1 1 360px', minHeight: 280, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' }}>
+        <div className="st-detail-hero-map">
           <WorldMap
             height="100%"
             jurisdictions={jurisdictionList}

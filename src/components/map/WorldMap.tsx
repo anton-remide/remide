@@ -89,7 +89,6 @@ export default function WorldMap({
   focusCountry,
   stablecoinStatuses,
 }: Props) {
-  const mapHeight = height ?? (compact ? '360px' : '65vh');
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -480,9 +479,11 @@ export default function WorldMap({
     Inactive: 'CBDC project is currently inactive or paused.',
   };
 
+  const containerClass = compact ? 'st-map-container st-map-container--compact' : 'st-map-container';
+
   return (
-    <div style={{ position: 'relative', height: mapHeight, minHeight: compact ? 200 : 300 }}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+    <div className={containerClass} style={height ? { height } : undefined}>
+      <div ref={containerRef} className="st-map-canvas" />
       <div ref={tooltipRef} className="st-map-tooltip" />
 
       {/* Zoom Controls */}

@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 import { ChevronUp, ChevronDown, Filter, Search, Check } from 'lucide-react';
 import type { SortDirection } from '../../types';
 
+/** Detect mobile viewport (matches CSS 768px breakpoint) */
+const isMobileViewport = () => window.innerWidth <= 768;
+
 interface Props {
   label: string;
   field: string;
@@ -89,6 +92,13 @@ export default function ColumnHeaderFilter({
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
+  // Lock body scroll on mobile when popup is open (bottom sheet)
+  useEffect(() => {
+    if (!open || !isMobileViewport()) return;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
   const filteredValues = useMemo(() => {
     if (!search.trim()) return values;
     const q = search.toLowerCase();
@@ -172,11 +182,14 @@ export default function ColumnHeaderFilter({
 
       {open &&
         createPortal(
-          <div
-            ref={popupRef}
-            className="st-col-filter-popup"
-            style={{ top: pos.top, left: pos.left }}
-          >
+          <>
+            {/* Backdrop for mobile bottom sheet */}
+            <div className="st-col-filter-backdrop" onClick={() => setOpen(false)} />
+            <div
+              ref={popupRef}
+              className="st-col-filter-popup"
+              style={{ top: pos.top, left: pos.left }}
+            >
             {/* Sort buttons */}
             <div className="st-col-filter-sort">
               <button
@@ -246,7 +259,8 @@ export default function ColumnHeaderFilter({
                 Apply
               </button>
             </div>
-          </div>,
+          </div>
+          </>,
           document.body,
         )}
     </>
