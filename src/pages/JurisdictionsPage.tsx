@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getJurisdictions } from '../data/dataLoader';
-import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../types';
+import { getJurisdictions, getCbdcs } from '../data/dataLoader';
+import { expandRegionalCode } from '../data/regionCodes';
+import type { Jurisdiction, Cbdc, RegimeType, TravelRuleStatus } from '../types';
 import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -56,6 +57,22 @@ export default function JurisdictionsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeJurisdictions]);
 
+  // CBDC statuses per country (expand "EU" → member states)
+  const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
+  const cbdcStatuses = useMemo(() => {
+    const m = new Map<string, string>();
+    (allCbdcsForMap ?? []).forEach((c: Cbdc) => {
+      const codes = expandRegionalCode(c.countryCode);
+      codes.forEach((cc) => { if (!m.has(cc)) m.set(cc, c.status); });
+    });
+    return m;
+  }, [allCbdcsForMap]);
+
+  // Choose which statuses to pass to the map based on color mode
+  const mapStatuses = mapColorMode === 'cbdc' ? cbdcStatuses
+    : mapColorMode === 'stablecoin' ? stablecoinStatuses
+    : stablecoinStatuses; // regime/travelRule don't use stablecoinStatuses, but it's harmless
+
   // Column filters hook (works on full dataset)
   const colFilters = useColumnFilters<Jurisdiction & Record<string, unknown>>(
     safeJurisdictions as (Jurisdiction & Record<string, unknown>)[],
@@ -77,11 +94,16 @@ export default function JurisdictionsPage() {
     developing: ['Developing'],
     'no framework': ['No Framework'],
     'no data': ['No Data'],
+    // CBDC status labels
+    launched: ['Launched'],
+    pilot: ['Pilot'],
+    development: ['Development'],
+    research: ['Research'],
   };
 
-  // Derive stablecoin status filters from activeMiniStats when in stablecoin mode
+  // Derive stablecoin/CBDC status filters from activeMiniStats
   const stablecoinStatusFilters = useMemo(() => {
-    if (mapColorMode !== 'stablecoin' || activeMiniStats.length === 0) return [] as string[];
+    if ((mapColorMode !== 'stablecoin' && mapColorMode !== 'cbdc') || activeMiniStats.length === 0) return [] as string[];
     return activeMiniStats.flatMap((l) => miniStatLabelToValues[l] ?? [l]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapColorMode, activeMiniStats]);
@@ -91,8 +113,8 @@ export default function JurisdictionsPage() {
       const isActive = prev.includes(label);
       const next = isActive ? prev.filter((l) => l !== label) : [...prev, label];
 
-      // In stablecoin mode, we only update activeMiniStats — map handles it via selectedStablecoinStatuses
-      if (mapColorMode === 'stablecoin') {
+      // In stablecoin/cbdc mode, we only update activeMiniStats — map handles it via selectedStablecoinStatuses
+      if (mapColorMode === 'stablecoin' || mapColorMode === 'cbdc') {
         return next;
       }
 
@@ -195,7 +217,7 @@ export default function JurisdictionsPage() {
           onMiniStatClick={handleMiniStatClick}
           activeMiniStats={activeMiniStats}
           colorMode={mapColorMode}
-          stablecoinStatuses={stablecoinStatuses}
+          stablecoinStatuses={mapStatuses}
         />
         {/* Toggles overlay — top-left */}
         <div className="st-map-toggles-overlay">
@@ -204,6 +226,7 @@ export default function JurisdictionsPage() {
               { value: 'regime', label: 'Regulation' },
               { value: 'travelRule', label: 'Travel Rule' },
               { value: 'stablecoin', label: 'Stablecoins' },
+              { value: 'cbdc', label: 'CBDCs' },
             ]}
             value={mapColorMode}
             onChange={(v) => {
