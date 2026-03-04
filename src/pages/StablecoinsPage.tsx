@@ -18,20 +18,24 @@ import DataTable, { type Column } from '../components/ui/DataTable';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
 
-type TabMode = 'stablecoins' | 'cbdcs';
-
 /* ── Stablecoins Table ── */
-function StablecoinsTab({ filterCountryNames }: { filterCountryNames?: string[] }) {
+function StablecoinsTab({
+  filterCountryCodes,
+  codeToName,
+}: {
+  filterCountryCodes?: string[];
+  codeToName: Map<string, string>;
+}) {
   const navigate = useNavigate();
   const { data: allStablecoins, loading, error, refetch } = useSupabaseQuery(getStablecoins);
   const safeData = allStablecoins ?? [];
 
-  // Pre-filter by country names from map (if any)
+  // Pre-filter by country codes from map (if any)
   const mapFilteredData = useMemo(() => {
-    if (!filterCountryNames || filterCountryNames.length === 0) return safeData;
-    const nameSet = new Set(filterCountryNames);
-    return safeData.filter((s) => nameSet.has(s.issuerCountry));
-  }, [safeData, filterCountryNames]);
+    if (!filterCountryCodes || filterCountryCodes.length === 0) return safeData;
+    const codeSet = new Set(filterCountryCodes);
+    return safeData.filter((s) => codeSet.has(s.issuerCountry.toUpperCase()));
+  }, [safeData, filterCountryCodes]);
 
   const colFilters = useColumnFilters<Stablecoin & Record<string, unknown>>(
     mapFilteredData as (Stablecoin & Record<string, unknown>)[],
@@ -107,7 +111,15 @@ function StablecoinsTab({ filterCountryNames }: { filterCountryNames?: string[] 
       selectedFilters: colFilters.filters['issuerCountry'] ?? [],
       onFilterApply: colFilters.applyFilter,
       onFilterClear: colFilters.clearFilter,
-      render: (r) => r.issuerCountry || '—',
+      render: (r) => {
+        const code = r.issuerCountry?.toUpperCase();
+        const name = codeToName.get(code) ?? r.issuerCountry;
+        return code ? <><span style={{ marginRight: 6 }}>{countryCodeToFlag(code)}</span>{name}</> : <>—</>;
+      },
+      renderFilterValue: (v) => {
+        const name = codeToName.get(v.toUpperCase()) ?? v;
+        return <><span style={{ marginRight: 4 }}>{countryCodeToFlag(v)}</span>{name}</>;
+      },
     },
     {
       key: 'regulatoryStatus',
@@ -285,7 +297,6 @@ export default function StablecoinsPage() {
   });
 
   const navigate = useNavigate();
-  const [tab, setTab] = useState<TabMode>('stablecoins');
   const [mapColorMode, setMapColorMode] = useState<MapColorMode>('stablecoin');
   const [activeMiniStats, setActiveMiniStats] = useState<string[]>([]);
   const revealRef = useReveal(false);
@@ -294,6 +305,13 @@ export default function StablecoinsPage() {
   const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
   const { data: allCbdcsForMap } = useSupabaseQuery(getCbdcs);
   const safeJurisdictions = allJurisdictions ?? [];
+
+  // Code → Name map for stablecoins country display
+  const codeToName = useMemo(() => {
+    const m = new Map<string, string>();
+    safeJurisdictions.forEach((j: Jurisdiction) => m.set(j.code.toUpperCase(), j.name));
+    return m;
+  }, [safeJurisdictions]);
 
   // Stablecoin regulatory stage per country
   const stageLabels: Record<number, string> = {
@@ -379,17 +397,10 @@ export default function StablecoinsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapColorMode, activeMiniStats, stablecoinStatuses, cbdcStatuses, safeJurisdictions]);
 
-  // Convert country codes to country names (for stablecoins tab filtering by issuerCountry)
-  const matchingCountryNames = useMemo(() => {
-    if (matchingCountryCodes.length === 0) return undefined;
-    const codeSet = new Set(matchingCountryCodes);
-    const names = safeJurisdictions
-      .filter((j) => codeSet.has(j.code.toUpperCase()))
-      .map((j) => j.name);
-    return names.length > 0 ? names : undefined;
-  }, [matchingCountryCodes, safeJurisdictions]);
-
   const filterCountryCodes = matchingCountryCodes.length > 0 ? matchingCountryCodes : undefined;
+
+  // Derive which table to show from map mode (cbdc → CBDCs, everything else → Stablecoins)
+  const showCbdcs = mapColorMode === 'cbdc';
 
   const handleMiniStatClick = useCallback((label: string) => {
     setActiveMiniStats((prev) => {
@@ -430,22 +441,13 @@ export default function StablecoinsPage() {
         </div>
       </div>
 
-      {/* Tab switcher for table */}
-      <div style={{ marginTop: 16, marginBottom: 8, display: 'flex', justifyContent: 'center' }}>
-        <SegmentedControl
-          options={[
-            { value: 'stablecoins', label: 'Stablecoins' },
-            { value: 'cbdcs', label: 'CBDCs' },
-          ]}
-          value={tab}
-          onChange={(v) => setTab(v as TabMode)}
-        />
+      {/* Table — follows map mode */}
+      <div style={{ marginTop: 24 }}>
+        {showCbdcs
+          ? <CbdcsTab filterCountryCodes={filterCountryCodes} />
+          : <StablecoinsTab filterCountryCodes={filterCountryCodes} codeToName={codeToName} />
+        }
       </div>
-
-      {tab === 'stablecoins'
-        ? <StablecoinsTab filterCountryNames={matchingCountryNames} />
-        : <CbdcsTab filterCountryCodes={filterCountryCodes} />
-      }
     </div>
   );
 }
