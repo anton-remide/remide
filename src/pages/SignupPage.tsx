@@ -80,9 +80,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page" style={{ paddingTop: 80, paddingBottom: 80 }}>
+    <div ref={revealRef} className="st-page" style={{ paddingTop: 80, paddingBottom: 40 }}>
       <div className="reveal" style={{ maxWidth: 480, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8 }}>Create Account</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
             Get full access to entity data and jurisdiction details

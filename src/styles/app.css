@@ -2188,14 +2188,19 @@ a, button, input, select, textarea {
     display: flex;
     padding: 0 16px;
     gap: 12px;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .st-header-left {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .st-header-right {
     flex: 0;
+    min-width: 0;
   }
 
   .st-header-search-wrapper {
@@ -2419,7 +2424,7 @@ a, button, input, select, textarea {
     bottom: auto;
     left: auto;
     flex-wrap: wrap;
-    padding: 8px 12px;
+    padding: 8px 12px 0;
     justify-content: flex-start;
     z-index: 1;
   }
@@ -2449,10 +2454,10 @@ a, button, input, select, textarea {
     padding: 8px 12px;
   }
 
-  /* --- Map toggles overlay: below map on mobile --- */
+  /* --- Map toggles overlay: below map on mobile, tight to mini-stats --- */
   .st-map-toggles-overlay {
     position: static;
-    padding: 8px 12px;
+    padding: 0 12px 8px;
     z-index: 2;
   }
 
@@ -2613,6 +2618,40 @@ a, button, input, select, textarea {
 
   .st-section-title h2 {
     margin-bottom: 4px;
+  }
+
+  /* --- Auth form: compact for mobile — fits on one screen --- */
+  .st-auth-form {
+    padding: 16px 14px;
+  }
+
+  .st-auth-form .st-field {
+    margin-bottom: 6px;
+  }
+
+  .st-auth-form .st-field-label {
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+  }
+
+  .st-auth-form .st-input {
+    padding: 8px 10px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .st-auth-form .row.g-3 {
+    --bs-gutter-y: 0.375rem;
+    --bs-gutter-x: 0.5rem;
+  }
+
+  .st-auth-form .st-btn {
+    margin-top: 4px !important;
+    height: 44px;
+  }
+
+  .st-auth-form ~ p {
+    margin-top: 10px !important;
   }
 
   /* --- Footer stack --- */
@@ -2809,12 +2848,7 @@ a, button, input, select, textarea {
     padding: 0 20px;
   }
 
-  /* --- Auth form: stack 2-column fields on phone --- */
-  .st-auth-form .col-6 {
-    flex: 0 0 100%;
-    max-width: 100%;
-    width: 100%;
-  }
+  /* Auth form col-6 stays 2-column on phone (saves vertical space) */
 }
 
 /* ===== SMALL PHONE: max-width 375px (iPhone SE) ===== */
