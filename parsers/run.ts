@@ -63,6 +63,12 @@ import { ScFsaParser } from './registries/sc-fsa.js';
 import { GiGfscParser } from './registries/gi-gfsc.js';
 import { ImFsaParser } from './registries/im-fsa.js';
 
+// Tier 3: Wave 3 — Medium-tier parsers
+import { LiFmaParser } from './registries/li-fma.js';
+import { TwFscParser } from './registries/tw-fsc.js';
+import { KyCimaParser } from './registries/ky-cima.js';
+import { IdOjkParser } from './registries/id-ojk.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -106,6 +112,11 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'sc-fsa': () => new ScFsaParser(),
   'gi-gfsc': () => new GiGfscParser(),
   'im-fsa': () => new ImFsaParser(),
+  // Tier 3: Wave 3 — Medium-tier parsers
+  'li-fma': () => new LiFmaParser(),
+  'tw-fsc': () => new TwFscParser(),
+  'ky-cima': () => new KyCimaParser(),
+  'id-ojk': () => new IdOjkParser(),
 };
 
 /** Run a single parser */
