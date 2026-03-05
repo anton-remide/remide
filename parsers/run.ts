@@ -69,6 +69,18 @@ import { TwFscParser } from './registries/tw-fsc.js';
 import { KyCimaParser } from './registries/ky-cima.js';
 import { IdOjkParser } from './registries/id-ojk.js';
 
+// Tier 4: Wave 4 — US, UK, APAC, LatAm, Africa parsers
+import { UsNydfsParser } from './registries/us-nydfs.js';
+import { UsFdicParser } from './registries/us-fdic.js';
+import { HkSfcParser } from './registries/hk-sfc.js';
+import { BrBcbParser } from './registries/br-bcb.js';
+import { NgSecParser } from './registries/ng-sec.js';
+import { SvCnadParser } from './registries/sv-cnad.js';
+import { KrFiuParser } from './registries/kr-fiu.js';
+import { GbPraParser } from './registries/gb-pra.js';
+import { PhBspParser } from './registries/ph-bsp.js';
+import { ArCnvParser } from './registries/ar-cnv.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -117,6 +129,17 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'tw-fsc': () => new TwFscParser(),
   'ky-cima': () => new KyCimaParser(),
   'id-ojk': () => new IdOjkParser(),
+  // Tier 4: Wave 4 — US, UK, APAC, LatAm, Africa
+  'us-nydfs': () => new UsNydfsParser(),
+  'us-fdic': () => new UsFdicParser(),
+  'hk-sfc': () => new HkSfcParser(),
+  'br-bcb': () => new BrBcbParser(),
+  'ng-sec': () => new NgSecParser(),
+  'sv-cnad': () => new SvCnadParser(),
+  'kr-fiu': () => new KrFiuParser(),
+  'gb-pra': () => new GbPraParser(),
+  'ph-bsp': () => new PhBspParser(),
+  'ar-cnv': () => new ArCnvParser(),
 };
 
 /** Run a single parser */
