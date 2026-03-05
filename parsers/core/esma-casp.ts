@@ -175,3 +175,100 @@ export async function fetchEsmaCaspEntities(
 
   return { entities, warnings, sourceUrl };
 }
+
+/** Result for a single country from the bulk fetch */
+export interface EsmaCountryResult {
+  entities: ParsedEntity[];
+  warnings: string[];
+  countryCode: string;
+  countryName: string;
+  regulator: string;
+}
+
+/** Result of fetching all ESMA CASP entities at once */
+export interface EsmaBulkResult {
+  countries: Map<string, EsmaCountryResult>;
+  sourceUrl: string;
+  totalRows: number;
+}
+
+/**
+ * Fetch ESMA CASP register ONCE and group all entities by country.
+ * Returns a Map keyed by country code (e.g. "DE", "FR").
+ * Only includes countries that exist in the COUNTRIES/REGULATORS maps.
+ */
+export async function fetchAllEsmaCaspEntities(
+  registryId: string,
+): Promise<EsmaBulkResult> {
+  const { rows, sourceUrl } = await fetchEsmaCsv(registryId);
+
+  // Group rows by home member state
+  const grouped = new Map<string, CsvRow[]>();
+  for (const row of rows) {
+    const memberState = (row['ae_homeMemberState'] ?? row['ae_home_member_state'] ?? '').toUpperCase().trim();
+    if (!memberState) continue;
+    const existing = grouped.get(memberState);
+    if (existing) {
+      existing.push(row);
+    } else {
+      grouped.set(memberState, [row]);
+    }
+  }
+
+  const countries = new Map<string, EsmaCountryResult>();
+
+  for (const [countryCode, countryRows] of grouped) {
+    // Only process countries we know about
+    if (!COUNTRIES[countryCode]) {
+      logger.debug(registryId, `Skipping unknown country code: ${countryCode} (${countryRows.length} rows)`);
+      continue;
+    }
+
+    const warnings: string[] = [];
+    const regulator = REGULATORS[countryCode] ?? 'National CA';
+    const country = COUNTRIES[countryCode] ?? countryCode;
+    const entities: ParsedEntity[] = [];
+
+    for (const row of countryRows) {
+      const leiName = (row['ae_lei_name'] ?? '').trim();
+      const commercialName = (row['ae_commercial_name'] ?? '').trim();
+      const name = leiName || commercialName;
+
+      if (!name) {
+        warnings.push('Skipping row: no name found');
+        continue;
+      }
+
+      const lei = (row['ae_lei'] ?? '').trim();
+      const licenseNumber = lei || `MICA-${countryCode}-${name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 30)}`;
+      const serviceCodes = (row['ac_serviceCode'] ?? '').split('|').map((s) => s.trim()).filter(Boolean);
+      const endDate = (row['ac_authorisationEndDate'] ?? '').trim();
+      const status = endDate ? 'Expired' : 'Authorized';
+      const website = (row['ae_website'] ?? '').trim() || undefined;
+
+      entities.push({
+        name,
+        licenseNumber,
+        countryCode,
+        country,
+        status,
+        regulator,
+        licenseType: 'MiCAR CASP',
+        activities: serviceCodes,
+        website,
+        sourceUrl,
+      });
+    }
+
+    countries.set(countryCode, {
+      entities,
+      warnings,
+      countryCode,
+      countryName: country,
+      regulator,
+    });
+  }
+
+  logger.info(registryId, `Bulk fetch complete: ${rows.length} total rows, ${countries.size} countries`);
+  return { countries, sourceUrl, totalRows: rows.length };
+}

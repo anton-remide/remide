@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Dev: base='/' (localhost:5173/)
-// Prod: base='/remide/' (GitHub Pages at anton-remide.github.io/remide/)
-export default defineConfig(({ mode }) => ({
+// Custom domain tracker.remide.xyz → base='/'
+export default defineConfig(() => ({
   plugins: [react()],
-  base: mode === 'production' ? '/remide/' : '/',
+  base: '/',
   server: { host: true },
   build: {
     rollupOptions: {

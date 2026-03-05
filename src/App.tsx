@@ -14,6 +14,7 @@ import SignupPage from './pages/SignupPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import StablecoinDetailPage from './pages/StablecoinDetailPage';
 import CbdcDetailPage from './pages/CbdcDetailPage';
+import IssuerDetailPage from './pages/IssuerDetailPage';
 
 /* BrowserRouter basename — matches Vite base config.
    Dev: BASE_URL = '/'  →  basename = ''
@@ -51,6 +52,9 @@ export default function App() {
               } />
               <Route path="/cbdcs/:id" element={
                 <ProtectedRoute><CbdcDetailPage /></ProtectedRoute>
+              } />
+              <Route path="/issuers/:slug" element={
+                <ProtectedRoute><IssuerDetailPage /></ProtectedRoute>
               } />
             </Routes>
           </ErrorBoundary>

@@ -4,6 +4,7 @@ import type {
   StablecoinIssuer, StablecoinLaw, StablecoinEvent,
   IssuerSubsidiary, IssuerLicense, StablecoinBlockchain,
 } from '../types';
+import { EU_MEMBER_CODES } from './regionCodes';
 
 // ── Snake_case DB row → camelCase TypeScript ──
 
@@ -237,6 +238,49 @@ export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
   return all.map(mapEntity);
 }
 
+/**
+ * Fetch entities for a regional code (e.g. 'EU' → all 27 member states).
+ * For non-regional codes, falls back to single-country query.
+ */
+export async function getEntitiesByRegion(code: string): Promise<Entity[]> {
+  const upper = code.toUpperCase();
+  const isEU = upper === 'EU';
+  const countryCodes = isEU ? [...EU_MEMBER_CODES] : [upper];
+
+  const all: EntityRow[] = [];
+  const PAGE = 1000;
+  let from = 0;
+  let done = false;
+  while (!done) {
+    const { data, error } = await supabase
+      .from('entities')
+      .select('*')
+      .in('country_code', countryCodes)
+      .order('name')
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`Failed to load entities: ${error.message}`);
+    all.push(...(data as EntityRow[]));
+    if ((data as EntityRow[]).length < PAGE) done = true;
+    else from += PAGE;
+  }
+  return all.map(mapEntity);
+}
+
+/** Fetch all member state jurisdictions for a regional code (e.g. EU → 27 jurisdictions) */
+export async function getJurisdictionsByRegion(code: string): Promise<Jurisdiction[]> {
+  const upper = code.toUpperCase();
+  if (upper !== 'EU') return [];
+
+  const { data, error } = await supabase
+    .from('jurisdictions')
+    .select('*')
+    .in('code', [...EU_MEMBER_CODES])
+    .order('entity_count', { ascending: false });
+
+  if (error) throw new Error(`Failed to load EU jurisdictions: ${error.message}`);
+  return (data as JurisdictionRow[]).map(mapJurisdiction);
+}
+
 // ── Stablecoins & CBDCs (Supabase) ──
 
 interface StablecoinRow {
@@ -467,6 +511,7 @@ export async function getCbdcsByCountry(code: string): Promise<Cbdc[]> {
 interface StablecoinIssuerRow {
   id: number;
   stride_id: number;
+  slug: string | null;
   name: string;
   official_name: string;
   former_names: string;
@@ -486,6 +531,7 @@ function mapIssuer(row: StablecoinIssuerRow): StablecoinIssuer {
   return {
     id: row.id,
     strideId: row.stride_id,
+    slug: row.slug ?? '',
     name: row.name,
     officialName: row.official_name ?? '',
     formerNames: row.former_names ?? '',
@@ -510,6 +556,50 @@ export async function getStablecoinIssuers(): Promise<StablecoinIssuer[]> {
 
   if (error) throw new Error(`Failed to load stablecoin issuers: ${error.message}`);
   return (data as StablecoinIssuerRow[]).map(mapIssuer);
+}
+
+export async function getIssuerBySlug(slug: string): Promise<StablecoinIssuer | null> {
+  const { data, error } = await supabase
+    .from('stablecoin_issuers')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(`Failed to load issuer: ${error.message}`);
+  }
+  return mapIssuer(data as StablecoinIssuerRow);
+}
+
+export async function getStablecoinsByIssuer(issuerId: number): Promise<Stablecoin[]> {
+  const { data: scData, error: scErr } = await supabase
+    .from('stablecoins')
+    .select('*')
+    .eq('issuer_id', issuerId)
+    .order('market_cap_bn', { ascending: false });
+
+  if (scErr) throw new Error(`Failed to load stablecoins: ${scErr.message}`);
+  if (!scData || scData.length === 0) return [];
+
+  const ids = (scData as StablecoinRow[]).map((r) => r.id);
+  const { data: sjData, error: sjErr } = await supabase
+    .from('stablecoin_jurisdictions')
+    .select('*')
+    .in('stablecoin_id', ids);
+
+  if (sjErr) throw new Error(`Failed to load jurisdictions: ${sjErr.message}`);
+
+  const jMap = new Map<string, StablecoinJurisdiction[]>();
+  for (const j of (sjData as StablecoinJurisdictionRow[]) ?? []) {
+    const arr = jMap.get(j.stablecoin_id) ?? [];
+    arr.push({ code: j.country_code, status: j.status as StablecoinJurisdiction['status'], notes: j.notes ?? '' });
+    jMap.set(j.stablecoin_id, arr);
+  }
+
+  return (scData as StablecoinRow[]).map((row) =>
+    mapStablecoin(row, jMap.get(row.id) ?? []),
+  );
 }
 
 export async function getStablecoinIssuerByStrideId(strideId: number): Promise<StablecoinIssuer | null> {

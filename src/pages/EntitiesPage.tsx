@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getEntities, getStablecoins, getCbdcs, getJurisdictions } from '../data/dataLoader';
-import type { Entity, Stablecoin, Cbdc, Jurisdiction } from '../types';
+import { getEntities, getStablecoins, getCbdcs, getJurisdictions, getStablecoinIssuers } from '../data/dataLoader';
+import type { Entity, Stablecoin, Cbdc, Jurisdiction, StablecoinIssuer } from '../types';
 import { STATUS_COLORS, STABLECOIN_TYPE_COLORS, CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -13,7 +13,7 @@ import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
 import SegmentedControl from '../components/ui/SegmentedControl';
 
-type EntityTab = 'vasps' | 'stablecoins' | 'cbdcs';
+type EntityTab = 'vasps' | 'stablecoins' | 'cbdcs' | 'issuers';
 
 /* ── VASPs Tab ── */
 function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitcher: React.ReactNode }) {
@@ -368,6 +368,101 @@ function CbdcsTab({ tabSwitcher }: { tabSwitcher: React.ReactNode }) {
   );
 }
 
+/* ── Issuers Tab ── */
+function IssuersTab({ tabSwitcher }: { tabSwitcher: React.ReactNode }) {
+  const navigate = useNavigate();
+  const { data: allIssuers, loading, error, refetch } = useSupabaseQuery(getStablecoinIssuers);
+  const safeData = allIssuers ?? [];
+
+  const colFilters = useColumnFilters<StablecoinIssuer & Record<string, unknown>>(
+    safeData as (StablecoinIssuer & Record<string, unknown>)[],
+  );
+
+  const filterFn = useCallback((i: StablecoinIssuer, q: string) => {
+    return (
+      i.name.toLowerCase().includes(q) ||
+      i.country.toLowerCase().includes(q) ||
+      i.auditor.toLowerCase().includes(q)
+    );
+  }, []);
+
+  const table = useTableState(
+    colFilters.filtered as StablecoinIssuer[],
+    filterFn,
+    { field: 'name', direction: 'asc' },
+  );
+
+  const columns: Column<StablecoinIssuer>[] = [
+    { key: 'name', label: 'Name', sortable: true, render: (r) => <span style={{ fontWeight: 600 }}>{r.name}</span> },
+    {
+      key: 'country',
+      label: 'Country',
+      sortable: true,
+      filterable: true,
+      filterValues: colFilters.getUniqueValues('country'),
+      selectedFilters: colFilters.filters['country'] ?? [],
+      onFilterApply: colFilters.applyFilter,
+      onFilterClear: colFilters.clearFilter,
+      render: (r) => r.countryCode ? <><span style={{ marginRight: 6 }}>{countryCodeToFlag(r.countryCode)}</span>{r.country || r.countryCode}</> : <>—</>,
+      renderFilterValue: (v) => <>{v}</>,
+    },
+    { key: 'auditor', label: 'Auditor', sortable: true },
+    {
+      key: 'lei',
+      label: 'LEI',
+      sortable: true,
+      render: (r) => r.lei ? <span style={{ fontFamily: 'var(--font2)', fontSize: '0.8125rem' }}>{r.lei}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>,
+    },
+    {
+      key: 'isVerified',
+      label: 'Verified',
+      sortable: true,
+      render: (r) => (
+        <span style={{ color: r.isVerified ? '#2B7A4B' : 'var(--text-muted)' }}>
+          {r.isVerified ? '✓ Yes' : '—'}
+        </span>
+      ),
+    },
+  ];
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: 40 }}><div className="st-loading-pulse" /></div>;
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <p style={{ color: 'var(--text-muted)' }}>{error}</p>
+        <button className="st-btn st-btn-sm" onClick={refetch} style={{ marginTop: 12 }}>Retry</button>
+      </div>
+    );
+  }
+
+  return (
+    <DataTable
+      columns={columns}
+      data={table.paginated as (StablecoinIssuer & Record<string, unknown>)[]}
+      sort={table.sort}
+      onSort={table.toggleSort}
+      onRowClick={(row) => {
+        const issuer = row as unknown as StablecoinIssuer;
+        if (issuer.slug) navigate(`/issuers/${issuer.slug}`);
+      }}
+      page={table.page}
+      totalPages={table.totalPages}
+      onPageChange={table.setPage}
+      totalFiltered={table.totalFiltered}
+      totalCount={safeData.length}
+      pageSize={table.pageSize}
+      onPageSizeChange={table.setPageSize}
+      search={table.search}
+      onSearchChange={table.setSearch}
+      searchPlaceholder="Search issuers..."
+      toolbarPrefix={tabSwitcher}
+    />
+  );
+}
+
 /* ── Main Page ── */
 export default function EntitiesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -396,11 +491,13 @@ export default function EntitiesPage() {
     vasps: 'Licensed Crypto Entities — VASP Registry',
     stablecoins: 'Stablecoins — Digital Currency Tracker',
     cbdcs: 'CBDCs — Central Bank Digital Currencies',
+    issuers: 'Stablecoin Issuers — Company Profiles',
   };
   const descriptions: Record<EntityTab, string> = {
     vasps: 'Browse 4,000+ licensed cryptocurrency service providers (VASPs) across 82 countries.',
     stablecoins: 'Track 15+ major stablecoins. Compare regulatory status, market caps, and issuers.',
     cbdcs: 'Track 24+ central bank digital currencies (CBDCs). Compare status, type, and central banks.',
+    issuers: 'Browse 44+ stablecoin issuers worldwide. Compare auditors, LEI codes, and regulatory licenses.',
   };
 
   useDocumentMeta({
@@ -432,6 +529,7 @@ export default function EntitiesPage() {
         { value: 'vasps', label: 'VASPs' },
         { value: 'stablecoins', label: 'Stablecoins' },
         { value: 'cbdcs', label: 'CBDCs' },
+        { value: 'issuers', label: 'Issuers' },
       ]}
       value={activeTab}
       onChange={handleTabChange}
@@ -443,6 +541,7 @@ export default function EntitiesPage() {
       {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} tabSwitcher={tabSwitcher} />}
       {activeTab === 'stablecoins' && <StablecoinsTab codeToName={codeToName} tabSwitcher={tabSwitcher} />}
       {activeTab === 'cbdcs' && <CbdcsTab tabSwitcher={tabSwitcher} />}
+      {activeTab === 'issuers' && <IssuersTab tabSwitcher={tabSwitcher} />}
     </div>
   );
 }

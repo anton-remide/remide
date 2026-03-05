@@ -6,6 +6,7 @@ import type { Topology, GeometryCollection } from 'topojson-specification';
 import { Plus, Minus } from 'lucide-react';
 import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_STAGE_MAP_COLORS, CBDC_MAP_COLORS } from '../../theme';
 import { numericToAlpha2 } from '../../data/isoMapping';
+import { expandRegionalCode } from '../../data/regionCodes';
 import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../../types';
 
 export type MapColorMode = 'regime' | 'travelRule' | 'stablecoin' | 'cbdc';
@@ -339,12 +340,17 @@ export default function WorldMap({
     ]);
   }, [loaded, activeCodes, activeStablecoinCodes, selectedRegimes, selectedTravelRules, selectedStablecoinStatuses]);
 
-  // Zoom to focused country (for detail page mini-map)
+  // Zoom to focused country/region (for detail page mini-map)
+  // Supports regional codes like 'EU' → zooms to fit all 27 member states
   useEffect(() => {
     if (!loaded || !mapRef.current || !focusCountry) return;
     const features = featuresRef.current as Array<{ properties?: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }>;
-    const target = features.find((f) => f.properties?.alpha2 === focusCountry.toUpperCase());
-    if (!target) return;
+
+    const codes = expandRegionalCode(focusCountry);
+    const targets = features.filter((f) =>
+      codes.includes(((f.properties?.alpha2 as string) ?? '').toUpperCase()),
+    );
+    if (targets.length === 0) return;
 
     const bounds = new maplibregl.LngLatBounds();
     const processCoords = (coords: unknown): void => {
@@ -354,7 +360,7 @@ export default function WorldMap({
         coords.forEach(processCoords);
       }
     };
-    processCoords(target.geometry.coordinates);
+    targets.forEach((target) => processCoords(target.geometry.coordinates));
     if (!bounds.isEmpty()) {
       mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 4, duration: 0 });
     }

@@ -177,6 +177,7 @@ export interface Cbdc {
 export interface StablecoinIssuer {
   id: number;
   strideId: number;
+  slug: string;
   name: string;
   officialName: string;
   formerNames: string;

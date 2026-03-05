@@ -1,9 +1,10 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useCallback, useMemo } from 'react';
 import {
   getJurisdictionByCode, getEntitiesByCountry, getStablecoinsByCountry,
   getCbdcsByCountry, getStablecoinLawsByCountry, getStablecoinEventsByCountry,
   getLicensesByCountry, getJurisdictions, getCbdcs,
+  getEntitiesByRegion, getJurisdictionsByRegion,
 } from '../data/dataLoader';
 import { expandRegionalCode } from '../data/regionCodes';
 import type { Entity, Jurisdiction, Cbdc, StablecoinLaw, StablecoinEvent, IssuerLicense } from '../types';
@@ -54,12 +55,25 @@ function BackingBadge({ value, alert }: { value: number | null; alert?: string }
 export default function JurisdictionDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const isEU = (code ?? '').toUpperCase() === 'EU';
 
   const jurisdictionFetcher = useCallback(() => getJurisdictionByCode(code ?? ''), [code]);
-  const entitiesFetcher = useCallback(() => getEntitiesByCountry(code ?? ''), [code]);
+  // EU → aggregate entities from all 27 member states; regular → single country
+  const entitiesFetcher = useCallback(
+    () => isEU ? getEntitiesByRegion(code ?? '') : getEntitiesByCountry(code ?? ''),
+    [code, isEU],
+  );
 
   const { data: jurisdiction, loading: jLoading, error: jError } = useSupabaseQuery(jurisdictionFetcher, [code]);
   const { data: entities, loading: eLoading, error: eError } = useSupabaseQuery(entitiesFetcher, [code]);
+
+  // EU-specific: fetch member state jurisdictions
+  const memberStatesFetcher = useCallback(
+    () => isEU ? getJurisdictionsByRegion('EU') : Promise.resolve([]),
+    [isEU],
+  );
+  const { data: memberStatesData } = useSupabaseQuery(memberStatesFetcher, [isEU]);
+  const memberStates = useMemo(() => memberStatesData ?? [], [memberStatesData]);
 
   const loading = jLoading || eLoading;
   const revealRef = useReveal(loading);
@@ -194,6 +208,17 @@ export default function JurisdictionDetailPage() {
 
   const entityColumns: Column<Entity>[] = [
     { key: 'name', label: 'Name', sortable: true },
+    ...(isEU ? [{
+      key: 'country' as keyof Entity,
+      label: 'Country',
+      sortable: true,
+      render: (r: Entity) => (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: '1rem' }}>{countryCodeToFlag(r.countryCode)}</span>
+          {r.country}
+        </span>
+      ),
+    }] : []),
     { key: 'status', label: 'Status', sortable: true, render: (r) => <Badge label={r.status} colorMap={STATUS_COLORS} /> },
     { key: 'licenseType', label: 'License Type', sortable: true },
     { key: 'activities', label: 'Activities', render: (r) => r.activities.slice(0, 3).join(', ') || '—' },
@@ -244,9 +269,17 @@ export default function JurisdictionDetailPage() {
                 <Badge label={jurisdiction.travelRule} colorMap={TRAVEL_RULE_COLORS} />
               </span>
             </div>
+            {isEU && memberStates.length > 0 && (
+              <div className="st-info-row">
+                <span className="st-info-label">Member States</span>
+                <span className="st-info-value">{memberStates.length} countries</span>
+              </div>
+            )}
             <div className="st-info-row">
               <span className="st-info-label">Licensed Entities</span>
-              <span className="st-info-value">{jurisdiction.entityCount}</span>
+              <span className="st-info-value">
+                {isEU ? safeEntities.length : jurisdiction.entityCount}
+              </span>
             </div>
             <div className="st-info-row">
               <span className="st-info-label">Stablecoins</span>
@@ -621,10 +654,57 @@ export default function JurisdictionDetailPage() {
         </div>
       )}
 
+      {/* ── EU Member States Grid ── */}
+      {isEU && memberStates.length > 0 && (
+        <div className="reveal" style={{ marginTop: 32 }}>
+          <h5 style={{ marginBottom: 16 }}>EU Member States</h5>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: 12,
+          }}>
+            {memberStates.map((ms: Jurisdiction) => (
+              <Link
+                key={ms.code}
+                to={`/jurisdictions/${ms.code}`}
+                className="st-info-card clip-lg"
+                style={{
+                  margin: 0, padding: '14px 16px', textDecoration: 'none',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = '';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '';
+                }}
+              >
+                <span style={{ fontSize: '1.5rem' }}>{countryCodeToFlag(ms.code)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {ms.name}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 2 }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {ms.entityCount} {ms.entityCount === 1 ? 'entity' : 'entities'}
+                    </span>
+                    <Badge label={ms.regime} colorMap={REGIME_CHIP_COLORS} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {safeEntities.length > 0 && (
         <>
           <div className="reveal" style={{ marginBottom: 16 }}>
-            <h5>Entities in {jurisdiction.name}</h5>
+            <h5>{isEU ? `All Licensed Entities across the EU` : `Entities in ${jurisdiction.name}`}</h5>
           </div>
           <div className="reveal">
             <DataTable

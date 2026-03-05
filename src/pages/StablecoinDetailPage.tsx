@@ -52,7 +52,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 /** Codes that don't have a standalone jurisdiction page (supranational / virtual) */
-const NON_JURISDICTION_CODES = new Set(['EU']);
+const NON_JURISDICTION_CODES = new Set<string>([]);
 
 /** Renders a country code as a clickable link or plain text if no jurisdiction page exists */
 function JurisdictionLink({ code, label, style }: { code: string; label?: string; style?: React.CSSProperties }) {
@@ -246,7 +246,11 @@ export default function StablecoinDetailPage() {
             </div>
 
             <h5 style={{ fontFamily: 'var(--font2)', marginBottom: 4 }}>
-              {issuer.name}
+              {issuer.slug ? (
+                <Link to={`/issuers/${issuer.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {issuer.name}
+                </Link>
+              ) : issuer.name}
             </h5>
             {issuer.officialName && issuer.officialName !== issuer.name && (
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', margin: '0 0 8px' }}>{issuer.officialName}</p>
