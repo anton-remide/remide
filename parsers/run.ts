@@ -53,6 +53,9 @@ import { NoFsaParser } from './registries/no-fsa.js';
 // ESMA Unified (all MiCA register types)
 import { EsmaUnifiedParser } from './registries/esma-unified.js';
 
+// EBA EUCLID (EU Payment Institutions Register)
+import { EbaEuclidParser } from './registries/eba-euclid.js';
+
 // Tier 3: Non-EU Wave 2 parsers
 import { ThSecParser } from './registries/th-sec.js';
 import { MyScParser } from './registries/my-sc.js';
@@ -95,6 +98,8 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'no-fsa': () => new NoFsaParser(),
   // ESMA Unified (replaces per-country EU parsers)
   'esma-unified': () => new EsmaUnifiedParser(),
+  // EBA EUCLID (EU Payment Institutions Register)
+  'eba-euclid': () => new EbaEuclidParser(),
   // Tier 3: Non-EU Wave 2
   'th-sec': () => new ThSecParser(),
   'my-sc': () => new MyScParser(),
