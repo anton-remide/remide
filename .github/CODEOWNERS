@@ -1,0 +1,26 @@
+# RemiDe Code Ownership
+# GitHub auto-assigns reviewers based on these rules.
+# Last matching pattern wins.
+
+# Default: Anton reviews everything
+*                       @anton-remide
+
+# Frontend visuals: Sasha owns components, styles, hooks
+/src/components/        @alexanderkrasnov
+/src/styles/            @alexanderkrasnov
+/src/hooks/             @alexanderkrasnov
+
+# Frontend structure + data: Anton owns
+/src/data/              @anton-remide
+/src/types.ts           @anton-remide
+/src/App.tsx            @anton-remide
+
+# Pages: both can touch (Anton=structure, Sasha=styles)
+/src/pages/             @anton-remide @alexanderkrasnov
+
+# Backend: Anton only
+/parsers/               @anton-remide
+/workers/               @anton-remide
+/shared/                @anton-remide
+/scripts/               @anton-remide
+/.github/               @anton-remide
