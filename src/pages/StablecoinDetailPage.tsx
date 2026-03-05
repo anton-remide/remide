@@ -51,6 +51,26 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+/** Codes that don't have a standalone jurisdiction page (supranational / virtual) */
+const NON_JURISDICTION_CODES = new Set(['EU']);
+
+/** Renders a country code as a clickable link or plain text if no jurisdiction page exists */
+function JurisdictionLink({ code, label, style }: { code: string; label?: string; style?: React.CSSProperties }) {
+  const display = (
+    <>
+      {countryCodeToFlag(code)} {label || code}
+    </>
+  );
+  if (NON_JURISDICTION_CODES.has(code.toUpperCase())) {
+    return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, ...style }}>{display}</span>;
+  }
+  return (
+    <Link to={`/jurisdictions/${code}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, ...style }}>
+      {display}
+    </Link>
+  );
+}
+
 export default function StablecoinDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -248,9 +268,7 @@ export default function StablecoinDetailPage() {
                 <div>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Country</span>
                   <div style={{ marginTop: 2 }}>
-                    <Link to={`/jurisdictions/${issuer.countryCode}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      {countryCodeToFlag(issuer.countryCode)} {issuer.country || issuer.countryCode}
-                    </Link>
+                    <JurisdictionLink code={issuer.countryCode} label={issuer.country || issuer.countryCode} />
                   </div>
                 </div>
               )}
@@ -395,9 +413,7 @@ export default function StablecoinDetailPage() {
                 {coin.majorJurisdictions.map((j) => (
                   <tr key={j.code}>
                     <td style={{ padding: '10px 16px', fontWeight: 500 }}>
-                      <Link to={`/jurisdictions/${j.code}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        {countryCodeToFlag(j.code)} {j.code}
-                      </Link>
+                      <JurisdictionLink code={j.code} />
                     </td>
                     <td style={{ padding: '10px 16px' }}>
                       <Badge label={j.status} colorMap={STABLECOIN_STATUS_COLORS} />

@@ -132,7 +132,7 @@ export default function EntityDetailPage() {
           <span className="st-info-label">License Number</span>
           <span className="st-info-value">{entity.licenseNumber || '—'}</span>
         </div>
-        {entity.website && (
+        {entity.website && /^https?:\/\//.test(entity.website) && (
           <div className="st-info-row">
             <span className="st-info-label">Website</span>
             <span className="st-info-value">
