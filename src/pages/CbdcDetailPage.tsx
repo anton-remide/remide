@@ -7,6 +7,7 @@ import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
+import { EU_MEMBER_CODES } from '../data/regionCodes';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
 
@@ -104,9 +105,13 @@ export default function CbdcDetailPage() {
         <div className="st-info-row">
           <span className="st-info-label">Country</span>
           <span className="st-info-value">
-            <Link to={`/jurisdictions/${cbdc.countryCode}`}>
-              {countryCodeToFlag(cbdc.countryCode)} {cbdc.country}
-            </Link>
+            {cbdc.countryCode === 'EU' ? (
+              <span>{countryCodeToFlag('EU')} {cbdc.country} <span style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>({EU_MEMBER_CODES.length} member states)</span></span>
+            ) : (
+              <Link to={`/jurisdictions/${cbdc.countryCode}`}>
+                {countryCodeToFlag(cbdc.countryCode)} {cbdc.country}
+              </Link>
+            )}
           </span>
         </div>
         <div className="st-info-row">

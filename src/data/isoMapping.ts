@@ -47,4 +47,5 @@ export const numericToAlpha2: Record<string, string> = {
   '840': 'US', '850': 'VI', '854': 'BF', '858': 'UY', '860': 'UZ',
   '862': 'VE', '876': 'WF', '882': 'WS', '887': 'YE', '894': 'ZM',
   '-99': 'XK', // Kosovo
+  '999': 'EU', // European Union (supranational — expanded to 27 member states at runtime)
 };
