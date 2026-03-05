@@ -39,6 +39,15 @@ export default function CbdcDetailPage() {
       ? `${cbdc.name}: ${cbdc.status} central bank digital currency from ${cbdc.country}. Technology: ${cbdc.technology}.`
       : 'Loading CBDC details...',
     path: id ? `/cbdcs/${id}` : undefined,
+    jsonLd: cbdc ? {
+      '@context': 'https://schema.org',
+      '@type': 'FinancialProduct',
+      name: cbdc.name,
+      description: `${cbdc.status} CBDC from ${cbdc.country}. Currency: ${cbdc.currency}. Technology: ${cbdc.technology}.`,
+      url: `https://anton-remide.github.io/remide/cbdcs/${id}`,
+      provider: { '@type': 'Organization', name: cbdc.centralBank },
+      category: 'Central Bank Digital Currency',
+    } : undefined,
   });
 
   if (loading) {
@@ -59,7 +68,7 @@ export default function CbdcDetailPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page">
+    <article ref={revealRef} className="st-page">
       <div className="reveal">
         <Breadcrumb crumbs={[
           { label: 'Home', to: '/' },
@@ -172,6 +181,6 @@ export default function CbdcDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }

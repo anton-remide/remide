@@ -24,6 +24,14 @@ export default function EntityDetailPage() {
       ? (entity.description || `${entity.name} is a ${entity.status} crypto service provider in ${entity.country}. License: ${entity.licenseNumber ?? 'N/A'}.`)
       : 'Loading entity details...',
     path: id ? `/entities/${id}` : undefined,
+    jsonLd: entity ? {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: entity.name,
+      description: entity.description || `${entity.name} — ${entity.status} crypto service provider in ${entity.country}`,
+      url: entity.website || `https://anton-remide.github.io/remide/entities/${id}`,
+      address: { '@type': 'PostalAddress', addressCountry: entity.countryCode },
+    } : undefined,
   });
 
   // Fetch related data once we have the entity
@@ -74,7 +82,7 @@ export default function EntityDetailPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page">
+    <article ref={revealRef} className="st-page">
       <div className="reveal">
         <Breadcrumb crumbs={[
           { label: 'Home', to: '/' },
@@ -220,6 +228,6 @@ export default function EntityDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }

@@ -407,6 +407,15 @@ export default function EntitiesPage() {
     title: titles[activeTab],
     description: descriptions[activeTab],
     path: activeTab === 'vasps' ? '/entities' : `/entities?tab=${activeTab}`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: titles[activeTab],
+      description: descriptions[activeTab],
+      url: `https://anton-remide.github.io/remide/entities${activeTab !== 'vasps' ? `?tab=${activeTab}` : ''}`,
+      creator: { '@type': 'Organization', name: 'RemiDe' },
+      keywords: ['cryptocurrency', 'VASP', 'stablecoin', 'CBDC', 'regulation', 'licensing'],
+    },
   });
 
   // Consume ?q= param once for VASPs

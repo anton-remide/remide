@@ -70,6 +70,15 @@ export default function JurisdictionDetailPage() {
       ? `Cryptocurrency regulation in ${jurisdiction.name}: ${jurisdiction.regime} regime, ${(entities ?? []).length} licensed VASPs. Travel Rule: ${jurisdiction.travelRule}.`
       : 'Loading jurisdiction details...',
     path: code ? `/jurisdictions/${code}` : undefined,
+    jsonLd: jurisdiction ? {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      name: `${jurisdiction.name} — Crypto Regulation`,
+      description: `Cryptocurrency regulation in ${jurisdiction.name}: ${jurisdiction.regime} regime, ${(entities ?? []).length} licensed VASPs.`,
+      url: `https://anton-remide.github.io/remide/jurisdictions/${code}`,
+      publisher: { '@type': 'Organization', name: 'RemiDe' },
+      about: { '@type': 'Country', name: jurisdiction.name },
+    } : undefined,
   });
 
   const safeEntities = useMemo(() => entities ?? [], [entities]);
@@ -191,7 +200,7 @@ export default function JurisdictionDetailPage() {
   ];
 
   return (
-    <div ref={revealRef} className="st-page">
+    <article ref={revealRef} className="st-page">
       <div className="reveal">
         <Breadcrumb crumbs={[
           { label: 'Home', to: '/' },
@@ -638,6 +647,6 @@ export default function JurisdictionDetailPage() {
           </div>
         </>
       )}
-    </div>
+    </article>
   );
 }

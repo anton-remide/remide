@@ -24,6 +24,15 @@ export default function StablecoinDetailPage() {
       ? `${coin.name} (${coin.ticker}): ${coin.type} stablecoin. Market cap: $${coin.marketCapBn.toFixed(1)}B. Issuer: ${coin.issuer}.`
       : 'Loading stablecoin details...',
     path: id ? `/stablecoins/${id}` : undefined,
+    jsonLd: coin ? {
+      '@context': 'https://schema.org',
+      '@type': 'FinancialProduct',
+      name: `${coin.name} (${coin.ticker})`,
+      description: `${coin.type} stablecoin pegged to ${coin.pegCurrency}. Issued by ${coin.issuer}.`,
+      url: `https://anton-remide.github.io/remide/stablecoins/${id}`,
+      provider: { '@type': 'Organization', name: coin.issuer },
+      category: 'Stablecoin',
+    } : undefined,
   });
 
   if (loading) {
@@ -44,7 +53,7 @@ export default function StablecoinDetailPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page">
+    <article ref={revealRef} className="st-page">
       <div className="reveal">
         <Breadcrumb crumbs={[
           { label: 'Home', to: '/' },
@@ -160,6 +169,6 @@ export default function StablecoinDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
