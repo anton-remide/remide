@@ -132,10 +132,28 @@ git push -u origin frontend/fix-mobile-nav
 - **Map:** MapLibre GL JS. NO react-simple-maps
 - **Charts:** Recharts
 
+### Your Scope (what you own)
+- `src/components/` — UI components, GSAP animations
+- `src/styles/` — all CSS files
+- `src/hooks/` — UI hooks (scroll, resize)
+- `src/pages/*.tsx` — **only styles, layout, responsive, animations** (not data/structure)
+
+### Anton's Scope (don't touch)
+- `src/data/` — data loaders, API calls
+- `src/types.ts` — TypeScript interfaces
+- `src/App.tsx` — routes
+- `src/pages/*.tsx` — structure, new sections, tables, data fields
+- `parsers/`, `workers/`, `shared/`, `scripts/`
+
+### Workflow
+1. Anton creates page skeleton with data (functional but unstyled)
+2. Anton merges to main + creates Notion task with Owner: Sasha
+3. You pick up the task and polish: CSS classes, responsive, animations, layout
+4. Never work on the same file as Anton simultaneously — check Notion KB for current tasks
+
 ### Architecture
-- `src/` is your domain — React pages, components, styles, data loaders
 - NEVER import from `parsers/`, `workers/`, or `shared/`
-- Data comes from Supabase via `src/data/dataLoader.ts`
+- Data comes from Supabase via `src/data/dataLoader.ts` (managed by Anton)
 
 ### Confidential
 - **Stride** is our data partner. NEVER mention "Stride" in code, comments, commits, or docs
