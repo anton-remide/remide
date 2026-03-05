@@ -50,6 +50,13 @@ import { FiFinfsaParser } from './registries/fi-finfsa.js';
 import { DkDfsaParser } from './registries/dk-dfsa.js';
 import { NoFsaParser } from './registries/no-fsa.js';
 
+// Tier 3: Non-EU Wave 2 parsers
+import { ThSecParser } from './registries/th-sec.js';
+import { MyScParser } from './registries/my-sc.js';
+import { ScFsaParser } from './registries/sc-fsa.js';
+import { GiGfscParser } from './registries/gi-gfsc.js';
+import { ImFsaParser } from './registries/im-fsa.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -83,6 +90,12 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'fi-finfsa': () => new FiFinfsaParser(),
   'dk-dfsa': () => new DkDfsaParser(),
   'no-fsa': () => new NoFsaParser(),
+  // Tier 3: Non-EU Wave 2
+  'th-sec': () => new ThSecParser(),
+  'my-sc': () => new MyScParser(),
+  'sc-fsa': () => new ScFsaParser(),
+  'gi-gfsc': () => new GiGfscParser(),
+  'im-fsa': () => new ImFsaParser(),
 };
 
 /** Run a single parser */
