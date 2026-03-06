@@ -114,6 +114,14 @@ import { VnSbvParser } from './registries/vn-sbv.js';
 import { NgCbnParser } from './registries/ng-cbn.js';
 import { HrHanfaParser } from './registries/hr-hanfa.js';
 
+// Tier 10: Wave 10 — Emerging Markets
+import { RuCbrParser } from './registries/ru-cbr.js';
+import { GeNbgParser } from './registries/ge-nbg.js';
+import { PkSecpParser } from './registries/pk-secp.js';
+import { PeSbsParser } from './registries/pe-sbs.js';
+import { TzBotParser } from './registries/tz-bot.js';
+import { BdBsecParser } from './registries/bd-bsec.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -202,6 +210,14 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'vn-sbv': () => new VnSbvParser(),
   'ng-cbn': () => new NgCbnParser(),
   'hr-hanfa': () => new HrHanfaParser(),
+
+  // Tier 10: Wave 10 — Emerging Markets
+  'ru-cbr': () => new RuCbrParser(),
+  'ge-nbg': () => new GeNbgParser(),
+  'pk-secp': () => new PkSecpParser(),
+  'pe-sbs': () => new PeSbsParser(),
+  'tz-bot': () => new TzBotParser(),
+  'bd-bsec': () => new BdBsecParser(),
 };
 
 /** Run a single parser */
