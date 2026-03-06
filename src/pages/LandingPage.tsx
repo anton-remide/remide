@@ -1,18 +1,30 @@
-import { useState, useEffect } from 'react';
-import { Scale, BookOpen, Search, ArrowRight, ChevronDown, Coins } from 'lucide-react';
+import type { ComponentType, FormEvent } from 'react';
+import { useState } from 'react';
+import { Scale, BookOpen, Search, ArrowRight, Coins, Globe, Building2, Landmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getJurisdictions, getEntities, getStablecoins, getCbdcs } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import HeroWorldMapCanvas from '../components/ui/HeroWorldMapCanvas';
 
-/* Minimal stat card — number + label, no icon */
-function NumberStat({ label, value }: { label: string; value: number }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+  label: string;
+  value: number;
+}) {
   const counterRef = useCounter(value);
   return (
-    <div className="st-card clip-lg stagger-in" style={{ textAlign: 'center', padding: '24px 16px' }}>
-      <div className="stat-value"><span ref={counterRef}>0</span></div>
-      <div className="stat-label">{label}</div>
+    <div className="st-landing-stat-card stagger-in">
+      <div className="st-landing-stat-icon" aria-hidden="true">
+        <Icon size={18} color="currentColor" strokeWidth={2} />
+      </div>
+      <span className="st-landing-stat-value"><span ref={counterRef}>0</span></span>
+      <span className="st-landing-stat-label">{label}</span>
     </div>
   );
 }
@@ -48,22 +60,31 @@ export default function LandingPage() {
   const revealRef = useReveal(loading);
   const statsRef = useStaggerReveal(loading);
   const featuresRef = useStaggerReveal(loading);
+  const [subscribeEmail, setSubscribeEmail] = useState('');
+  const [subscribeFocused, setSubscribeFocused] = useState(false);
+  const [subscribeError, setSubscribeError] = useState<string | null>(null);
+  const [subscribeSent, setSubscribeSent] = useState(false);
 
-  // Hide scroll hint after scrolling past hero
-  const [scrollHintHidden, setScrollHintHidden] = useState(false);
-  useEffect(() => {
-    const onScroll = () => {
-      setScrollHintHidden(window.scrollY > 120);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  const handleSubscribeSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (subscribeSent) return;
+
+    const email = subscribeEmail.trim();
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!isValidEmail) {
+      setSubscribeError('Please enter a valid email address.');
+      return;
+    }
+
+    setSubscribeSent(true);
+    setSubscribeError(null);
+  };
 
   const stats = [
-    { label: 'Countries Tracked', value: jurisdictions?.length ?? 0 },
-    { label: 'Licensed Entities', value: totalEntities },
-    { label: 'Stablecoins Tracked', value: totalStablecoins },
-    { label: 'CBDC Projects', value: totalCbdcs },
+    { icon: Globe, label: 'Countries Tracked', value: jurisdictions?.length ?? 0 },
+    { icon: Building2, label: 'Licensed Entities', value: totalEntities },
+    { icon: Coins, label: 'Stablecoins Tracked', value: totalStablecoins },
+    { icon: Landmark, label: 'CBDC Projects', value: totalCbdcs },
   ];
 
   const features = [
@@ -75,88 +96,123 @@ export default function LandingPage() {
 
   if (loading) {
     return (
-      <div className="st-page" style={{ paddingTop: 120, textAlign: 'center' }}>
-        <div className="st-loading-pulse" />
+      <div className="st-landing-v2">
+        <div className="st-landing-state" role="status" aria-label="Loading">
+          <div className="st-loading-pulse" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="st-page" style={{ paddingTop: 120, textAlign: 'center' }}>
-        <h4 style={{ marginBottom: 12 }}>Failed to load data</h4>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: '0.875rem' }}>{error}</p>
-        <button className="st-btn" onClick={refetch}>Try Again</button>
+      <div className="st-landing-v2">
+        <div className="st-landing-state" role="alert" aria-label="Failed to load">
+          <h4 className="st-landing-error-title">Failed to load data</h4>
+          <p className="st-landing-error-text">{error}</p>
+          <button className="st-btn" onClick={refetch}>Try Again</button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div ref={revealRef}>
+    <div ref={revealRef} className="st-landing-v2">
       {/* Hero */}
       <section className="st-hero">
+        <div className="st-hero-map-wrap">
+          <HeroWorldMapCanvas />
+        </div>
         <div className="st-hero-inner">
-          <h1 className="reveal" style={{ marginBottom: 24 }}>
-            Global VASP & Crypto<br />Registry Tracker
-          </h1>
-          <p className="reveal" style={{ maxWidth: 520, margin: '0 auto 32px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '1.0625rem' }}>
-            Comprehensive database of licensed crypto asset service providers across{' '}
-            <strong style={{ color: 'var(--black)' }}>{jurisdictions?.length ?? 0} jurisdictions</strong>{' '}
-            worldwide
-          </p>
-          <div className="st-hero-buttons reveal">
-            <button className="st-btn" onClick={() => navigate('/jurisdictions')}>
-              Explore Map
-            </button>
-            <button className="st-btn-outline" onClick={() => navigate('/entities')}>
-              Browse Entities <ArrowRight size={16} style={{ marginLeft: 4 }} />
-            </button>
+          <div className="st-hero-content">
+            <h1 className="reveal st-landing-hero-title">
+              <span>Stablecoin</span>
+              <span>Intelligence</span>
+              <span>Platform</span>
+            </h1>
+            <p className="reveal">
+              Track stablecoin licensing frameworks, issuer compliance, and Travel Rule status across{' '}
+              <strong>{jurisdictions?.length ?? 0} jurisdictions</strong>{' '}
+              worldwide
+            </p>
+            <div className="st-hero-buttons reveal">
+              <button className="st-btn" onClick={() => navigate('/jurisdictions')}>
+                Explore Map
+              </button>
+              <button className="st-btn-outline" onClick={() => navigate('/entities')}>
+                Browse Entities <ArrowRight size={16} className="st-landing-cta-icon" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Scroll Hint */}
-      <button
-        className={`st-scroll-hint${scrollHintHidden ? ' st-scroll-hint-hidden' : ''}`}
-        onClick={() => window.scrollTo({ top: window.innerHeight * 0.7, behavior: 'smooth' })}
-        aria-label="Scroll to explore"
-      >
-        <span>Scroll to explore</span>
-        <ChevronDown size={16} className="st-scroll-hint-arrow" />
-      </button>
-
-      {/* Stats — numbers only, no icons */}
+      {/* Stats */}
       <section ref={statsRef} className="st-stats-section">
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div className="row g-3">
+        <div className="st-landing-container">
+          <div className="st-landing-stats-grid">
             {stats.map((s) => (
-              <div key={s.label} className="col-6 col-md-3">
-                <NumberStat label={s.label} value={s.value} />
-              </div>
+              <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} />
             ))}
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section ref={featuresRef} style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 80px' }}>
-        <div className="reveal" style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h3>Everything you need to navigate global crypto regulation</h3>
-        </div>
-        <div className="row g-3">
-          {features.map((f) => (
-            <div key={f.title} className="col-12 col-md-6 col-lg-3">
-              <div className="st-feature-card clip-lg stagger-in">
+      <section ref={featuresRef} className="st-landing-v2-features">
+        <div className="st-landing-container">
+          <div className="st-landing-section-header reveal">
+            <h2>Global Registry Data Ecosystem</h2>
+          </div>
+          <div className="st-landing-features-grid">
+            {features.map((f) => (
+              <div key={f.title} className="st-feature-card clip-lg stagger-in">
                 <div className="st-feature-header">
-                  <div className="st-feature-icon">
-                    <f.icon size={20} color="var(--black)" strokeWidth={2} />
+                  <div className="st-feature-icon" aria-hidden="true">
+                    <f.icon size={20} color="currentColor" strokeWidth={2} />
                   </div>
                   <h6>{f.title}</h6>
                 </div>
                 <p>{f.desc}</p>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Subscribe */}
+      <section className="st-landing-subscribe-section">
+        <div className="st-landing-container">
+          <div className="st-landing-subscribe reveal">
+            <h3>RemiDe Tracker is a continuous work in progress. Stay updated.</h3>
+            <form
+              data-testid="landing-subscribe-form"
+              className={`st-landing-subscribe-form${subscribeFocused ? ' is-focused' : ''}${subscribeError ? ' is-error' : ''}${subscribeSent ? ' is-sent' : ''}`}
+              onSubmit={handleSubscribeSubmit}
+              noValidate
+            >
+              <input
+                type="email"
+                value={subscribeEmail}
+                onChange={(event) => {
+                  setSubscribeEmail(event.target.value);
+                  if (subscribeError) setSubscribeError(null);
+                }}
+                onFocus={() => setSubscribeFocused(true)}
+                onBlur={() => setSubscribeFocused(false)}
+                placeholder="Enter email"
+                aria-label="Enter email"
+                aria-invalid={subscribeError ? 'true' : 'false'}
+                disabled={subscribeSent}
+              />
+              <button className="st-btn" type="submit" disabled={subscribeSent}>
+                {subscribeSent ? 'Sent' : 'Get updates'}
+              </button>
+            </form>
+            <p aria-live="polite" className={`st-landing-subscribe-status${subscribeError ? ' is-error' : ''}${subscribeSent ? ' is-sent' : ''}`}>
+              {subscribeError || (subscribeSent ? 'Thanks! You are on the update list.' : '')}
+            </p>
+          </div>
         </div>
       </section>
     </div>

@@ -126,7 +126,7 @@ export default function HeaderSearch() {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search..."
+          placeholder="Search VASP or Jurisdiction..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { if (results) setOpen(true); }}
