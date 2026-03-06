@@ -19,15 +19,15 @@ function NumberStat({ label, value }: { label: string; value: number }) {
 
 export default function LandingPage() {
   useDocumentMeta({
-    title: 'Global Crypto Registry',
-    description: 'Track cryptocurrency regulations, VASP licensing, stablecoins, CBDCs, and Travel Rule compliance across 206 countries worldwide.',
+    title: 'Stablecoin Intelligence Platform',
+    description: 'Stablecoin regulatory intelligence — track licensing frameworks, issuer compliance, CBDC projects, and Travel Rule status across 206 countries.',
     path: '/',
     noSuffix: true,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
       name: 'RemiDe',
-      description: 'Global cryptocurrency regulatory intelligence platform tracking VASP licensing across 206 jurisdictions.',
+      description: 'Stablecoin regulatory intelligence platform — track licensing frameworks, issuer compliance, and Travel Rule status across 206 jurisdictions.',
       url: 'https://anton-remide.github.io/remide',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
@@ -69,7 +69,7 @@ export default function LandingPage() {
   const features = [
     { icon: Scale, title: 'Regulatory Regimes', desc: 'Instantly see how each jurisdiction classifies crypto — Licensing, Registration, Sandbox, or Ban — so you know where you can operate' },
     { icon: BookOpen, title: 'Travel Rule Tracking', desc: 'Know exactly which countries enforce FATF Travel Rule, which have legislated it, and which are still in progress — critical for compliance teams' },
-    { icon: Search, title: 'Entity Directory', desc: `Search ${totalEntities}+ licensed VASPs, exchanges, custodians, and EMIs with direct links to regulators and license details` },
+    { icon: Search, title: 'Entity Directory', desc: `Search ${totalEntities}+ licensed entities — banks, payment institutions, EMIs, and crypto service providers — with direct links to regulators` },
     { icon: Coins, title: 'Stablecoins & CBDCs', desc: 'Track regulatory status of major stablecoins across jurisdictions and follow 25+ central bank digital currency projects from research to launch' },
   ];
 
@@ -97,10 +97,10 @@ export default function LandingPage() {
       <section className="st-hero">
         <div className="st-hero-inner">
           <h1 className="reveal" style={{ marginBottom: 24 }}>
-            Global VASP & Crypto<br />Registry Tracker
+            Stablecoin Intelligence<br />Platform
           </h1>
           <p className="reveal" style={{ maxWidth: 520, margin: '0 auto 32px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '1.0625rem' }}>
-            Comprehensive database of licensed crypto asset service providers across{' '}
+            Track stablecoin licensing frameworks, issuer compliance, and Travel Rule status across{' '}
             <strong style={{ color: 'var(--black)' }}>{jurisdictions?.length ?? 0} jurisdictions</strong>{' '}
             worldwide
           </p>
@@ -141,7 +141,7 @@ export default function LandingPage() {
       {/* Features */}
       <section ref={featuresRef} style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px 80px' }}>
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h3>Everything you need to navigate global crypto regulation</h3>
+          <h3>Everything you need to navigate stablecoin regulation</h3>
         </div>
         <div className="row g-3">
           {features.map((f) => (

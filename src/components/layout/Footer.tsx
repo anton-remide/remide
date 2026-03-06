@@ -10,7 +10,7 @@ export default function Footer() {
         <nav className="st-footer-links" aria-label="Footer navigation">
           <Link to="/jurisdictions">Jurisdictions</Link>
           <Link to="/entities">Entities</Link>
-          <Link to="/stablecoins">Stablecoins</Link>
+          <Link to="/entities?tab=stablecoins">Stablecoins</Link>
         </nav>
         <div className="st-footer-copyright">
           &copy; {new Date().getFullYear()} RemiDe. All rights reserved.
