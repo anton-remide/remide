@@ -106,6 +106,14 @@ import { QaQfcraParser } from './registries/qa-qfcra.js';
 import { PaSbpParser } from './registries/pa-sbp.js';
 import { EeFiuParser } from './registries/ee-fiu.js';
 
+// Tier 9: Wave 9 — Africa, LATAM, Eastern Europe, Asia
+import { KeCmaParser } from './registries/ke-cma.js';
+import { ClCmfParser } from './registries/cl-cmf.js';
+import { UaNssmcParser } from './registries/ua-nssmc.js';
+import { VnSbvParser } from './registries/vn-sbv.js';
+import { NgCbnParser } from './registries/ng-cbn.js';
+import { HrHanfaParser } from './registries/hr-hanfa.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -186,6 +194,14 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'qa-qfcra': () => new QaQfcraParser(),
   'pa-sbp': () => new PaSbpParser(),
   'ee-fiu': () => new EeFiuParser(),
+
+  // Tier 9: Wave 9 — Africa, LATAM, Eastern Europe, Asia
+  'ke-cma': () => new KeCmaParser(),
+  'cl-cmf': () => new ClCmfParser(),
+  'ua-nssmc': () => new UaNssmcParser(),
+  'vn-sbv': () => new VnSbvParser(),
+  'ng-cbn': () => new NgCbnParser(),
+  'hr-hanfa': () => new HrHanfaParser(),
 };
 
 /** Run a single parser */
