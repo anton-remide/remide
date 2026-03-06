@@ -213,10 +213,16 @@ export async function upsertEntities(
   let inserted = 0;
   const errors: string[] = [];
 
-  // Delete existing entities for this country
-  // If parser_id column exists, only delete parser-managed rows
+  // Delete existing entities for this country FROM THIS PARSER only
+  // If parser_id column exists, scope deletion to this parser's rows
   // Otherwise delete all for this country (risk of removing manually-added data)
-  const deleteQuery = sb.from('entities').delete().eq('country_code', countryCode);
+  let deleteQuery = sb.from('entities').delete().eq('country_code', countryCode);
+  if (hasParserId && registryId) {
+    deleteQuery = deleteQuery.eq('parser_id', registryId);
+    logger.info(registryId, `Scoped delete: country_code=${countryCode} AND parser_id=${registryId}`);
+  } else {
+    logger.warn(registryId, `Unscoped delete: deleting ALL entities for country_code=${countryCode} (no parser_id column or registryId)`);
+  }
   const { error: delErr, count: delCount } = await deleteQuery;
 
   if (delErr) {
