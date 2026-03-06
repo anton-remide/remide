@@ -81,6 +81,17 @@ import { GbPraParser } from './registries/gb-pra.js';
 import { PhBspParser } from './registries/ph-bsp.js';
 import { ArCnvParser } from './registries/ar-cnv.js';
 
+// Tier 5: Wave 5 — Central Asia, Middle East, Turkey
+import { KzAfsaParser } from './registries/kz-afsa.js';
+import { TrSpkParser } from './registries/tr-spk.js';
+import { AeAdgmParser } from './registries/ae-adgm.js';
+import { BhCbbParser } from './registries/bh-cbb.js';
+
+// Tier 6: Wave 6 — UAE DFSA, Bermuda, India, Bahrain
+import { AeDfsaParser } from './registries/ae-dfsa.js';
+import { BmBmaParser } from './registries/bm-bma.js';
+import { InFiuParser } from './registries/in-fiu.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -140,6 +151,15 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'gb-pra': () => new GbPraParser(),
   'ph-bsp': () => new PhBspParser(),
   'ar-cnv': () => new ArCnvParser(),
+  // Tier 5: Wave 5 — Central Asia, Middle East, Turkey
+  'kz-afsa': () => new KzAfsaParser(),
+  'tr-spk': () => new TrSpkParser(),
+  'ae-adgm': () => new AeAdgmParser(),
+  'bh-cbb': () => new BhCbbParser(),
+  // Tier 6: Wave 6 — UAE DFSA, Bermuda, India
+  'ae-dfsa': () => new AeDfsaParser(),
+  'bm-bma': () => new BmBmaParser(),
+  'in-fiu': () => new InFiuParser(),
 };
 
 /** Run a single parser */
