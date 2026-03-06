@@ -52,6 +52,13 @@ export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Unknown: { bg: '#F1F5F9', text: '#586B82' },
 };
 
+/* ── Entity sector colors ── */
+export const SECTOR_COLORS: Record<string, { bg: string; text: string }> = {
+  Crypto: { bg: '#EEF0FF', text: '#4B5CC4' },
+  Payments: { bg: '#F0FDFA', text: '#0D6857' },
+  Banking: { bg: '#FFF8EB', text: '#92610B' },
+};
+
 /* ── Stablecoin type colors ── */
 export const STABLECOIN_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   'Fiat-Backed': { bg: '#ECFDF3', text: '#2B7A4B' },

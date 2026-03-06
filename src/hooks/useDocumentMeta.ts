@@ -108,7 +108,7 @@ export function useDocumentMeta(options: DocumentMetaOptions): void {
 
     // Cleanup: restore defaults on unmount
     return () => {
-      document.title = `${SITE_NAME} — Global Crypto Registry`;
+      document.title = `${SITE_NAME} — Stablecoin Intelligence Platform`;
     };
   }, [options.title, options.description, options.path, options.ogImage, options.noSuffix, options.jsonLd]);
 }

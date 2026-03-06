@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { SortConfig } from '../../types';
 import { ChevronUp, ChevronDown, Search, X } from 'lucide-react';
 import ColumnHeaderFilter from './ColumnHeaderFilter';
@@ -73,6 +73,8 @@ export default function DataTable<T extends Record<string, unknown>>({
 
   // Local search state for debounce
   const [localSearch, setLocalSearch] = useState(search ?? '');
+  const [searchExpanded, setSearchExpanded] = useState(() => !!(search ?? ''));
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => { setLocalSearch(search ?? ''); }, [search]);
 
@@ -81,6 +83,19 @@ export default function DataTable<T extends Record<string, unknown>>({
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => onSearchChange?.(val), 200);
   };
+
+  const expandSearch = useCallback(() => {
+    setSearchExpanded(true);
+    // Focus after CSS transition starts
+    requestAnimationFrame(() => searchInputRef.current?.focus());
+  }, []);
+
+  const collapseSearch = useCallback(() => {
+    // Only collapse if the input is empty
+    if (!localSearch) {
+      setSearchExpanded(false);
+    }
+  }, [localSearch]);
 
   // Derive active filters from columns for pill display
   const activeFilterPills = useMemo(() => {
@@ -114,20 +129,35 @@ export default function DataTable<T extends Record<string, unknown>>({
         )}
         <div className="st-table-toolbar-controls">
           {onSearchChange && (
-            <div className="st-table-search">
-              <Search size={14} className="st-table-search-icon" />
-              <input
-                type="text"
-                value={localSearch}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder={searchPlaceholder}
-              />
-              {localSearch && (
-                <button className="st-table-search-clear" onClick={() => handleSearchChange('')} aria-label="Clear search">
+            searchExpanded ? (
+              <div className="st-table-search st-table-search--expanded">
+                <Search size={14} className="st-table-search-icon" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={localSearch}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onBlur={collapseSearch}
+                  placeholder={searchPlaceholder}
+                />
+                <button
+                  className="st-table-search-clear"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { handleSearchChange(''); setSearchExpanded(false); }}
+                  aria-label="Clear search"
+                >
                   <X size={12} />
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <button
+                className="st-table-search-toggle"
+                onClick={expandSearch}
+                aria-label="Open search"
+              >
+                <Search size={15} />
+              </button>
+            )
           )}
           {/* Active filter pills (Notion-style) */}
           {activeFilterPills.map((pill) => (

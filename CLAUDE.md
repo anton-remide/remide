@@ -223,13 +223,28 @@ Create row with Status: Blocked, Blocker: "question text here"
 **Bug found → Notion Knowledge Base**
 Create row with Type: Task, Priority: Core, Status: Backlog
 
-**Parser created → Notion Parser Registry**
-Create row in `collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6`:
-- Parser name, Country, Registry, Source Type, Frequency, Source URL, Notes
+**Parser created → Notion Parser Registry (MANDATORY — NO EXCEPTIONS)**
+Create row in `collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6` **IMMEDIATELY after building each parser:**
+- Parser name, Country, Registry, Source Type, Frequency, Source URL
+- **Parser Approach:** HOW the parser works (API type, scraping method, pagination, fallback strategy)
+- **Technical Decisions:** What was tried, what failed, what alternative was chosen and why
+- **Entity Count:** Number of entities parsed
+- **Build Status:** "Deployed & Running" / "Built, Not Deployed" / "Broken"
+- **Notes:** Full writeup including: API endpoints, data format, edge cases, known issues
+- ⚠️ **NEVER batch parser documentation.** Each parser is logged to Notion the moment it is built and tested. Do not wait until "later" or "end of session".
 
-**Parser executed → Notion Scrape Runs**
-Create row in `collection://5dfa965b-6f3e-441e-b37b-8768b52ea131`:
+**Parser executed → Notion Scrape Runs (MANDATORY)**
+Create row in `collection://5dfa965b-6f3e-441e-b37b-8768b52ea131` **IMMEDIATELY after each parser deployment:**
 - Run name, Parser, Status, Started, Duration, Records Found/New/Updated, Errors, Trigger
+- ⚠️ Do not skip this step. Every parser run that writes to Supabase MUST be logged.
+
+### Documentation Gap Recovery (CRITICAL)
+If at any point you discover that parsers, decisions, or runs are NOT logged in Notion:
+1. **STOP current work immediately**
+2. **Audit:** Check what's missing (search Notion, compare with MEMORY.md/codebase)
+3. **Backfill:** Create all missing Notion entries with full specs and decisions
+4. **Resume:** Only continue new work after gaps are filled
+This applies to all Notion databases: Knowledge Base, Parser Registry, and Scrape Runs.
 
 **Task completed → Update Notion Knowledge Base**
 Change Status to Done on the corresponding row
@@ -318,11 +333,12 @@ Properties:
 ---
 
 ### Session End (ALWAYS do this before finishing)
-1. **Update `MEMORY.md`** — sync current status, any new IDs, what was done
-2. **Update `project-decisions.md`** — sync any new decisions made this session
-3. **Update Notion "Current State" page** (`3182ac10-63c8-811c-8cfe-fd40919d8e20`) — latest status
-4. **Log unresolved items** — any open questions → Knowledge Base (Blocked), any new tasks → Knowledge Base (Backlog)
-5. **Commit code** if there are uncommitted changes
+1. **Documentation Completeness Audit** — Check that ALL parsers, decisions, and runs from this session are logged in Notion. If anything is missing, create the entries NOW before proceeding.
+2. **Update `MEMORY.md`** — sync current status, any new IDs, what was done
+3. **Update `project-decisions.md`** — sync any new decisions made this session
+4. **Update Notion "Current State" page** (`3182ac10-63c8-811c-8cfe-fd40919d8e20`) — latest status
+5. **Log unresolved items** — any open questions → Knowledge Base (Blocked), any new tasks → Knowledge Base (Backlog)
+6. **Commit code** if there are uncommitted changes
 
 ---
 

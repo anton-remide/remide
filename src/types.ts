@@ -1,3 +1,5 @@
+export type EntitySector = 'Crypto' | 'Payments' | 'Banking';
+
 export interface Entity {
   id: string;
   name: string;
@@ -14,6 +16,8 @@ export interface Entity {
   registryUrl: string;
   linkedinUrl: string;
   twitterUrl: string;
+  sector: EntitySector;
+  cryptoRelated: boolean;
 }
 
 export type EntityStatus =

@@ -59,6 +59,8 @@ interface EntityRow {
   registry_url: string;
   linkedin_url: string;
   raw_data: EntityRawData | null;
+  sector: string | null;
+  crypto_related: boolean | null;
 }
 
 function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
@@ -115,6 +117,8 @@ function mapEntity(row: EntityRow): Entity {
     registryUrl,
     linkedinUrl,
     twitterUrl,
+    sector: (row.sector as Entity['sector']) ?? 'Crypto',
+    cryptoRelated: row.crypto_related ?? true,
   };
 }
 
