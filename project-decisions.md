@@ -1,0 +1,121 @@
+# RemiDe — Decision Log (Cache)
+
+> **Source of truth:** Notion KB (Type: Decision). This file is a fast cache.
+> **Format:** `[ID]: Title — Category — Date`
+
+---
+
+## PROC-001: Development Priority — Features First, SEO+Mobile as Quality Gates
+- **Category:** Business
+- **Date:** 2026-03-04
+- **Context:** Sprint S3 planning. SEO/mobile/architecture consuming sprints without monetization impact.
+- **Decision:** Features first. SEO+Mobile are mandatory quality gates, not priorities. Architecture only when it unblocks features.
+- **Impact:** All sprint planning follows: features > SEO+mobile as quality gates.
+
+## PROC-002: A/B/C/D Adversarial Debate Framework
+- **Category:** Process
+- **Date:** 2026-03-05
+- **Context:** SIMULATE step (10 failure scenarios) was unstructured. No adversarial check, no confidence levels, no business/UX lens.
+- **Decision:** Replace SPEC+SIMULATE+REVIEW with integrated A/B/C/D framework. Tier 1 skip, Tier 2 = 1 round A+B+C, Tier 3 = 2 rounds A+B+D+C.
+- **Impact:** CLAUDE.md Feature Lifecycle replaced. Notion System Prompt + CD Protocol updated.
+
+## DATA-001: Parsers Collect ALL Entities — No Crypto Filtering at Parse Stage
+- **Category:** Data
+- **Date:** 2026-03-05
+- **Context:** Parsers grab PI, EMI, banks, securities, VASPs from registries. Filtering at parse time loses data.
+- **Decision:** S2/S3 parsers collect everything. S4 (Enrichment) handles sorting, classification, cleanup.
+- **Impact:** Enables "crypto penetration in tradfi" analytics. No data loss from misclassification.
+
+## DATA-002: Entity Sector Classification (sector + crypto_related)
+- **Category:** Data
+- **Date:** 2026-03-06
+- **Context:** 14K entities include banks (FDIC), payment institutions (EBA), VASPs. Need to distinguish.
+- **Decision:** Added `sector` (Crypto/Payments/Banking) + `crypto_related` boolean. Auto-classify by parser_id.
+- **Impact:** Sector filter chips on EntitiesPage. Tab label "VASPs" → "Entities".
+
+## INFRA-001: Scoped Delete in upsertEntities()
+- **Category:** Infra
+- **Date:** 2026-03-06
+- **Context:** `upsertEntities()` DELETE was scoped only by country_code, wiping ALL parsers' data for that country.
+- **Decision:** Scope DELETE to parser_id when available. Prevents FDIC+NYDFS coexistence issues.
+- **Impact:** `parsers/core/db.ts` — critical fix. Commit `5e1075e`.
+
+## ARCH-008: Quality Pipeline Architecture — 3 Workers
+- **Category:** Architecture
+- **Date:** 2026-03-06
+- **Context:** 14K entities with garbage data (dates as names, CONSOB codes, quoted Polish sole proprietors). No processing between parsing and display. Tier 3 A/B/C/D debate completed — 2 rounds.
+- **Alternatives:**
+  - A) 5-stage pipeline with separate processing_log table (rejected: over-engineered)
+  - B) Quick fixes only — regex cleanup in frontend (rejected: unsustainable)
+  - C) 3 workers + columns on entities + scrape_runs for logging (chosen)
+- **Decision:** 3 workers: Quality (cleanup+classify+score), Enrichment (existing expanded), Verify (DNS+staleness). No separate log table — quality_flags JSONB on entities + scrape_runs for worker runs.
+- **Confidence:** 93% avg across 6 decision points.
+- **Impact:** New DDL 006, patch db.ts, 3 worker files, frontend sort/filter changes.
+
+## DATA-003: crypto_status Enum (replaces simple sector for crypto classification)
+- **Category:** Data
+- **Date:** 2026-03-06
+- **Context:** S4.0 in Notion already had `crypto_status` enum designed. More nuanced than sector+crypto_related: 4 levels vs 3.
+- **Alternatives:**
+  - A) Only `sector` + `crypto_related` (rejected: too coarse, no "adjacent" category)
+  - B) `crypto_status` replaces `sector` entirely (rejected: orthogonal axes)
+  - C) `crypto_status` ADDS to existing columns (chosen): sector = business type, crypto_status = crypto relevance
+- **Decision:** Add `crypto_status` enum: confirmed_crypto / crypto_adjacent / traditional / unknown. Keep `sector` + `crypto_related` for backward compatibility. `crypto_related` = true when crypto_status IN ('confirmed_crypto', 'crypto_adjacent').
+- **Confidence:** 90%
+- **Impact:** DDL 006, Quality Worker classification rules, frontend filter.
+
+## DATA-004: DNS Status Tracking (not just boolean)
+- **Category:** Data
+- **Date:** 2026-03-06
+- **Context:** 164+ dead DNS entities found during enrichment. Need to distinguish "dead website" from "no website" from "not checked".
+- **Alternatives:**
+  - A) Boolean `is_dead` (rejected: no nuance)
+  - B) Enum `dns_status`: alive/dead/no_website/unknown (chosen)
+- **Decision:** `dns_status` enum + `dns_checked_at` timestamp. Verify Worker re-checks every 30 days.
+- **Confidence:** 92%
+- **Impact:** DDL 006, Verify Worker, UI badges (💀/⚠️).
+
+## DATA-005: quality_flags — Current State Only, No History
+- **Category:** Data
+- **Date:** 2026-03-06
+- **Context:** quality_flags JSONB could store change history per entity, but 14K × many runs = bloat.
+- **Alternatives:**
+  - A) Full history in JSONB (rejected: bloat)
+  - B) Current state only in JSONB, history in scrape_runs (chosen)
+- **Decision:** `quality_flags` stores: `{ "rules": [...], "garbage_reason": null, "tier": "T1" }`. No change history. Worker runs logged in scrape_runs.
+- **Confidence:** 95%
+- **Impact:** quality_flags schema, Quality Worker output format.
+
+## INFRA-002: Preserve Quality Columns on Parser Re-run (CRITICAL)
+- **Category:** Infra
+- **Date:** 2026-03-06
+- **Context:** Parsers use DELETE+INSERT (not UPDATE). Re-running a parser wipes canonical_name, quality_score, crypto_status, dns_status — all quality pipeline work lost.
+- **Alternatives:**
+  - A) Switch parsers to UPSERT (rejected: too many parsers to change, breaks existing pattern)
+  - B) Save quality columns before DELETE, restore after INSERT (chosen)
+  - C) Move quality columns to separate table (rejected: JOIN overhead, complexity)
+- **Decision:** Modify `upsertEntities()` in `parsers/core/db.ts` — before DELETE, SELECT quality columns; after INSERT, UPDATE to restore. Must be done BEFORE Quality Worker is built.
+- **Confidence:** 98%
+- **Impact:** `parsers/core/db.ts` — critical path. Without this, entire pipeline is useless.
+
+## DB-RESTRUCTURE-001: Split Parser Registry into Country Research + Workers Registry
+- **Category:** Infra
+- **Date:** 2026-03-06
+- **Context:** Parser Registry held two different types of data: country-level regulatory context (200+ countries) and parser/worker machine specs (82+ workers). Mixed concerns made it hard to maintain.
+- **Alternatives:**
+  - A) Keep single database with tags/filters (rejected: mixed concerns, unclear ownership)
+  - B) Split into two specialized databases (chosen)
+- **Decision:** Parser Registry → two databases:
+  1. **🌍 Country Research Registry** (`collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6`) — same ID, renamed. Per-country regulatory context, research notes, priority tiers.
+  2. **🤖 Workers Registry** (`collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720`) — NEW database. Parser/worker specs with: Worker, Type (Parser/Enricher/Cleaner/Verifier), Status lifecycle (Backlog→Deployed), Countries, Source URL/Type, Approach, Difficulty, Priority, Frequency, Last Run, Success Rate, Entity Count, Data Quality, Build Order, Owner, Notes, Deploy Session.
+- **Logging rule:** New parsers/workers → Workers Registry. Country research → Country Research Registry. Never mix.
+- **Confidence:** 95%
+- **Impact:** CLAUDE.md, MEMORY.md updated. All future parser/worker logging goes to Workers Registry.
+
+## DATA-006: Quality Score Based on Data Tiers T1-T4
+- **Category:** Data
+- **Date:** 2026-03-06
+- **Context:** S4.6 in Notion already defined data tiers. Quality Score should reflect enrichment level.
+- **Decision:** Score ranges: T1 (name+license) = 10-30, T2 (+website+description) = 40-60, T3 (+LinkedIn+social) = 60-80, T4 (+revenue+products) = 80-100. Drives Firecrawl enrichment priority: enrich lowest-tier entities first.
+- **Confidence:** 88%
+- **Impact:** Quality Worker scoring rules, Firecrawl prioritization.

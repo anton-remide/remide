@@ -46,6 +46,7 @@ interface EntityRawData {
 interface EntityRow {
   id: string;
   name: string;
+  canonical_name: string | null;
   country_code: string;
   country: string;
   license_number: string;
@@ -61,6 +62,11 @@ interface EntityRow {
   raw_data: EntityRawData | null;
   sector: string | null;
   crypto_related: boolean | null;
+  quality_score: number | null;
+  quality_tier: string | null;
+  dns_status: string | null;
+  crypto_status: string | null;
+  is_garbage: boolean | null;
 }
 
 function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
@@ -103,7 +109,8 @@ function mapEntity(row: EntityRow): Entity {
 
   return {
     id: row.id,
-    name: row.name,
+    // Prefer canonical_name (cleaned by Quality Worker) over raw parser name
+    name: row.canonical_name || row.name,
     countryCode: row.country_code,
     country: row.country,
     licenseNumber: row.license_number,
@@ -119,6 +126,12 @@ function mapEntity(row: EntityRow): Entity {
     twitterUrl,
     sector: (row.sector as Entity['sector']) ?? 'Crypto',
     cryptoRelated: row.crypto_related ?? true,
+    /* Quality pipeline */
+    qualityScore: row.quality_score ?? null,
+    qualityTier: (row.quality_tier as Entity['qualityTier']) ?? null,
+    dnsStatus: (row.dns_status as Entity['dnsStatus']) ?? 'unknown',
+    cryptoStatus: (row.crypto_status as Entity['cryptoStatus']) ?? 'unknown',
+    isGarbage: row.is_garbage ?? false,
   };
 }
 
@@ -200,8 +213,8 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
       .limit(5),
     supabase
       .from('entities')
-      .select('id, name, country, country_code, regulator')
-      .or(`name.ilike.${q},country.ilike.${q},regulator.ilike.${q}`)
+      .select('id, name, canonical_name, country, country_code, regulator')
+      .or(`name.ilike.${q},canonical_name.ilike.${q},country.ilike.${q},regulator.ilike.${q}`)
       .order('name')
       .limit(5),
   ]);
@@ -214,7 +227,7 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
     })),
     entities: (eRes.data ?? []).map((r: Record<string, string>) => ({
       id: r.id,
-      name: r.name,
+      name: r.canonical_name || r.name,
       country: r.country,
       countryCode: r.country_code,
       regulator: r.regulator,

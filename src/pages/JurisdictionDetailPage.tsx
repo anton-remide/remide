@@ -95,7 +95,7 @@ export default function JurisdictionDetailPage() {
     } : undefined,
   });
 
-  const safeEntities = useMemo(() => entities ?? [], [entities]);
+  const safeEntities = useMemo(() => (entities ?? []).filter((e) => !e.isGarbage), [entities]);
 
   // Stablecoins & CBDCs per country (async Supabase)
   const stablecoinsFetcher = useCallback(

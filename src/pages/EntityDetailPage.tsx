@@ -92,7 +92,10 @@ export default function EntityDetailPage() {
       </div>
 
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>{entity.name}</h2>
+        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>
+          {entity.name}
+          {entity.dnsStatus === 'dead' && <span title="Website is dead" style={{ marginLeft: 8, fontSize: '0.75em' }}>💀</span>}
+        </h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <Badge label={entity.status} colorMap={STATUS_COLORS} />
           {jurisdiction && (
@@ -100,6 +103,9 @@ export default function EntityDetailPage() {
               <Badge label={jurisdiction.regime} colorMap={REGIME_CHIP_COLORS} />
               <Badge label={jurisdiction.travelRule} colorMap={TRAVEL_RULE_COLORS} />
             </>
+          )}
+          {entity.dnsStatus === 'dead' && (
+            <Badge label="Dead Website" colorMap={{ 'Dead Website': { bg: '#fee2e2', text: '#991b1b' } }} />
           )}
         </div>
       </div>

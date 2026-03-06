@@ -23,6 +23,13 @@ let hasSourceUrl = false;
 let hasParsedAt = false;
 let hasParserId = false;
 let hasRawData = false;
+let hasQualityColumns = false;
+
+/** Quality columns to preserve across DELETE+INSERT (INFRA-002) */
+const QUALITY_COLS = [
+  'canonical_name', 'is_garbage', 'quality_score', 'quality_flags',
+  'last_quality_at', 'crypto_status', 'dns_status', 'dns_checked_at', 'last_verified_at',
+] as const;
 
 /** Valid entity_status enum values in the database */
 const VALID_STATUSES = ['Licensed', 'Registered', 'Provisional', 'Unknown', 'Sandbox'] as const;
@@ -115,11 +122,16 @@ async function detectSchema(): Promise<void> {
   hasParserId = results['parser_id'] ?? false;
   hasRawData = results['raw_data'] ?? false;
 
+  // Check quality columns (DDL 007) for INFRA-002 preservation
+  const { error: qErr } = await sb.from('entities').select('quality_score').limit(0);
+  hasQualityColumns = !qErr;
+
   const present = [
     hasSourceUrl && 'source_url',
     hasParsedAt && 'parsed_at',
     hasParserId && 'parser_id',
     hasRawData && 'raw_data',
+    hasQualityColumns && 'quality_*',
   ].filter(Boolean);
 
   const missing = [
@@ -127,9 +139,13 @@ async function detectSchema(): Promise<void> {
     !hasParsedAt && 'parsed_at',
     !hasParserId && 'parser_id',
     !hasRawData && 'raw_data',
+    !hasQualityColumns && 'quality_*',
   ].filter(Boolean);
 
   logger.info('db', `Schema detected — present: [${present.join(', ')}], missing: [${missing.join(', ')}]`);
+  if (hasQualityColumns) {
+    logger.info('db', 'Quality columns found — will preserve on re-parse (INFRA-002)');
+  }
   schemaChecked = true;
 }
 
@@ -213,6 +229,54 @@ export async function upsertEntities(
   let inserted = 0;
   const errors: string[] = [];
 
+  // ──────────────────────────────────────────────────────
+  // INFRA-002: Backup quality columns BEFORE delete
+  // Quality Worker enriches entities with canonical_name, quality_score,
+  // crypto_status, dns_status, etc. Parser DELETE+INSERT would wipe this.
+  // We save non-default quality data and restore it after INSERT.
+  // ──────────────────────────────────────────────────────
+  let qualityBackup: Map<string, Record<string, unknown>> | null = null;
+
+  if (hasQualityColumns) {
+    const selectCols = ['id', ...QUALITY_COLS].join(',');
+    let backupQuery = sb.from('entities').select(selectCols).eq('country_code', countryCode);
+    if (hasParserId && registryId) {
+      backupQuery = backupQuery.eq('parser_id', registryId);
+    }
+
+    const { data: backupData, error: backupErr } = await backupQuery;
+
+    if (backupErr) {
+      logger.warn(registryId, `Quality backup failed: ${backupErr.message} — quality data may be lost on re-parse`);
+    } else if (backupData && backupData.length > 0) {
+      qualityBackup = new Map();
+      for (const row of backupData) {
+        // Only save entities that have any non-default quality data
+        const hasData =
+          row.canonical_name != null ||
+          row.is_garbage === true ||
+          (row.quality_score != null && row.quality_score > 0) ||
+          (row.quality_flags != null && JSON.stringify(row.quality_flags) !== '{}') ||
+          row.last_quality_at != null ||
+          (row.crypto_status != null && row.crypto_status !== 'unknown') ||
+          (row.dns_status != null && row.dns_status !== 'unknown') ||
+          row.dns_checked_at != null ||
+          row.last_verified_at != null;
+
+        if (hasData) {
+          const qData: Record<string, unknown> = {};
+          for (const col of QUALITY_COLS) {
+            if (row[col] !== undefined) qData[col] = row[col];
+          }
+          qualityBackup.set(row.id as string, qData);
+        }
+      }
+      if (qualityBackup.size > 0) {
+        logger.info(registryId, `INFRA-002: Backed up quality data for ${qualityBackup.size} entities`);
+      }
+    }
+  }
+
   // Delete existing entities for this country FROM THIS PARSER only
   // If parser_id column exists, scope deletion to this parser's rows
   // Otherwise delete all for this country (risk of removing manually-added data)
@@ -253,6 +317,30 @@ export async function upsertEntities(
     } else {
       inserted += chunk.length;
     }
+  }
+
+  // ──────────────────────────────────────────────────────
+  // INFRA-002: Restore quality columns AFTER insert
+  // Match by entity ID (slug) — same parser produces same slugs.
+  // Only restore entities that had non-default quality data.
+  // ──────────────────────────────────────────────────────
+  if (qualityBackup && qualityBackup.size > 0) {
+    let restored = 0;
+    let restoreErrors = 0;
+    for (const [entityId, qualityData] of qualityBackup) {
+      const { error: restoreErr } = await sb
+        .from('entities')
+        .update(qualityData)
+        .eq('id', entityId);
+
+      if (!restoreErr) {
+        restored++;
+      } else {
+        restoreErrors++;
+        logger.debug(registryId, `Quality restore skip "${entityId}": ${restoreErr.message}`);
+      }
+    }
+    logger.info(registryId, `INFRA-002: Restored quality data for ${restored}/${qualityBackup.size} entities${restoreErrors > 0 ? ` (${restoreErrors} not found — entity renamed?)` : ''}`);
   }
 
   logger.info(registryId, `Write complete: ${inserted} inserted, ${errors.length} chunk errors`);

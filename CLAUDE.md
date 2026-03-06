@@ -167,7 +167,8 @@ npx tsx scripts/generate-sitemap.ts              # Rebuild sitemap
 | Data | Location | Why |
 |------|----------|-----|
 | Tasks, features, backlog, decisions | **Notion Knowledge Base** (Type field distinguishes) → decisions cached in `project-decisions.md` | Single source of truth for everything |
-| Parser registry | **Notion Parser Registry** | Per-country structured records |
+| Country research | **Notion Country Research Registry** | Per-country regulatory context (200+ countries) |
+| Workers registry | **Notion Workers Registry** | Parser/worker specs, status, runs (82+ workers) |
 | Scrape run logs | **Notion Scrape Runs** | Execution history |
 | Architecture overview | **Notion Architecture Router** page | Living document |
 | Current project status | **Notion Current State** page → cache in `MEMORY.md` | Quick sync |
@@ -180,9 +181,10 @@ npx tsx scripts/generate-sitemap.ts              # Rebuild sitemap
 Parent page: 3182ac10-63c8-809a-870f-fe525637dd79
 
 Databases:
-  Knowledge Base:   collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f
-  Parser Registry:  collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6
-  Scrape Runs:      collection://5dfa965b-6f3e-441e-b37b-8768b52ea131
+  Knowledge Base:           collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f
+  Country Research Registry: collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6
+  Workers Registry:         collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720
+  Scrape Runs:              collection://5dfa965b-6f3e-441e-b37b-8768b52ea131
 
 Pages:
   Architecture Router:  3182ac10-63c8-8132-a898-fc7e7c04b757
@@ -223,15 +225,16 @@ Create row with Status: Blocked, Blocker: "question text here"
 **Bug found → Notion Knowledge Base**
 Create row with Type: Task, Priority: Core, Status: Backlog
 
-**Parser created → Notion Parser Registry (MANDATORY — NO EXCEPTIONS)**
-Create row in `collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6` **IMMEDIATELY after building each parser:**
-- Parser name, Country, Registry, Source Type, Frequency, Source URL
-- **Parser Approach:** HOW the parser works (API type, scraping method, pagination, fallback strategy)
+**Parser/Worker created → Notion Workers Registry (MANDATORY — NO EXCEPTIONS)**
+Create row in `collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720` **IMMEDIATELY after building each parser or worker:**
+- Worker name, Type (Parser/Enricher/Cleaner/Verifier), Countries, Source URL, Source Type
+- **Approach:** HOW it works (API type, scraping method, pagination, fallback strategy)
 - **Technical Decisions:** What was tried, what failed, what alternative was chosen and why
-- **Entity Count:** Number of entities parsed
-- **Build Status:** "Deployed & Running" / "Built, Not Deployed" / "Broken"
+- **Entity Count:** Number of entities parsed/processed
+- **Status:** Backlog → Research → In Development → Testing → Deployed & Running / Blocked
 - **Notes:** Full writeup including: API endpoints, data format, edge cases, known issues
-- ⚠️ **NEVER batch parser documentation.** Each parser is logged to Notion the moment it is built and tested. Do not wait until "later" or "end of session".
+- ⚠️ **NEVER batch worker documentation.** Each parser/worker is logged to Notion the moment it is built and tested.
+- ⚠️ **Country Research Registry** (`collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6`) is for **country-level regulatory context only** — NOT for parser/worker specs. Do not create parser entries there.
 
 **Parser executed → Notion Scrape Runs (MANDATORY)**
 Create row in `collection://5dfa965b-6f3e-441e-b37b-8768b52ea131` **IMMEDIATELY after each parser deployment:**
@@ -244,7 +247,7 @@ If at any point you discover that parsers, decisions, or runs are NOT logged in 
 2. **Audit:** Check what's missing (search Notion, compare with MEMORY.md/codebase)
 3. **Backfill:** Create all missing Notion entries with full specs and decisions
 4. **Resume:** Only continue new work after gaps are filled
-This applies to all Notion databases: Knowledge Base, Parser Registry, and Scrape Runs.
+This applies to all Notion databases: Knowledge Base, Workers Registry, Country Research Registry, and Scrape Runs.
 
 **Task completed → Update Notion Knowledge Base**
 Change Status to Done on the corresponding row

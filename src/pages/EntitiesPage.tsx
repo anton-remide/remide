@@ -19,7 +19,8 @@ type EntityTab = 'vasps' | 'stablecoins' | 'cbdcs' | 'issuers';
 function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitcher: React.ReactNode }) {
   const navigate = useNavigate();
   const { data: allEntities, loading, error, refetch } = useSupabaseQuery(getEntities);
-  const safeEntities = allEntities ?? [];
+  // Filter out garbage entities — they have bad data (dates as names, codes, etc.)
+  const safeEntities = useMemo(() => (allEntities ?? []).filter((e) => !e.isGarbage), [allEntities]);
 
   const colFilters = useColumnFilters<Entity & Record<string, unknown>>(
     safeEntities as (Entity & Record<string, unknown>)[],
@@ -38,7 +39,17 @@ function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitc
   }, [searchQuery]);
 
   const columns: Column<Entity>[] = [
-    { key: 'name', label: 'Name', sortable: true },
+    {
+      key: 'name',
+      label: 'Name',
+      sortable: true,
+      render: (r) => (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontWeight: 500 }}>{r.name}</span>
+          {r.dnsStatus === 'dead' && <span title="Website is dead" style={{ fontSize: '0.75rem' }}>💀</span>}
+        </span>
+      ),
+    },
     {
       key: 'sector',
       label: 'Sector',

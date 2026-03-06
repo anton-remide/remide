@@ -1,5 +1,9 @@
 export type EntitySector = 'Crypto' | 'Payments' | 'Banking';
 
+export type DnsStatus = 'alive' | 'dead' | 'no_website' | 'unknown';
+export type CryptoStatus = 'confirmed_crypto' | 'crypto_adjacent' | 'traditional' | 'unknown';
+export type QualityTier = 'T1' | 'T2' | 'T3' | 'T4';
+
 export interface Entity {
   id: string;
   name: string;
@@ -18,6 +22,12 @@ export interface Entity {
   twitterUrl: string;
   sector: EntitySector;
   cryptoRelated: boolean;
+  /* Quality pipeline fields */
+  qualityScore: number | null;
+  qualityTier: QualityTier | null;
+  dnsStatus: DnsStatus;
+  cryptoStatus: CryptoStatus;
+  isGarbage: boolean;
 }
 
 export type EntityStatus =
