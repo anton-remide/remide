@@ -10,22 +10,14 @@ export default function Header() {
   const { user, signOut } = useAuth();
   const headerRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
-  const lastY = useRef(0);
 
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 40);
-      if (y > 200) {
-        setHidden(y > lastY.current);
-      } else {
-        setHidden(false);
-      }
-      lastY.current = y;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -61,7 +53,6 @@ export default function Header() {
 
   const cls = ['st-header'];
   if (scrolled) cls.push('scrolled');
-  if (hidden) cls.push('hidden');
 
   return (
     <>
@@ -70,7 +61,7 @@ export default function Header() {
           {/* Left: Logo */}
           <div className="st-header-left">
             <Link to="/" className="st-header-brand" aria-label="RemiDe Home">
-              <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={28} className="st-header-logo" />
+              <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={28} className="st-header-logo st-logo-black" />
             </Link>
           </div>
 
@@ -80,41 +71,46 @@ export default function Header() {
           {/* Right: Nav + Auth */}
           <div className="st-header-right">
             <nav className="st-header-nav">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={location.pathname.startsWith(link.to) ? 'active' : ''}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              {user ? (
-                <div ref={avatarRef} className="st-avatar-menu">
-                  <button
-                    className="st-avatar-trigger"
-                    onClick={() => setAvatarOpen(!avatarOpen)}
-                    aria-label="Account menu"
+              <div className="st-header-nav-links">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={location.pathname.startsWith(link.to) ? 'active' : ''}
                   >
-                    <span className="st-header-avatar">
-                      {(user.email ?? '?')[0].toUpperCase()}
-                    </span>
-                  </button>
-                  {avatarOpen && (
-                    <div className="st-avatar-dropdown">
-                      <div className="st-avatar-dropdown-email">{user.email}</div>
-                      <button className="st-avatar-dropdown-item" onClick={handleSignOut}>
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <Link to="/login" className="st-header-auth-link">Sign In</Link>
-                  <Link to="/signup" className="st-btn st-btn-sm">Sign Up</Link>
-                </>
-              )}
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="st-header-nav-auth">
+                {user ? (
+                  <div ref={avatarRef} className="st-avatar-menu">
+                    <button
+                      className="st-avatar-trigger"
+                      onClick={() => setAvatarOpen(!avatarOpen)}
+                      aria-label="Account menu"
+                    >
+                      <span className="st-header-avatar">
+                        {(user.email ?? '?')[0].toUpperCase()}
+                      </span>
+                    </button>
+                    {avatarOpen && (
+                      <div className="st-avatar-dropdown">
+                        <div className="st-avatar-dropdown-email">{user.email}</div>
+                        <button className="st-avatar-dropdown-item" onClick={handleSignOut}>
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Link to="/login" className="st-header-auth-link">Sign In</Link>
+                    <Link to="/signup" className="st-btn st-btn-sm">Sign Up</Link>
+                  </>
+                )}
+              </div>
             </nav>
           </div>
 
