@@ -92,6 +92,20 @@ import { AeDfsaParser } from './registries/ae-dfsa.js';
 import { BmBmaParser } from './registries/bm-bma.js';
 import { InFiuParser } from './registries/in-fiu.js';
 
+// Tier 7: Wave 7 — Americas, Europe, Offshore
+import { MxCnbvParser } from './registries/mx-cnbv.js';
+import { CoSfcParser } from './registries/co-sfc.js';
+import { IlIsaParser } from './registries/il-isa.js';
+import { JeJfscParser } from './registries/je-jfsc.js';
+import { GgGfscParser } from './registries/gg-gfsc.js';
+import { VgFscParser } from './registries/vg-fsc.js';
+
+// Tier 8: Wave 8 — Gulf, Offshore, Baltics
+import { SaSamaParser } from './registries/sa-sama.js';
+import { QaQfcraParser } from './registries/qa-qfcra.js';
+import { PaSbpParser } from './registries/pa-sbp.js';
+import { EeFiuParser } from './registries/ee-fiu.js';
+
 /** Registry of all available parsers */
 const PARSERS: Record<string, () => RegistryParser> = {
   // Tier 1
@@ -160,6 +174,18 @@ const PARSERS: Record<string, () => RegistryParser> = {
   'ae-dfsa': () => new AeDfsaParser(),
   'bm-bma': () => new BmBmaParser(),
   'in-fiu': () => new InFiuParser(),
+  // Tier 7: Wave 7 — Americas, Europe, Offshore
+  'mx-cnbv': () => new MxCnbvParser(),
+  'co-sfc': () => new CoSfcParser(),
+  'il-isa': () => new IlIsaParser(),
+  'je-jfsc': () => new JeJfscParser(),
+  'gg-gfsc': () => new GgGfscParser(),
+  'vg-fsc': () => new VgFscParser(),
+  // Tier 8: Wave 8 — Gulf, Offshore, Baltics
+  'sa-sama': () => new SaSamaParser(),
+  'qa-qfcra': () => new QaQfcraParser(),
+  'pa-sbp': () => new PaSbpParser(),
+  'ee-fiu': () => new EeFiuParser(),
 };
 
 /** Run a single parser */
