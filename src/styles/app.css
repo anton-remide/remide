@@ -1132,6 +1132,39 @@ ul {
   background: rgba(10, 37, 64, 0.14);
 }
 
+/* Expandable search — icon toggle button */
+.st-table-search-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  background: var(--bg-light);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  flex-shrink: 0;
+}
+
+.st-table-search-toggle:hover {
+  background: var(--white);
+  border-color: rgba(10, 37, 64, 0.15);
+  color: var(--text);
+}
+
+/* Expanded search — slides in */
+.st-table-search--expanded {
+  animation: searchExpand 200ms ease forwards;
+}
+
+@keyframes searchExpand {
+  from { max-width: 32px; opacity: 0.6; }
+  to   { max-width: 240px; opacity: 1; }
+}
+
 /* Active Filter Pills (Notion-style) */
 .st-filter-pill {
   display: inline-flex;
@@ -2819,10 +2852,15 @@ a, button, input, select, textarea {
     padding: 8px;
   }
 
-  /* --- DataTable header: stack search and count --- */
+  /* --- DataTable header: expandable search on mobile --- */
   .st-table-search {
     max-width: 100%;
     width: 100%;
+  }
+
+  .st-table-search--expanded {
+    animation: none;
+    max-width: 100%;
   }
 
   /* --- Page container tighter --- */
