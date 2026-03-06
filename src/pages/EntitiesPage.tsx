@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getEntities, getStablecoins, getCbdcs, getJurisdictions, getStablecoinIssuers } from '../data/dataLoader';
 import type { Entity, Stablecoin, Cbdc, Jurisdiction, StablecoinIssuer } from '../types';
-import { STATUS_COLORS, STABLECOIN_TYPE_COLORS, CBDC_STATUS_COLORS } from '../theme';
+import { STATUS_COLORS, SECTOR_COLORS, STABLECOIN_TYPE_COLORS, CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useColumnFilters } from '../hooks/useColumnFilters';
@@ -26,7 +26,7 @@ function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitc
   );
 
   const filterFn = useCallback((e: Entity, q: string) => {
-    return e.name.toLowerCase().includes(q) || e.country.toLowerCase().includes(q);
+    return e.name.toLowerCase().includes(q) || e.country.toLowerCase().includes(q) || e.sector.toLowerCase().includes(q);
   }, []);
 
   const table = useTableState(colFilters.filtered as Entity[], filterFn, { field: 'name', direction: 'asc' });
@@ -39,6 +39,18 @@ function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitc
 
   const columns: Column<Entity>[] = [
     { key: 'name', label: 'Name', sortable: true },
+    {
+      key: 'sector',
+      label: 'Sector',
+      sortable: true,
+      filterable: true,
+      filterValues: colFilters.getUniqueValues('sector'),
+      selectedFilters: colFilters.filters['sector'] ?? [],
+      onFilterApply: colFilters.applyFilter,
+      onFilterClear: colFilters.clearFilter,
+      render: (r) => <Badge label={r.sector} colorMap={SECTOR_COLORS} />,
+      renderFilterValue: (v) => <Badge label={v} colorMap={SECTOR_COLORS} />,
+    },
     {
       key: 'country',
       label: 'Country',
@@ -488,13 +500,13 @@ export default function EntitiesPage() {
 
   // SEO meta
   const titles: Record<EntityTab, string> = {
-    vasps: 'Licensed Crypto Entities — VASP Registry',
+    vasps: 'Licensed Entities — Crypto, Payments & Banking Registry',
     stablecoins: 'Stablecoins — Digital Currency Tracker',
     cbdcs: 'CBDCs — Central Bank Digital Currencies',
     issuers: 'Stablecoin Issuers — Company Profiles',
   };
   const descriptions: Record<EntityTab, string> = {
-    vasps: 'Browse 4,000+ licensed cryptocurrency service providers (VASPs) across 82 countries.',
+    vasps: 'Browse 14,000+ licensed entities across crypto, payments and banking sectors in 82+ countries.',
     stablecoins: 'Track 15+ major stablecoins. Compare regulatory status, market caps, and issuers.',
     cbdcs: 'Track 24+ central bank digital currencies (CBDCs). Compare status, type, and central banks.',
     issuers: 'Browse 44+ stablecoin issuers worldwide. Compare auditors, LEI codes, and regulatory licenses.',
@@ -526,7 +538,7 @@ export default function EntitiesPage() {
   const tabSwitcher = (
     <SegmentedControl
       options={[
-        { value: 'vasps', label: 'VASPs' },
+        { value: 'vasps', label: 'Entities' },
         { value: 'stablecoins', label: 'Stablecoins' },
         { value: 'cbdcs', label: 'CBDCs' },
         { value: 'issuers', label: 'Issuers' },

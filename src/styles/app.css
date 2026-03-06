@@ -1042,27 +1042,31 @@ ul {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .st-table-toolbar-prefix {
   flex: 0 0 auto;
+  z-index: 1;
 }
 
 .st-table-toolbar-controls {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 0;
 }
 
 .st-table-toolbar-count {
   font-size: 0.8125rem;
   color: var(--text-muted);
   white-space: nowrap;
+  z-index: 1;
 }
 
 /* ==========================================================================
