@@ -64,6 +64,12 @@ const LEGAL_SUFFIXES = [
   /\s*\b(GmbH\s*&?\s*Co\.?\s*KG|GmbH|e\.?G\.?|AG|UG|KG|OHG)\s*\.?\s*$/i,
   // Generic legal forms
   /\s*\b(S\.?L\.?|S\.?A\.?|S\.?R\.?L\.?|S\.?P\.?A\.?|N\.?V\.?|B\.?V\.?|SE|PLC|LTD\.?|LLC|INC\.?|CORP\.?|Co\.?\s*Ltd\.?|A\.?S\.?|AB|OY|OYJ|d\.?o\.?o\.?|ApS|EHIF|KFT|ZRT|UAB|SIA|SARL|EURL)\s*\.?\s*$/i,
+  // CIS/Central Asian legal forms (Kazakhstan, Russia, etc.)
+  /\s*\b(JSC|OJSC|PJSC|CJSC|Joint[- ]Stock\s+Company)\s*$/i,
+  // "Limited" / "Private Limited Company" / "Pty Ltd" etc. (common in UK, AU, SG, KZ, HK)
+  /\s*\bPrivate\s+Limited\s+Company\s*$/i,
+  /\s*\bLimited\s*$/i,
+  /\s*\bPty\.?\s*$/i,
   // Polish former name: "(d. Former Name Here)" — must be BEFORE generic parenthetical
   /\s*\(d\.\s*[^)]+\)\s*$/i,
   // Trailing parenthetical: "Company (former Name)"
@@ -74,6 +80,8 @@ const LEGAL_SUFFIXES = [
 const NOISE_PREFIXES = [
   /^\d+\.\s*/,           // "1. Company Name" → "Company Name"
   /^[-–—•·]\s*/,         // Bullet points
+  /^Subsidiary\s+Organization\s+of\s+/i,  // CIS: "Subsidiary Organization of Halyk Bank..." → "Halyk Bank..."
+  /^(JSC|OJSC|PJSC|CJSC)\s+/i,            // CIS prefix: "JSC Altyn Bank" → "Altyn Bank"
 ];
 
 /** Characters that indicate garbage if they dominate the name */
@@ -82,6 +90,17 @@ const GARBAGE_CHAR_PATTERNS = [
   /^[A-Z]{2,5}\d{3,}$/,       // Registry codes: "PL00123456"
   /^\d{1,2}[./]\d{1,2}[./]\d{2,4}$/,  // Date formats
   /^\d{4}-\d{2}-\d{2}$/,      // ISO dates: "2024-01-15"
+  // Written-out dates: "1 October 2021", "10 February 2022", "28 March 2024" (AUSTRAC registration dates)
+  /^\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}$/i,
+  // CONSOB/ESMA gibberish codes: "01luhar", "03wakih", "09pqws", "12DEF", "Cfsd123"
+  // Pattern: 2 digits + 3-8 all-lowercase OR 2 digits + 2-5 all-uppercase
+  // NOT matching real names like "21Shares" (mixed case = real brand)
+  /^\d{2}[a-z]{3,8}$/,
+  /^\d{2}[A-Z]{2,5}$/,
+  // ESMA/CONSOB gibberish codes starting with letters: "Cfsd123", "Sdf837", "Caa871"
+  // Pattern: exactly 3 non-word lowercase + digits, total <= 8 chars (not matching "Emoney247")
+  // These are random alpha+digit codes, not company names
+  /^[A-Z][a-z]{2,4}\d{2,4}$/,
   /^Art\.\s*\d/i,              // Article references: "Art. 45"
   /^§\s*\d/,                   // Section references: "§ 12"
   /^note\s*\d/i,               // Footnote references: "Note 1"
@@ -125,9 +144,47 @@ const BOILERPLATE_NAMES = [
   'sample',
 ];
 
+/** Common European first names — used to detect sole proprietor entries (personal names) */
+const PERSONAL_FIRST_NAMES = new Set([
+  // Polish (most common in EBA-PL data)
+  'agnieszka', 'marek', 'jolanta', 'artur', 'krzysztof', 'marta', 'piotr',
+  'joanna', 'kamil', 'maciej', 'pawe\u0142', 'daria', 'mariusz', 'arkadiusz',
+  'dominika', 'stanis\u0142awa', 'adam', 'anna', 'jan', 'andrzej', 'tomasz',
+  'barbara', 'magdalena', 'katarzyna', 'wojciech', 'grzegorz', 'zbigniew',
+  'rafa\u0142', 'robert', 'monika', 'dorota', 'jacek', 'henryk', 'ewa',
+  'ma\u0142gorzata', 'beata', 'danuta', 'tadeusz', '\u0142ukasz', 'karol',
+  'aleksandra', 'micha\u0142', 'marcin', 'jakub', 'szymon', 'damian',
+  // Nordic
+  'nasra', 'erik', 'lars', 'anders', 'johan', 'karl', 'olof', 'per',
+  'nils', 'ingvar', 'sven', 'birgitta', 'karin',
+  // German
+  'hans', 'fritz', 'klaus', 'dieter', 'wolfgang', 'j\u00FCrgen', 'helmut',
+  'gerhard', 'heinrich', 'werner', 'manfred', 'horst', 'g\u00FCnter',
+  // French
+  'jean', 'pierre', 'marie', 'jacques', 'philippe', 'alain', 'michel',
+  // Italian
+  'giovanni', 'giuseppe', 'antonio', 'marco', 'luca', 'francesca', 'laura',
+  // Spanish
+  'carlos', 'jose', 'miguel', 'francisco', 'manuel',
+  // General European
+  'alexander', 'christian', 'thomas', 'martin', 'michael', 'peter', 'stefan',
+  'david', 'daniel', 'andreas', 'sandra', 'nicole', 'elena', 'natalia',
+]);
+
+/** Check if a name is likely a personal name (sole proprietor, not a company) */
+function isPersonalName(name: string): boolean {
+  const words = name.split(/\s+/);
+  if (words.length !== 2) return false;
+  if (name.length >= 35) return false;
+  if (/\d/.test(name)) return false;
+  const firstName = words[0].toLowerCase().normalize('NFC');
+  return PERSONAL_FIRST_NAMES.has(firstName);
+}
+
 /** Words that should stay uppercase (acronyms, known brands, etc.) */
 const UPPERCASE_WORDS = new Set([
-  'LLC', 'LLP', 'PLC', 'USA', 'UK', 'EU', 'UAE', 'FCA', 'SEC', 'API',
+  'LLC', 'LLP', 'PLC', 'JSC', 'OJSC', 'PJSC', 'CJSC',
+  'USA', 'UK', 'EU', 'UAE', 'FCA', 'SEC', 'API',
   'ATM', 'BTC', 'ETH', 'DLT', 'NFT', 'DAO', 'DEX', 'KYC', 'AML',
   'FX', 'OTC', 'ICO', 'IPO', 'CEO', 'CTO', 'CFO', 'IT', 'AI',
   'ADAS-TEL', 'VB', 'FHU', 'FHUP', 'PHU', 'PPHU',
@@ -154,7 +211,17 @@ export function cleanName(raw: string): string {
   // Also strip double-comma opening quotes: ,,Company'' (Polish convention)
   name = name.replace(/^,,/, '');                          // Leading ,, (Polish open quote)
   name = name.replace(/''/g, '');                          // '' (Polish close quote)
-  name = name.replace(/["""„"‟''‚‛«»‹›`\u02BA\u02EE\u02DD\uFF02\uFF07]/g, '');
+  // Note: \u0027 (ASCII ') intentionally EXCLUDED — preserves apostrophes in "Brink's", "O'Brien"
+  name = name.replace(/[\u0022\u201C\u201D\u201E\u201F\u00AB\u00BB\u2039\u203A\u0060\u02BA\u02EE\u02DD\uFF02\uFF07]/g, '');
+
+  // Normalize smart apostrophes → ASCII apostrophe: "Brink\u2019s" → "Brink's"
+  name = name.replace(/[\u2018\u2019\u201A\u201B]/g, "'");
+
+  // Normalize double-dash to en-dash: "Binance (Pakistan -- P2P)" → "Binance (Pakistan – P2P)"
+  name = name.replace(/\s--\s/g, ' – ');
+
+  // Normalize em-dash to en-dash for consistency: "Binance (Pakistan — P2P)" → "Binance (Pakistan – P2P)"
+  name = name.replace(/\u2014/g, '–');
 
   // Remove soft hyphens and zero-width characters
   name = name.replace(/[\u00AD\u200B\u200C\u200D\uFEFF]/g, '');
@@ -170,6 +237,19 @@ export function cleanName(raw: string): string {
   // Also handles parenthesized: "Ripple Markets DE LLC (f/k/a XRP II LLC)"
   name = name.replace(/[,\s]*\(?\s*f\/k\/a\s+[^)]+\)?\s*$/i, '').trim();
 
+  // Handle DBA (doing business as) clauses — strip the DBA alias, keep primary name
+  // "Company X doing business in the AIFC as Company Y" → "Company X"
+  // "Moon Inc. d/b/a LibertyX" → "Moon Inc."
+  // "Aux Cayes FinTech Co. Ltd T/A OKX" → "Aux Cayes FinTech Co. Ltd"
+  // "Company d.b.a. SomeName" → "Company"
+  // Patterns: "doing business (in ...) as", "d/b/a", "d.b.a.", "t/a", "trading as", "operating as"
+  name = name.replace(/\s+doing\s+business\s+(?:in\s+.+?\s+)?as\s+.+$/i, '').trim();
+  name = name.replace(/\s+d\/b\/a\s+.+$/i, '').trim();
+  name = name.replace(/\s+d\.b\.a\.?\s+.+$/i, '').trim();
+  name = name.replace(/\s+t\/a\s+.+$/i, '').trim();
+  name = name.replace(/\s+trading\s+as\s+.+$/i, '').trim();
+  name = name.replace(/\s+operating\s+as\s+.+$/i, '').trim();
+
   // Remove legal suffixes iteratively (some names have multiple: "Corp. (d. Old Name)")
   let prevName = '';
   while (prevName !== name) {
@@ -181,6 +261,9 @@ export function cleanName(raw: string): string {
 
   // Clean up trailing comma/period left after suffix removal: "Coinbase," → "Coinbase"
   name = name.replace(/[,;.]+\s*$/, '').trim();
+
+  // Collapse multiple consecutive commas/periods: "Company,, City" → "Company, City"
+  name = name.replace(/,{2,}/g, ',').replace(/\.{2,}/g, '.');
 
   // Fix ALL-CAPS (common in Italian CONSOB, French AMF, Polish KNF)
   // Only convert if MOST of the alphabetic characters are uppercase
@@ -247,6 +330,24 @@ export function detectGarbage(entity: QualityInput): { isGarbage: boolean; reaso
     return { isGarbage: true, reason: 'pure_number' };
   }
 
+  // Numbered companies: "1000224522 ONTARIO INC.", "1035596 ALBERTA LTD", "9876543 CANADA INC."
+  // These are legitimate FINTRAC/registry entries but just shell numbered corporations — useless for display.
+  // 6+ leading digits followed by any word = never a real brand/company name.
+  if (/^\d{6,}\s+[A-Za-z]/.test(name)) {
+    return { isGarbage: true, reason: 'numbered_company' };
+  }
+
+  // Quebec/Canadian numbered companies with dash format: "9435-9643 Québec", "9070-9122 Quebec"
+  // Format: XXXX-XXXX followed by anything — these are shell numbered corps from ca-fintrac.
+  if (/^\d{4}-\d{4}\s/.test(name) && entity.country_code === 'CA') {
+    return { isGarbage: true, reason: 'numbered_company:quebec' };
+  }
+
+  // List-numbered entries: "1)kantor Wymiany Walut..." — multiple businesses concatenated
+  if (/^\d+\)/.test(name)) {
+    return { isGarbage: true, reason: 'garbage:list_numbered' };
+  }
+
   // Description-as-name: NYDFS entries where "name" is actually a description sentence
   // e.g. "**The Department granted Provenance Technologies, Inc. a money transmitter license..."
   // Detect: starts with markdown ** or *, contains sentence-like structure, > 80 chars
@@ -269,6 +370,28 @@ export function detectGarbage(entity: QualityInput): { isGarbage: boolean; reaso
   const COIN_NAMES = ['bitcoin', 'ethereum', 'litecoin', 'ripple', 'dogecoin', 'solana', 'cardano'];
   if (COIN_NAMES.includes(name.toLowerCase())) {
     return { isGarbage: true, reason: `coin_name:${name.toLowerCase()}` };
+  }
+
+  // Personal names (sole proprietors): not relevant for B2B platform
+  // Detected by matching first word against common European first names
+  // Only triggers for 2-word names < 35 chars with no digits (to avoid "365 Finance")
+  if (isPersonalName(name)) {
+    return { isGarbage: true, reason: 'personal_name:sole_proprietor' };
+  }
+
+  // Out-of-scope activities: insurance, pension funds (per product scope definition)
+  const activities = (entity.activities ?? []).map(a => a.toLowerCase());
+  if (activities.some(a => a.includes('insurance') || a.includes('pension') || a.includes('reinsurance'))) {
+    return { isGarbage: true, reason: 'out_of_scope:insurance_pension' };
+  }
+
+  // Out-of-scope license types: insurance, credit unions (per product scope — DQ-001)
+  const lt = (entity.license_type ?? '').toLowerCase();
+  if (lt.includes('insurance') || lt.includes('reinsurance')) {
+    return { isGarbage: true, reason: 'out_of_scope:insurance_license' };
+  }
+  if (lt.includes('credit union')) {
+    return { isGarbage: true, reason: 'out_of_scope:credit_union' };
   }
 
   return { isGarbage: false, reason: null };

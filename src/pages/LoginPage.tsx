@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReveal } from '../hooks/useAnimations';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { trackEvent } from '../utils/analytics';
 
 export default function LoginPage() {
   useDocumentMeta({
@@ -16,6 +17,10 @@ export default function LoginPage() {
   const revealRef = useReveal();
 
   const from = (location.state as { from?: string })?.from || '/';
+
+  useEffect(() => {
+    trackEvent('login_page_view');
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -41,6 +46,7 @@ export default function LoginPage() {
     if (err) {
       setError(err);
     } else {
+      trackEvent('login_completed');
       navigate(from, { replace: true });
     }
   };

@@ -1,10 +1,44 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Shield, Database, Globe, FileCheck, ArrowRight } from 'lucide-react';
+import {
+  ArrowRight, Zap, CheckCircle2, Clock, Star,
+  BarChart3, Users, BookOpen,
+} from 'lucide-react';
+
+/* Countdown hook — calculates days/hours/minutes until a target date */
+function useCountdown(targetDate: Date) {
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft(targetDate));
+  useEffect(() => {
+    const timer = setInterval(() => setTimeLeft(getTimeLeft(targetDate)), 60_000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+  return timeLeft;
+}
+
+function getTimeLeft(target: Date) {
+  const diff = Math.max(0, target.getTime() - Date.now());
+  return {
+    days: Math.floor(diff / 86_400_000),
+    hours: Math.floor((diff % 86_400_000) / 3_600_000),
+    minutes: Math.floor((diff % 3_600_000) / 60_000),
+  };
+}
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const location = useLocation();
+
+  // Early-bird deadline: 14 days from now (cached per session)
+  const [deadline] = useState(() => {
+    const stored = sessionStorage.getItem('remide_eb_deadline');
+    if (stored) return new Date(stored);
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    sessionStorage.setItem('remide_eb_deadline', d.toISOString());
+    return d;
+  });
+  const countdown = useCountdown(deadline);
 
   if (loading) {
     return (
@@ -22,46 +56,111 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
           {children}
         </div>
 
-        {/* Registration overlay */}
+        {/* Conversion overlay — AppSumo-style early-access offer */}
         <div className="st-auth-overlay">
-          <div className="st-auth-popup clip-lg">
-            <div className="st-auth-popup-icon">
-              <Shield size={32} />
+          <div className="st-paywall clip-lg">
+            {/* Urgency bar */}
+            <div className="st-paywall-urgency">
+              <Clock size={14} />
+              <span>Early-bird pricing ends in <strong>{countdown.days}d {countdown.hours}h {countdown.minutes}m</strong></span>
             </div>
-            <h2 className="st-auth-popup-title">Sign up for free access</h2>
-            <p className="st-auth-popup-desc">
-              Create a free account to unlock the full platform
-            </p>
 
-            <ul className="st-auth-popup-benefits">
+            {/* Header */}
+            <div className="st-paywall-header">
+              <div className="st-paywall-badge">
+                <Zap size={14} />
+                Beta Access
+              </div>
+              <h2 className="st-paywall-title">
+                Unlock the Full<br />Intelligence Platform
+              </h2>
+              <p className="st-paywall-subtitle">
+                The only regulatory tracker purpose-built for stablecoin compliance teams.
+                Join early and lock in founder pricing.
+              </p>
+            </div>
+
+            {/* Pricing */}
+            <div className="st-paywall-pricing">
+              <div className="st-paywall-price-row">
+                <span className="st-paywall-price-old">$1,200/yr</span>
+                <span className="st-paywall-price-current">$49</span>
+                <span className="st-paywall-price-period">one-time beta access</span>
+              </div>
+              <div className="st-paywall-savings">
+                <Star size={14} />
+                <span>Save $1,151 — early supporters only</span>
+              </div>
+            </div>
+
+            {/* What you get */}
+            <ul className="st-paywall-features">
               <li>
-                <Database size={16} />
-                <span>Full entity directory with 608+ licensed VASPs</span>
+                <CheckCircle2 size={16} />
+                <div>
+                  <strong>14,000+ Licensed Entities</strong>
+                  <span>VASPs, EMIs, banks across 206 jurisdictions — searchable, filterable</span>
+                </div>
               </li>
               <li>
-                <Globe size={16} />
-                <span>Detailed jurisdiction profiles & regulator info</span>
+                <CheckCircle2 size={16} />
+                <div>
+                  <strong>Stablecoin Regulation Intelligence</strong>
+                  <span>Licensing frameworks, backing rules, and compliance status per country</span>
+                </div>
               </li>
               <li>
-                <FileCheck size={16} />
-                <span>License type tracking & compliance status</span>
+                <CheckCircle2 size={16} />
+                <div>
+                  <strong>Issuer Profiles & Corporate Structure</strong>
+                  <span>44 issuers with subsidiaries, licenses, LEI, and audit data</span>
+                </div>
               </li>
               <li>
-                <ArrowRight size={16} />
-                <span>Travel rule implementation status worldwide</span>
+                <CheckCircle2 size={16} />
+                <div>
+                  <strong>CBDC Project Tracker</strong>
+                  <span>24 central bank digital currency projects — from research to launch</span>
+                </div>
+              </li>
+              <li>
+                <CheckCircle2 size={16} />
+                <div>
+                  <strong>Travel Rule Implementation Map</strong>
+                  <span>FATF compliance status across every tracked jurisdiction</span>
+                </div>
+              </li>
+              <li>
+                <CheckCircle2 size={16} />
+                <div>
+                  <strong>Continuous Updates</strong>
+                  <span>New data sources, parsers, and regulatory changes added weekly</span>
+                </div>
               </li>
             </ul>
 
+            {/* CTA */}
             <Link
-              to="/signup"
+              to="/pricing"
               state={{ from: location.pathname }}
-              className="st-auth-popup-cta"
+              className="st-paywall-cta"
             >
-              Create Free Account
+              Get Early Access — $49
+              <ArrowRight size={16} />
             </Link>
 
-            <p className="st-auth-popup-signin">
-              Already have an account?{' '}
+            {/* Social proof */}
+            <div className="st-paywall-proof">
+              <div className="st-paywall-proof-stats">
+                <span><BarChart3 size={13} /> 206 jurisdictions</span>
+                <span><Users size={13} /> 14,000+ entities</span>
+                <span><BookOpen size={13} /> 70+ stablecoins</span>
+              </div>
+            </div>
+
+            {/* Already have access */}
+            <p className="st-paywall-signin">
+              Already have access?{' '}
               <Link to="/login" state={{ from: location.pathname }}>
                 Sign in
               </Link>

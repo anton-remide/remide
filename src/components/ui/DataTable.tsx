@@ -46,6 +46,8 @@ interface Props<T> {
   searchPlaceholder?: string;
   /** Content rendered before search in toolbar (e.g. tab switcher) */
   toolbarPrefix?: React.ReactNode;
+  /** Show loading skeleton rows */
+  loading?: boolean;
 }
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500];
@@ -67,6 +69,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   onSearchChange,
   searchPlaceholder = 'Search...',
   toolbarPrefix,
+  loading = false,
 }: Props<T>) {
   const startIndex = (page - 1) * pageSize + 1;
   const endIndex = Math.min(page * pageSize, totalFiltered);
@@ -224,6 +227,10 @@ export default function DataTable<T extends Record<string, unknown>>({
                   <th
                     key={col.key}
                     onClick={col.sortable ? () => onSort(col.key) : undefined}
+                    onKeyDown={col.sortable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSort(col.key); } } : undefined}
+                    tabIndex={col.sortable ? 0 : undefined}
+                    role="columnheader"
+                    aria-sort={col.sortable && sort.field === col.key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : col.sortable ? 'none' : undefined}
                     className={col.sortable ? 'sortable' : ''}
                     style={col.width ? { width: col.width } : undefined}
                   >
@@ -240,7 +247,15 @@ export default function DataTable<T extends Record<string, unknown>>({
             </tr>
           </thead>
           <tbody>
-            {data.length === 0 ? (
+            {loading ? (
+              Array.from({ length: 8 }).map((_, ri) => (
+                <tr key={`skel-${ri}`} className="st-table-skeleton-row">
+                  {columns.map((col) => (
+                    <td key={col.key}><div className="st-skeleton-bar" /></td>
+                  ))}
+                </tr>
+              ))
+            ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>
                   No results found
@@ -251,6 +266,9 @@ export default function DataTable<T extends Record<string, unknown>>({
                 <tr
                   key={i}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? 'button' : undefined}
                   style={onRowClick ? { cursor: 'pointer' } : undefined}
                 >
                   {columns.map((col) => (

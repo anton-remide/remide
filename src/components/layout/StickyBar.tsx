@@ -32,8 +32,8 @@ export default function StickyBar() {
       {!wipDismissed && (
         <div className="st-sticky-bar-row">
           <span className="st-sticky-bar-text">
-            🚧 RemiDe Register is a continuous work in progress.{' '}
-            <Link to="/signup">Subscribe</Link> to get notified about updates.
+            🚧 RemiDe is in early access — new data sources added weekly.{' '}
+            <Link to="/pricing">Get early-bird access</Link> before public launch.
           </span>
           <button
             className="st-sticky-bar-close"

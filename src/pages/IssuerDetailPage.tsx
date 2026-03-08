@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import { ExternalLink, Building2, Shield, Globe, BadgeCheck, Users } from 'lucide-react';
 import {
   getIssuerBySlug,
@@ -11,24 +11,21 @@ import { STABLECOIN_TYPE_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { usePaywall } from '../hooks/usePaywall';
+import { trackEvent } from '../utils/analytics';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
+import PaywallOverlay from '../components/ui/PaywallOverlay';
 
 /* ── Style helpers ── */
 
-const SECTION_LABEL: React.CSSProperties = {
-  marginBottom: 16,
-  color: 'var(--text-muted)',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-};
+/* SECTION_LABEL → now uses CSS class .st-section-label (B3 audit fix) */
 
 export default function IssuerDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { isAnonymous, hasAccess, hasFullAccess } = usePaywall();
 
   /* ── Data fetching ── */
   const issuerFetcher = useCallback(() => getIssuerBySlug(slug ?? ''), [slug]);
@@ -57,6 +54,15 @@ export default function IssuerDetailPage() {
 
   // Stablecoin count for header
   const coinCount = useMemo(() => stablecoins?.length ?? 0, [stablecoins]);
+
+  useEffect(() => {
+    if (slug) {
+      trackEvent('issuer_detail_view', { slug });
+      if (isAnonymous) {
+        trackEvent('paywall_shown', { page: `/issuers/${slug}`, type: 'issuer' });
+      }
+    }
+  }, [slug, isAnonymous]);
 
   /* ── SEO ── */
   useDocumentMeta({
@@ -197,14 +203,15 @@ export default function IssuerDetailPage() {
         </div>
       </div>
 
-      {/* ── Stablecoins Issued ── */}
-      {stablecoins && stablecoins.length > 0 && (
+      {/* ── Stablecoins Issued — registered+ ── */}
+      {hasAccess && stablecoins && stablecoins.length > 0 && (
         <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={SECTION_LABEL}>
+          <h6 className="st-section-label">
             <Building2 size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
             Stablecoins Issued <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({stablecoins.length})</span>
           </h6>
           <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="st-table-scroll">
             <table className="st-table" style={{ width: '100%', margin: 0 }}>
               <thead>
                 <tr>
@@ -235,18 +242,36 @@ export default function IssuerDetailPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Corporate Structure (Subsidiaries) ── */}
-      {subsidiaries && subsidiaries.length > 0 && (
+      {/* ── Paywall overlay ── */}
+      {isAnonymous ? (
+        <PaywallOverlay
+          title={`Unlock ${issuer.name} Full Profile`}
+          count={(stablecoins?.length ?? 0) + (subsidiaries?.length ?? 0) + (licenses?.length ?? 0)}
+          noun="corporate records"
+          variant="signup"
+        />
+      ) : !hasFullAccess ? (
+        <PaywallOverlay
+          title={`Unlock ${issuer.name} Premium Data`}
+          count={(subsidiaries?.length ?? 0) + (licenses?.length ?? 0)}
+          noun="corporate records"
+          variant="upgrade"
+        />
+      ) : null}
+
+      {/* ── Corporate Structure (Subsidiaries) — paid only ── */}
+      {hasFullAccess && subsidiaries && subsidiaries.length > 0 && (
         <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={SECTION_LABEL}>
+          <h6 className="st-section-label">
             <Users size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
             Corporate Structure <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({subsidiaries.length})</span>
           </h6>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 12 }}>
             {subsidiaries.map((sub) => (
               <div key={sub.id} className="st-card clip-lg" style={{ padding: '14px 18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -277,10 +302,10 @@ export default function IssuerDetailPage() {
         </div>
       )}
 
-      {/* ── Global Licenses ── */}
-      {licenses && licenses.length > 0 && (
+      {/* ── Global Licenses — paid only ── */}
+      {hasFullAccess && licenses && licenses.length > 0 && (
         <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={SECTION_LABEL}>
+          <h6 className="st-section-label">
             <Shield size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
             Global Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({licenses.length})</span>
           </h6>

@@ -1,15 +1,18 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useCallback } from 'react';
-import { ExternalLink, CheckCircle, XCircle } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+import { ExternalLink, CheckCircle, XCircle, Lock } from 'lucide-react';
 import { getCbdcById } from '../data/dataLoader';
 import { CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { usePaywall } from '../hooks/usePaywall';
+import { trackEvent } from '../utils/analytics';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import { EU_MEMBER_CODES } from '../data/regionCodes';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
+import PaywallOverlay from '../components/ui/PaywallOverlay';
 
 function BoolIndicator({ value, label }: { value: boolean; label: string }) {
   return (
@@ -29,10 +32,20 @@ function BoolIndicator({ value, label }: { value: boolean; label: string }) {
 export default function CbdcDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAnonymous, hasAccess } = usePaywall();
 
   const fetcher = useCallback(() => getCbdcById(id ?? ''), [id]);
   const { data: cbdc, loading, error } = useSupabaseQuery(fetcher, [id]);
   const revealRef = useReveal(loading);
+
+  useEffect(() => {
+    if (id) {
+      trackEvent('cbdc_detail_view', { id });
+      if (isAnonymous) {
+        trackEvent('paywall_shown', { page: `/cbdcs/${id}`, type: 'cbdc' });
+      }
+    }
+  }, [id, isAnonymous]);
 
   useDocumentMeta({
     title: cbdc ? `${cbdc.name} — CBDC Profile` : 'CBDC',
@@ -73,7 +86,8 @@ export default function CbdcDetailPage() {
       <div className="reveal">
         <Breadcrumb crumbs={[
           { label: 'Home', to: '/' },
-          { label: 'Stablecoins & CBDCs', to: '/stablecoins' },
+          { label: 'Entities', to: '/entities' },
+          { label: 'CBDCs', to: '/entities?tab=cbdcs' },
           { label: cbdc.name },
         ]} />
       </div>
@@ -105,12 +119,11 @@ export default function CbdcDetailPage() {
         <div className="st-info-row">
           <span className="st-info-label">Country</span>
           <span className="st-info-value">
-            {cbdc.countryCode === 'EU' ? (
-              <span>{countryCodeToFlag('EU')} {cbdc.country} <span style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>({EU_MEMBER_CODES.length} member states)</span></span>
-            ) : (
-              <Link to={`/jurisdictions/${cbdc.countryCode}`}>
-                {countryCodeToFlag(cbdc.countryCode)} {cbdc.country}
-              </Link>
+            <Link to={`/jurisdictions/${cbdc.countryCode}`}>
+              {countryCodeToFlag(cbdc.countryCode)} {cbdc.country}
+            </Link>
+            {cbdc.countryCode === 'EU' && (
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginLeft: 4 }}>({EU_MEMBER_CODES.length} member states)</span>
             )}
           </span>
         </div>
@@ -138,9 +151,25 @@ export default function CbdcDetailPage() {
         </div>
       </div>
 
+      {/* ── Locked sections: Features, Cross-Border, Sources — registered+ ── */}
+      {!hasAccess && (
+        <>
+          <div className="st-premium-divider">
+            <span className="st-premium-badge"><Lock size={10} /> Full Access</span>
+          </div>
+          <PaywallOverlay
+            title={`Unlock ${cbdc.name} Full Intelligence`}
+            noun="CBDC data fields"
+            variant="signup"
+          />
+        </>
+      )}
+
+      {hasAccess && (
+      <>
       {/* Feature indicators */}
       <div className="reveal" style={{ marginBottom: 28 }}>
-        <h6 style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Features</h6>
+        <h6 className="st-section-label">Features</h6>
         <div className="st-card clip-lg" style={{ padding: '16px 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
             <BoolIndicator value={cbdc.crossBorder} label="Cross-Border" />
@@ -152,9 +181,9 @@ export default function CbdcDetailPage() {
       </div>
 
       {/* Cross-border projects */}
-      {cbdc.crossBorderProjects.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 28 }}>
-          <h6 style={{ marginBottom: 12, color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Cross-Border Projects</h6>
+      <div className="reveal" style={{ marginBottom: 28 }}>
+        <h6 className="st-section-label" style={{ marginBottom: 12 }}>Cross-Border Projects</h6>
+        {cbdc.crossBorderProjects.length > 0 ? (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {cbdc.crossBorderProjects.map((p) => (
               <span key={p} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, fontSize: '0.75rem' }}>
@@ -162,13 +191,15 @@ export default function CbdcDetailPage() {
               </span>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>No cross-border projects reported yet.</p>
+        )}
+      </div>
 
       {/* Sources */}
-      {cbdc.sources.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={{ marginBottom: 12, color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Sources</h6>
+      <div className="reveal" style={{ marginBottom: 32 }}>
+        <h6 className="st-section-label" style={{ marginBottom: 12 }}>Sources</h6>
+        {cbdc.sources.length > 0 ? (
           <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
             {cbdc.sources.map((s) => (
               <a
@@ -184,7 +215,11 @@ export default function CbdcDetailPage() {
               </a>
             ))}
           </div>
-        </div>
+        ) : (
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>No sources available.</p>
+        )}
+      </div>
+      </>
       )}
     </article>
   );

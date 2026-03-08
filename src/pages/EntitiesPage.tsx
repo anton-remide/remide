@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getEntities, getStablecoins, getCbdcs, getJurisdictions, getStablecoinIssuers } from '../data/dataLoader';
-import type { Entity, Stablecoin, Cbdc, Jurisdiction, StablecoinIssuer } from '../types';
+import { getEntities, getEntityStats, getStablecoins, getCbdcs, getJurisdictions, getStablecoinIssuers } from '../data/dataLoader';
+import type { EntityStats } from '../data/dataLoader';
+import type { Entity, Stablecoin, Cbdc, Jurisdiction, StablecoinIssuer, EntitySector } from '../types';
 import { STATUS_COLORS, SECTOR_COLORS, STABLECOIN_TYPE_COLORS, CBDC_STATUS_COLORS } from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
@@ -15,15 +16,83 @@ import SegmentedControl from '../components/ui/SegmentedControl';
 
 type EntityTab = 'vasps' | 'stablecoins' | 'cbdcs' | 'issuers';
 
+/* ── Region Mapping ── */
+type RegionKey = 'Europe' | 'UK' | 'North America' | 'Asia-Pacific' | 'MENA' | 'Africa' | 'LATAM' | 'Caribbean & Offshore';
+const REGION_MAP: Record<RegionKey, string[]> = {
+  'Europe': ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','CH','NO','IS','LI','AD','MC','SM','UA','MD','RS','BA','ME','MK','AL','XK'],
+  'UK': ['GB','GG','JE','IM','GI'],
+  'North America': ['US','CA'],
+  'Asia-Pacific': ['JP','SG','HK','KR','AU','NZ','TH','MY','ID','PH','TW','IN','CN','VN','KH','MM','LA','BD','LK','PK','NP','MN','FJ','PG','WS','TO','MO'],
+  'MENA': ['AE','SA','BH','QA','KW','OM','IL','JO','LB','EG','MA','TN','DZ','IQ','IR','TR','PS','YE','LY','SY'],
+  'Africa': ['ZA','NG','KE','GH','MU','SC','TZ','UG','RW','ET','CI','SN','CM','BW','NA','MZ','ZW','MG','MW','ZM'],
+  'LATAM': ['BR','AR','MX','CL','CO','PE','EC','UY','PY','BO','VE','CR','GT','HN','NI','DO','SV','PA','CU','HT'],
+  'Caribbean & Offshore': ['KY','VG','BS','BM','CW','BB','JM','TT','AG','LC','VC','GD','DM','KN','TC','AI','MS','BZ','SR','GY','AW','SX','BQ','MF','BL'],
+};
+const ALL_REGION_CODES = new Set(Object.values(REGION_MAP).flat());
+
+function getRegion(countryCode: string): RegionKey | 'Other' {
+  for (const [region, codes] of Object.entries(REGION_MAP) as [RegionKey, string[]][]) {
+    if (codes.includes(countryCode)) return region;
+  }
+  return 'Other';
+}
+
+const REGION_ORDER: (RegionKey | 'Other')[] = ['Europe', 'UK', 'North America', 'Asia-Pacific', 'MENA', 'Africa', 'LATAM', 'Caribbean & Offshore', 'Other'];
+
+/* ── Stat Chip Component ── */
+function StatChip({ value, label, active, onClick, compact }: { value: number | null; label: string; active: boolean; onClick: () => void; compact?: boolean }) {
+  return (
+    <button
+      className={`st-entity-stat-chip${active ? ' active' : ''}${compact ? ' compact' : ''}`}
+      onClick={onClick}
+      aria-label={`Filter by ${label} sector${value !== null ? `, ${value.toLocaleString()} entities` : ''}`}
+      aria-pressed={active}
+    >
+      <span className="st-entity-stat-value">{value !== null ? value.toLocaleString() : '…'}</span>
+      <span className="st-entity-stat-label">{label}</span>
+    </button>
+  );
+}
+
 /* ── VASPs Tab ── */
-function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitcher: React.ReactNode }) {
+function VaspsTab({ searchQuery, tabSwitcher, stats }: { searchQuery?: string; tabSwitcher: React.ReactNode; stats: EntityStats | null }) {
   const navigate = useNavigate();
   const { data: allEntities, loading, error, refetch } = useSupabaseQuery(getEntities);
   // Filter out garbage entities — they have bad data (dates as names, codes, etc.)
   const safeEntities = useMemo(() => (allEntities ?? []).filter((e) => !e.isGarbage), [allEntities]);
 
+  // Sector quick filter (from stat chips)
+  const [sectorFilter, setSectorFilter] = useState<EntitySector | null>(null);
+  // Region quick filter (second row of chips)
+  const [regionFilter, setRegionFilter] = useState<RegionKey | 'Other' | null>(null);
+
+  const sectorFiltered = useMemo(() => {
+    if (!sectorFilter) return safeEntities;
+    return safeEntities.filter((e) => e.sector === sectorFilter);
+  }, [safeEntities, sectorFilter]);
+
+  // Region counts computed from sector-filtered entities (cross-filter)
+  const regionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const region of REGION_ORDER) counts[region] = 0;
+    for (const e of sectorFiltered) {
+      const r = getRegion(e.countryCode);
+      counts[r] = (counts[r] || 0) + 1;
+    }
+    return counts;
+  }, [sectorFiltered]);
+
+  const regionFiltered = useMemo(() => {
+    if (!regionFilter) return sectorFiltered;
+    if (regionFilter === 'Other') {
+      return sectorFiltered.filter((e) => !ALL_REGION_CODES.has(e.countryCode));
+    }
+    const codes = REGION_MAP[regionFilter];
+    return sectorFiltered.filter((e) => codes.includes(e.countryCode));
+  }, [sectorFiltered, regionFilter]);
+
   const colFilters = useColumnFilters<Entity & Record<string, unknown>>(
-    safeEntities as (Entity & Record<string, unknown>)[],
+    regionFiltered as (Entity & Record<string, unknown>)[],
   );
 
   const filterFn = useCallback((e: Entity, q: string) => {
@@ -31,6 +100,9 @@ function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitc
   }, []);
 
   const table = useTableState(colFilters.filtered as Entity[], filterFn, { field: 'name', direction: 'asc' });
+
+  // Reset page when external filters change (J8-3 audit fix)
+  useEffect(() => { table.setPage(1); }, [sectorFilter, regionFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync external search query
   useEffect(() => {
@@ -107,6 +179,14 @@ function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitc
     },
   ];
 
+  const handleSectorClick = useCallback((sector: EntitySector | null) => {
+    setSectorFilter((prev) => prev === sector ? null : sector);
+  }, []);
+
+  const handleRegionClick = useCallback((region: RegionKey | 'Other' | null) => {
+    setRegionFilter((prev) => prev === region ? null : region);
+  }, []);
+
   if (loading) {
     return <div style={{ textAlign: 'center', padding: 40 }}><div className="st-loading-pulse" /></div>;
   }
@@ -121,24 +201,51 @@ function VaspsTab({ searchQuery, tabSwitcher }: { searchQuery?: string; tabSwitc
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={table.paginated as (Entity & Record<string, unknown>)[]}
-      sort={table.sort}
-      onSort={table.toggleSort}
-      onRowClick={(row) => navigate(`/entities/${(row as unknown as Entity).id}`)}
-      page={table.page}
-      totalPages={table.totalPages}
-      onPageChange={table.setPage}
-      totalFiltered={table.totalFiltered}
-      totalCount={safeEntities.length}
-      pageSize={table.pageSize}
-      onPageSizeChange={table.setPageSize}
-      search={table.search}
-      onSearchChange={table.setSearch}
-      searchPlaceholder="Search entities..."
-      toolbarPrefix={tabSwitcher}
-    />
+    <>
+      {/* Sector chips */}
+      <div className="st-entity-stats-bar">
+        <StatChip value={stats?.total ?? null} label="All Entities" active={sectorFilter === null} onClick={() => handleSectorClick(null)} />
+        <StatChip value={stats?.crypto ?? null} label="Crypto" active={sectorFilter === 'Crypto'} onClick={() => handleSectorClick('Crypto')} />
+        {(stats?.payments ?? 0) > 0 && (
+          <StatChip value={stats?.payments ?? null} label="Payments" active={sectorFilter === 'Payments'} onClick={() => handleSectorClick('Payments')} />
+        )}
+        <StatChip value={stats?.banking ?? null} label="Banking" active={sectorFilter === 'Banking'} onClick={() => handleSectorClick('Banking')} />
+      </div>
+
+      {/* Region chips */}
+      <div className="st-entity-stats-bar st-region-bar">
+        <StatChip compact value={sectorFiltered.length} label="All Regions" active={regionFilter === null} onClick={() => handleRegionClick(null)} />
+        {REGION_ORDER.map((r) => (
+          <StatChip key={r} compact value={regionCounts[r] || 0} label={r} active={regionFilter === r} onClick={() => handleRegionClick(r)} />
+        ))}
+      </div>
+
+      {/* Insight panel */}
+      <div className="st-insight-panel" style={{ marginBottom: 16, marginTop: 0 }}>
+        <div className="st-insight-disclaimer" style={{ padding: '8px 16px', background: 'rgba(10,37,64,0.025)', borderRadius: 8, border: '1px solid rgba(10,37,64,0.06)' }}>
+          Aggregated from {stats ? '80+' : '…'} official registries. We are continuously connecting additional data sources — entity counts grow with each update.
+        </div>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={table.paginated as (Entity & Record<string, unknown>)[]}
+        sort={table.sort}
+        onSort={table.toggleSort}
+        onRowClick={(row) => navigate(`/entities/${(row as unknown as Entity).id}`)}
+        page={table.page}
+        totalPages={table.totalPages}
+        onPageChange={table.setPage}
+        totalFiltered={table.totalFiltered}
+        totalCount={regionFiltered.length}
+        pageSize={table.pageSize}
+        onPageSizeChange={table.setPageSize}
+        search={table.search}
+        onSearchChange={table.setSearch}
+        searchPlaceholder="Search entities..."
+        toolbarPrefix={tabSwitcher}
+      />
+    </>
   );
 }
 
@@ -501,6 +608,9 @@ export default function EntitiesPage() {
     setSearchParams(tab === 'vasps' ? {} : { tab }, { replace: true });
   }, [setSearchParams]);
 
+  // Load entity stats for stat chips (fast COUNT queries)
+  const { data: entityStats } = useSupabaseQuery(getEntityStats);
+
   // Load jurisdictions for code→name map (used by stablecoins country column)
   const { data: allJurisdictions } = useSupabaseQuery(getJurisdictions);
   const codeToName = useMemo(() => {
@@ -511,7 +621,7 @@ export default function EntitiesPage() {
 
   // SEO meta
   const titles: Record<EntityTab, string> = {
-    vasps: 'Licensed Entities — Crypto, Payments & Banking Registry',
+    vasps: 'Regulated Entities — VASPs, EMIs, Payment Institutions & Banks',
     stablecoins: 'Stablecoins — Digital Currency Tracker',
     cbdcs: 'CBDCs — Central Bank Digital Currencies',
     issuers: 'Stablecoin Issuers — Company Profiles',
@@ -561,7 +671,7 @@ export default function EntitiesPage() {
 
   return (
     <div ref={revealRef} className="st-page" style={{ paddingTop: 100 }}>
-      {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} tabSwitcher={tabSwitcher} />}
+      {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} tabSwitcher={tabSwitcher} stats={entityStats ?? null} />}
       {activeTab === 'stablecoins' && <StablecoinsTab codeToName={codeToName} tabSwitcher={tabSwitcher} />}
       {activeTab === 'cbdcs' && <CbdcsTab tabSwitcher={tabSwitcher} />}
       {activeTab === 'issuers' && <IssuersTab tabSwitcher={tabSwitcher} />}

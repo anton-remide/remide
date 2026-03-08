@@ -1,26 +1,22 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCallback, useMemo } from 'react';
-import { ExternalLink, FileText, Building2, Shield, Globe, Copy, Check } from 'lucide-react';
+import { ExternalLink, FileText, Building2, Shield, Globe, Copy, Check, Lock } from 'lucide-react';
 import { getStablecoinById, getStablecoinIssuerByStrideId, getBlockchainsByStablecoin, getLicensesByIssuer } from '../data/dataLoader';
 import { STABLECOIN_TYPE_COLORS, STABLECOIN_STATUS_COLORS } from '../theme';
+import { usePaywall } from '../hooks/usePaywall';
+import { trackEvent } from '../utils/analytics';
 import { useReveal } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
-import { useState } from 'react';
+import PaywallOverlay from '../components/ui/PaywallOverlay';
+import { useState, useEffect } from 'react';
 
 /* ── Helpers ── */
 
-const SECTION_LABEL: React.CSSProperties = {
-  marginBottom: 16,
-  color: 'var(--text-muted)',
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-};
+/* SECTION_LABEL → now uses CSS class .st-section-label (B3 audit fix) */
 
 function truncateAddress(addr: string): string {
   if (addr.length <= 16) return addr;
@@ -37,17 +33,21 @@ function CopyButton({ text }: { text: string }) {
     } catch { /* fallback: ignore */ }
   };
   return (
-    <button
-      onClick={handleCopy}
-      title="Copy address"
-      style={{
-        background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-        color: copied ? 'var(--green)' : 'var(--text-muted)',
-        display: 'inline-flex', alignItems: 'center',
-      }}
-    >
-      {copied ? <Check size={12} /> : <Copy size={12} />}
-    </button>
+    <>
+      <button
+        onClick={handleCopy}
+        title="Copy address"
+        aria-label="Copy address to clipboard"
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+          color: copied ? 'var(--green)' : 'var(--text-muted)',
+          display: 'inline-flex', alignItems: 'center',
+        }}
+      >
+        {copied ? <Check size={12} /> : <Copy size={12} />}
+      </button>
+      <span aria-live="polite" className="sr-only">{copied ? 'Address copied to clipboard' : ''}</span>
+    </>
   );
 }
 
@@ -74,6 +74,7 @@ function JurisdictionLink({ code, label, style }: { code: string; label?: string
 export default function StablecoinDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAnonymous, hasAccess, hasFullAccess } = usePaywall();
 
   const fetcher = useCallback(() => getStablecoinById(id ?? ''), [id]);
   const { data: coin, loading, error } = useSupabaseQuery(fetcher, [id]);
@@ -102,6 +103,15 @@ export default function StablecoinDetailPage() {
 
   // Unique chains from blockchains (more detailed than coin.chains)
   const chainCount = useMemo(() => blockchains?.length ?? 0, [blockchains]);
+
+  useEffect(() => {
+    if (id) {
+      trackEvent('stablecoin_detail_view', { id });
+      if (isAnonymous) {
+        trackEvent('paywall_shown', { page: `/stablecoins/${id}`, type: 'stablecoin' });
+      }
+    }
+  }, [id, isAnonymous]);
 
   useDocumentMeta({
     title: coin ? `${coin.name} (${coin.ticker}) — Stablecoin Profile` : 'Stablecoin',
@@ -142,7 +152,7 @@ export default function StablecoinDetailPage() {
       <div className="reveal">
         <Breadcrumb crumbs={[
           { label: 'Home', to: '/' },
-          { label: 'Stablecoins & CBDCs', to: '/stablecoins' },
+          { label: 'Stablecoins', to: '/entities?tab=stablecoins' },
           { label: `${coin.ticker} — ${coin.name}` },
         ]} />
       </div>
@@ -176,7 +186,7 @@ export default function StablecoinDetailPage() {
       )}
 
       {/* ── Two-column layout: Info + Issuer ── */}
-      <div className="reveal" style={{ display: 'grid', gridTemplateColumns: issuer ? 'repeat(auto-fit, minmax(320px, 1fr))' : '1fr', gap: 24, marginBottom: 32 }}>
+      <div className="reveal" style={{ display: 'grid', gridTemplateColumns: issuer ? 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))' : '1fr', gap: 24, marginBottom: 32 }}>
 
         {/* Info card */}
         <div className="st-info-card clip-lg">
@@ -309,13 +319,14 @@ export default function StablecoinDetailPage() {
         )}
       </div>
 
-      {/* ── Blockchain Deployments (Stride) ── */}
-      {blockchains && blockchains.length > 0 && (
+      {/* ── Blockchain Deployments — registered+ ── */}
+      {hasAccess && blockchains && blockchains.length > 0 && (
         <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={SECTION_LABEL}>
+          <h6 className="st-section-label">
             Blockchain Deployments <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({chainCount})</span>
           </h6>
           <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="st-table-scroll">
             <table className="st-table" style={{ width: '100%', margin: 0 }}>
               <thead>
                 <tr>
@@ -330,12 +341,16 @@ export default function StablecoinDetailPage() {
                     <td style={{ padding: '10px 16px', fontWeight: 500 }}>{bc.blockchainName}</td>
                     <td style={{ padding: '10px 16px', fontFamily: 'var(--font2)', fontSize: '0.8125rem' }}>
                       {bc.contractAddress ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <code style={{ background: 'var(--bg-light)', padding: '2px 6px', borderRadius: 4, fontSize: '0.75rem' }}>
-                            {truncateAddress(bc.contractAddress)}
-                          </code>
-                          <CopyButton text={bc.contractAddress} />
-                        </span>
+                        hasFullAccess ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <code style={{ background: 'var(--bg-light)', padding: '2px 6px', borderRadius: 4, fontSize: '0.75rem' }} aria-label={bc.contractAddress} title={bc.contractAddress}>
+                              {truncateAddress(bc.contractAddress)}
+                            </code>
+                            <CopyButton text={bc.contractAddress} />
+                          </span>
+                        ) : (
+                          <span style={{ filter: 'blur(4px)', userSelect: 'none', color: 'var(--text-muted)' }}>0x1a2b...c3d4</span>
+                        )
                       ) : (
                         <span style={{ color: 'var(--text-muted)' }}>—</span>
                       )}
@@ -347,14 +362,87 @@ export default function StablecoinDetailPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Issuer Licenses (Stride) ── */}
-      {licenses && licenses.length > 0 && (
+      {/* ── Supported Chains (fallback) — registered+ ── */}
+      {hasAccess && coin.chains.length > 0 && (!blockchains || blockchains.length === 0) && (
+        <div className="reveal" style={{ marginBottom: 28 }}>
+          <h6 className="st-section-label">Supported Chains</h6>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {coin.chains.map((c) => (
+              <span key={c} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, fontSize: '0.75rem' }}>
+                {c}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Jurisdiction status table — registered+ ── */}
+      {hasAccess && coin.majorJurisdictions.length > 0 && (
         <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={SECTION_LABEL}>
+          <h6 className="st-section-label">Regulatory Status by Jurisdiction</h6>
+          <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="st-table-scroll">
+            <table className="st-table" style={{ width: '100%', margin: 0 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: '10px 16px' }}>Jurisdiction</th>
+                  <th style={{ padding: '10px 16px' }}>Status</th>
+                  <th style={{ padding: '10px 16px' }}>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {coin.majorJurisdictions.map((j) => (
+                  <tr key={j.code}>
+                    <td style={{ padding: '10px 16px', fontWeight: 500 }}>
+                      <JurisdictionLink code={j.code} />
+                    </td>
+                    <td style={{ padding: '10px 16px' }}>
+                      <Badge label={j.status} colorMap={STABLECOIN_STATUS_COLORS} />
+                    </td>
+                    <td style={{ padding: '10px 16px', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      {j.notes}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Premium divider + paywall ── */}
+      {!hasFullAccess && (
+        <div className="st-premium-divider">
+          <span className="st-premium-badge"><Lock size={10} /> Full Access</span>
+        </div>
+      )}
+
+      {isAnonymous ? (
+        <PaywallOverlay
+          title={`Unlock ${coin.ticker} Full Intelligence`}
+          count={(blockchains?.length ?? 0) + (licenses?.length ?? 0) + coin.majorJurisdictions.length}
+          noun="data records"
+          variant="signup"
+        />
+      ) : !hasFullAccess ? (
+        <PaywallOverlay
+          title={`Unlock ${coin.ticker} Premium Data`}
+          count={(licenses?.length ?? 0)}
+          noun="license records"
+          variant="upgrade"
+        />
+      ) : null}
+
+      {/* ── Issuer Licenses — paid only ── */}
+      {hasFullAccess && licenses && licenses.length > 0 && (
+        <div className="reveal" style={{ marginBottom: 32 }}>
+          <h6 className="st-section-label">
             <Shield size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
             Issuer Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({licenses.length})</span>
           </h6>
@@ -382,53 +470,6 @@ export default function StablecoinDetailPage() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Supported Chains (original data, fallback if no blockchains) ── */}
-      {coin.chains.length > 0 && (!blockchains || blockchains.length === 0) && (
-        <div className="reveal" style={{ marginBottom: 28 }}>
-          <h6 style={SECTION_LABEL}>Supported Chains</h6>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {coin.chains.map((c) => (
-              <span key={c} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, fontSize: '0.75rem' }}>
-                {c}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Jurisdiction status table ── */}
-      {coin.majorJurisdictions.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 style={SECTION_LABEL}>Regulatory Status by Jurisdiction</h6>
-          <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
-            <table className="st-table" style={{ width: '100%', margin: 0 }}>
-              <thead>
-                <tr>
-                  <th style={{ padding: '10px 16px' }}>Jurisdiction</th>
-                  <th style={{ padding: '10px 16px' }}>Status</th>
-                  <th style={{ padding: '10px 16px' }}>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {coin.majorJurisdictions.map((j) => (
-                  <tr key={j.code}>
-                    <td style={{ padding: '10px 16px', fontWeight: 500 }}>
-                      <JurisdictionLink code={j.code} />
-                    </td>
-                    <td style={{ padding: '10px 16px' }}>
-                      <Badge label={j.status} colorMap={STABLECOIN_STATUS_COLORS} />
-                    </td>
-                    <td style={{ padding: '10px 16px', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                      {j.notes}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       )}

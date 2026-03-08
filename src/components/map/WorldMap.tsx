@@ -251,6 +251,13 @@ export default function WorldMap({
       });
 
       map.addLayer({
+        id: 'countries-focus-border',
+        type: 'line',
+        source: 'countries',
+        paint: { 'line-color': '#0A2540', 'line-width': 0, 'line-opacity': 0.7 },
+      });
+
+      map.addLayer({
         id: 'countries-hover',
         type: 'fill',
         source: 'countries',
@@ -364,6 +371,15 @@ export default function WorldMap({
     if (!bounds.isEmpty()) {
       mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 4, duration: 0 });
     }
+
+    // Highlight focused country borders with thicker stroke
+    const focusCodes = codes;
+    const filterExpr: maplibregl.FilterSpecification = focusCodes.length === 1
+      ? ['==', ['get', 'alpha2'], focusCodes[0]]
+      : ['in', ['get', 'alpha2'], ['literal', focusCodes]];
+    mapRef.current.setFilter('countries-focus-border', filterExpr);
+    mapRef.current.setPaintProperty('countries-focus-border', 'line-width', 2.5);
+    mapRef.current.setPaintProperty('countries-focus-border', 'line-color', '#0A2540');
   }, [loaded, focusCountry]);
 
   // Hover + click handlers
@@ -491,7 +507,7 @@ export default function WorldMap({
   const containerClass = compact ? 'st-map-container st-map-container--compact' : 'st-map-container';
 
   return (
-    <div className={containerClass} style={height ? { height } : undefined}>
+    <div className={containerClass} style={height ? { height } : undefined} role="img" aria-label="Interactive world map showing regulatory status by country">
       <div ref={containerRef} className="st-map-canvas" />
       <div ref={tooltipRef} className="st-map-tooltip" />
 
@@ -507,15 +523,16 @@ export default function WorldMap({
 
       {/* Legend */}
       {!compact && (
-        <div className="st-map-legend">
+        <div className="st-map-legend" role="list" aria-label="Map legend">
           <div className="st-map-legend-title">{legendTitle}</div>
           {Object.entries(legendColors).map(([label, color]) => (
             <div
               key={label}
               className="st-map-legend-item"
+              role="listitem"
               title={legendTooltips[label] ?? ''}
             >
-              <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color, flexShrink: 0 }} aria-hidden="true" />
               <span>{label}</span>
             </div>
           ))}

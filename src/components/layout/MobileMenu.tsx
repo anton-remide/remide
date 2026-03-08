@@ -76,10 +76,8 @@ export default function MobileMenu({ open, onClose, links, user, onSignOut }: Pr
             <Link to="/login" onClick={onClose} className="st-mobile-menu-action">
               Sign In
             </Link>
-            <Link to="/signup" onClick={onClose}>
-              <span className="st-btn" style={{ width: '200px', justifyContent: 'center' }}>
-                Sign Up Free
-              </span>
+            <Link to="/signup" onClick={onClose} className="st-mobile-menu-action">
+              Register
             </Link>
           </>
         )}

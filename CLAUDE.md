@@ -69,6 +69,67 @@ A public regulatory intelligence platform that tracks licensed crypto asset serv
 
 **Priority: Build features that drive monetization.**
 
+### Data Quality = Business-Critical (DQ-001)
+
+**Принцип: Каждая запись в продукте должна быть actionable, valuable и business-useful.**
+
+Данные — это продукт. Пользователь видит список компаний и принимает решения на основе этих данных. Поэтому:
+
+1. **Actionable** — Каждая entity должна быть полезна для бизнес-действия (due diligence, compliance check, market research). Shell-компании без имени (numbered corps), даты вместо имён, коды реестров — это НЕ actionable.
+2. **Valuable** — Если запись не несёт ценности для пользователя, она не должна быть видна. Garbage entities (`is_garbage=true`) фильтруются на frontend. Quality Worker отвечает за классификацию.
+3. **Display Quality** — Первая страница = первое впечатление. Имена компаний отображаются через `canonical_name` (очищенные Quality Worker'ом). Сортировка по `canonical_name`. Буквы перед цифрами.
+4. **Iterative Verification** — После каждого изменения в rules/worker: запустить worker → открыть первую страницу → прочитать каждое имя → найти проблемы → исправить → повторить. Не "считать статистику" — СМОТРЕТЬ глазами.
+
+**Garbage = невидимо:** Entities с `is_garbage=true` не показываются пользователю, не считаются в stat chips, не попадают в поиск. Но хранятся в БД для аудита.
+
+**Quality Worker pipeline (MANDATORY after every parser run):**
+- `rules.ts` → `cleanName()` → `detectGarbage()` → `classifyCryptoStatus()` → `calculateScore()`
+- `run.ts` → fetch → process → write `canonical_name`, `is_garbage`, `quality_score`, `crypto_status`
+- **After parser:** `npx tsx workers/quality/run.ts [--country XX]` — MUST run for new entities to appear on frontend
+- Frontend: `mapEntity()` → `name: row.canonical_name || cleanNameFallback(row.name)`
+- Frontend: ALL list queries filter `.not('canonical_name', 'is', null)` — entities without canonical_name are INVISIBLE
+- Frontend: `safeEntities = entities.filter(e => !e.isGarbage)`
+
+**⚠️ CRITICAL RULE: Entities with `canonical_name = NULL` are NEVER shown on the frontend.**
+Parser → DB → Quality Worker → Frontend. Without Quality Worker, new entities are invisible.
+`db.ts` logs a WARNING after upsert if any entities have `canonical_name = NULL`.
+
+### Analytics & Conversion Funnel — Mandatory Audit (ANALYTICS-001)
+
+**Правило: При любом изменении user flow, events или conversion paths — обязательно проверить и обновить аналитику.**
+
+Когда меняются:
+- Paywall placement (где показывается, что блокируется)
+- CTA buttons (текст, ссылка, расположение)
+- Registration/signup flow
+- Pricing page
+- Navigation paths (breadcrumbs, links between pages)
+- Any button that triggers `trackEvent()`
+
+**Обязательные действия:**
+1. Grep all `trackEvent()` calls in affected files
+2. Check if events still fire correctly with new flow
+3. Update/add/remove events as needed
+4. Verify funnel stages are still correct (view → paywall_shown → cta_click → signup → payment)
+5. Test the flow manually: open page → see content → hit paywall → click CTA → land on correct page
+
+**Трёхуровневый paywall (PAYWALL-001):**
+- **Tier 0 — Anonymous (не залогинен):** Структура страниц видна, но VALUES заблюрены
+  - Jurisdiction page: Labels (Fiat-Backed, Currency, etc.) видны, values размыты (blur 5px)
+  - Laws/Events: Title + Date видны, description/details заблюрены
+  - Licenses: Title видно, subsidiary/detail/canIssue заблюрены
+  - CBDCs: Name + Status badge видны, все values заблюрены
+  - Entity table: Первые 3 строки clear, остальные blurred + CTA "Register"
+  - CTA → `/signup` (Register Free)
+- **Tier 1 — Registered (бесплатно):** Values видны, но LIMITED (первые ~20 entities)
+  - Detail pages (Entity, Stablecoin, CBDC) за paywall — premium поля скрыты
+  - CTA → `/pricing` (Get Full Access — $49)
+- **Tier 2 — Paid (full access):** Всё открыто — детальные страницы, алерты, скачивание
+- CSS: `.st-blur-value` (individual), `.st-blur-card` (card values), `.st-blur-row` (table rows)
+- Конверсия: Blur preview → Register free → See lists → Click detail → Paywall → Pay
+
+### SEO & Mobile — Mandatory Quality Gates
+
 SEO and Mobile are NOT separate priorities — they are mandatory quality gates:
 - Every page/component MUST ship with: `<meta>`, `<title>`, OG tags, semantic HTML
 - Every page/component MUST work at 375px viewport minimum
@@ -151,6 +212,8 @@ npx tsc --noEmit     # Type check only
 npx tsx parsers/run.ts --registry <id> [--dry-run] [--force] [--no-notion]
 npx tsx parsers/run.ts --list                    # List all parsers
 npx tsx parsers/registries/esma-unified.ts       # ESMA all EU countries
+npx tsx workers/quality/run.ts                   # Quality pipeline (MANDATORY after parser)
+npx tsx workers/quality/run.ts --country KZ      # Quality for specific country
 npx tsx workers/enrichment/run.ts --limit 200    # Enrichment worker
 npx tsx scripts/generate-sitemap.ts              # Rebuild sitemap
 ```

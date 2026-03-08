@@ -1,11 +1,12 @@
 import type { ComponentType, FormEvent } from 'react';
-import { useState } from 'react';
-import { Scale, BookOpen, Search, ArrowRight, Coins, Globe, Building2, Landmark } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { getJurisdictions, getEntities, getStablecoins, getCbdcs } from '../data/dataLoader';
+import { useState, useEffect } from 'react';
+import { Scale, BookOpen, Search, ArrowRight, Coins, Globe, Building2, Landmark, Zap } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { getJurisdictions, getEntityCount, getStablecoins, getCbdcs } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { trackEvent } from '../utils/analytics';
 import HeroWorldMapCanvas from '../components/ui/HeroWorldMapCanvas';
 
 function StatCard({
@@ -20,10 +21,12 @@ function StatCard({
   const counterRef = useCounter(value);
   return (
     <div className="st-landing-stat-card stagger-in">
-      <div className="st-landing-stat-icon" aria-hidden="true">
-        <Icon size={18} color="currentColor" strokeWidth={2} />
+      <div className="st-landing-stat-row">
+        <div className="st-landing-stat-icon" aria-hidden="true">
+          <Icon size={16} color="currentColor" strokeWidth={2} />
+        </div>
+        <span className="st-landing-stat-value"><span ref={counterRef}>0</span></span>
       </div>
-      <span className="st-landing-stat-value"><span ref={counterRef}>0</span></span>
       <span className="st-landing-stat-label">{label}</span>
     </div>
   );
@@ -31,29 +34,33 @@ function StatCard({
 
 export default function LandingPage() {
   useDocumentMeta({
-    title: 'Global Crypto Registry',
-    description: 'Track cryptocurrency regulations, VASP licensing, stablecoins, CBDCs, and Travel Rule compliance across 206 countries worldwide.',
+    title: 'Stablecoin Intelligence Platform — RemiDe',
+    description: 'Track stablecoin regulation, VASP licensing, issuer compliance, and Travel Rule status across 206 jurisdictions. Purpose-built for compliance teams.',
     path: '/',
     noSuffix: true,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
       name: 'RemiDe',
-      description: 'Global cryptocurrency regulatory intelligence platform tracking VASP licensing across 206 jurisdictions.',
+      description: 'Stablecoin regulatory intelligence platform tracking licensing frameworks, entity registries, and Travel Rule compliance across 206 jurisdictions.',
       url: 'https://anton-remide.github.io/remide',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
     },
   });
 
+  useEffect(() => {
+    trackEvent('landing_page_view');
+  }, []);
+
   const navigate = useNavigate();
   const { data: jurisdictions, loading: jLoading, error, refetch } = useSupabaseQuery(getJurisdictions);
-  const { data: entities, loading: eLoading } = useSupabaseQuery(getEntities);
+  const { data: entityCount, loading: eLoading } = useSupabaseQuery(getEntityCount);
   const { data: stablecoins, loading: sLoading } = useSupabaseQuery(getStablecoins);
   const { data: cbdcs, loading: cLoading } = useSupabaseQuery(getCbdcs);
 
   const loading = jLoading || eLoading || sLoading || cLoading;
-  const totalEntities = entities?.length ?? 0;
+  const totalEntities = entityCount ?? 0;
   const totalStablecoins = stablecoins?.length ?? 0;
   const totalCbdcs = cbdcs?.length ?? 0;
 
@@ -76,22 +83,39 @@ export default function LandingPage() {
       return;
     }
 
+    trackEvent('newsletter_subscribe', { email });
     setSubscribeSent(true);
     setSubscribeError(null);
   };
 
   const stats = [
-    { icon: Globe, label: 'Countries Tracked', value: jurisdictions?.length ?? 0 },
-    { icon: Building2, label: 'Licensed Entities', value: totalEntities },
-    { icon: Coins, label: 'Stablecoins Tracked', value: totalStablecoins },
+    { icon: Globe, label: 'Jurisdictions Tracked', value: jurisdictions?.length ?? 0 },
+    { icon: Building2, label: 'Regulated Entities', value: totalEntities },
+    { icon: Coins, label: 'Stablecoins Monitored', value: totalStablecoins },
     { icon: Landmark, label: 'CBDC Projects', value: totalCbdcs },
   ];
 
   const features = [
-    { icon: Scale, title: 'Regulatory Regimes', desc: 'Instantly see how each jurisdiction classifies crypto — Licensing, Registration, Sandbox, or Ban — so you know where you can operate' },
-    { icon: BookOpen, title: 'Travel Rule Tracking', desc: 'Know exactly which countries enforce FATF Travel Rule, which have legislated it, and which are still in progress — critical for compliance teams' },
-    { icon: Search, title: 'Entity Directory', desc: `Search ${totalEntities}+ licensed VASPs, exchanges, custodians, and EMIs with direct links to regulators and license details` },
-    { icon: Coins, title: 'Stablecoins & CBDCs', desc: 'Track regulatory status of major stablecoins across jurisdictions and follow 25+ central bank digital currency projects from research to launch' },
+    {
+      icon: Scale,
+      title: 'Regulatory Regime Classification',
+      desc: 'Instantly assess how each jurisdiction classifies crypto assets — Licensing, Registration, Sandbox, or Ban. Essential for market entry decisions.',
+    },
+    {
+      icon: BookOpen,
+      title: 'Travel Rule Compliance Map',
+      desc: 'Track FATF Travel Rule implementation status globally. Know which countries enforce, which have legislated, and which are still in progress.',
+    },
+    {
+      icon: Search,
+      title: 'Entity Registry Intelligence',
+      desc: `Search ${totalEntities.toLocaleString()}+ regulated entities — VASPs, EMIs, payment institutions, banks — with direct regulator links and license details.`,
+    },
+    {
+      icon: Coins,
+      title: 'Stablecoin Regulation Tracker',
+      desc: 'Per-jurisdiction stablecoin frameworks, backing rules, issuer licensing requirements, and regulatory milestones — all in structured, queryable format.',
+    },
   ];
 
   if (loading) {
@@ -136,11 +160,11 @@ export default function LandingPage() {
               worldwide
             </p>
             <div className="st-hero-buttons reveal">
-              <button className="st-btn" onClick={() => navigate('/jurisdictions')}>
-                Explore Map
+              <button className="st-btn" onClick={() => { trackEvent('landing_cta_click', { cta: 'explore_map' }); navigate('/jurisdictions'); }}>
+                Explore Regulatory Map
               </button>
-              <button className="st-btn-outline" onClick={() => navigate('/entities')}>
-                Browse Entities <ArrowRight size={16} className="st-landing-cta-icon" />
+              <button className="st-btn-outline" onClick={() => { trackEvent('landing_cta_click', { cta: 'browse_entities' }); navigate('/entities'); }}>
+                Browse {totalEntities.toLocaleString()}+ Entities <ArrowRight size={16} className="st-landing-cta-icon" />
               </button>
             </div>
           </div>
@@ -162,7 +186,10 @@ export default function LandingPage() {
       <section ref={featuresRef} className="st-landing-v2-features">
         <div className="st-landing-container">
           <div className="st-landing-section-header reveal">
-            <h2>Global Registry Data Ecosystem</h2>
+            <h2>Regulatory Intelligence at Scale</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', maxWidth: 540, margin: '8px auto 0', lineHeight: 1.6 }}>
+              Structured data from 49+ regulatory registries, continuously updated. Built for compliance professionals who need accuracy and coverage.
+            </p>
           </div>
           <div className="st-landing-features-grid">
             {features.map((f) => (
@@ -180,11 +207,41 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Early Access Banner */}
+      <section className="st-landing-early-access">
+        <div className="st-landing-container">
+          <div className="st-landing-early-access-card clip-lg reveal">
+            <div className="st-landing-ea-content">
+              <div className="st-landing-ea-badge">
+                <Zap size={14} />
+                Beta Access Available
+              </div>
+              <h3>Get full platform access at early-bird pricing</h3>
+              <p>
+                Lock in founder pricing before public launch. One payment covers the entire beta period — including all future data sources and features.
+              </p>
+              <div className="st-landing-ea-price">
+                <span className="st-landing-ea-old">$1,200/yr</span>
+                <span className="st-landing-ea-current">$49</span>
+                <span className="st-landing-ea-label">one-time</span>
+              </div>
+              <Link to="/pricing" className="st-landing-ea-cta" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
+                View Pricing Details
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Subscribe */}
       <section className="st-landing-subscribe-section">
         <div className="st-landing-container">
           <div className="st-landing-subscribe reveal">
-            <h3>RemiDe Tracker is a continuous work in progress. Stay updated.</h3>
+            <h3>Stay informed on regulatory developments</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 20, lineHeight: 1.6 }}>
+              Weekly updates on new data sources, regulatory changes, and platform improvements.
+            </p>
             <form
               data-testid="landing-subscribe-form"
               className={`st-landing-subscribe-form${subscribeFocused ? ' is-focused' : ''}${subscribeError ? ' is-error' : ''}${subscribeSent ? ' is-sent' : ''}`}
@@ -200,17 +257,17 @@ export default function LandingPage() {
                 }}
                 onFocus={() => setSubscribeFocused(true)}
                 onBlur={() => setSubscribeFocused(false)}
-                placeholder="Enter email"
-                aria-label="Enter email"
+                placeholder="Enter your work email"
+                aria-label="Enter your work email"
                 aria-invalid={subscribeError ? 'true' : 'false'}
                 disabled={subscribeSent}
               />
               <button className="st-btn" type="submit" disabled={subscribeSent}>
-                {subscribeSent ? 'Sent' : 'Get updates'}
+                {subscribeSent ? 'Subscribed' : 'Get Updates'}
               </button>
             </form>
             <p aria-live="polite" className={`st-landing-subscribe-status${subscribeError ? ' is-error' : ''}${subscribeSent ? ' is-sent' : ''}`}>
-              {subscribeError || (subscribeSent ? 'Thanks! You are on the update list.' : '')}
+              {subscribeError || (subscribeSent ? 'You\'re on the list. We\'ll keep you posted.' : '')}
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Building2, Shield } from 'lucide-react';
 import { searchGlobal, type SearchResult } from '../../data/dataLoader';
+import { useClickOutside } from '../../hooks/useClickOutside';
 import { countryCodeToFlag } from '../../utils/countryFlags';
 
 export default function HeaderSearch() {
@@ -11,6 +12,7 @@ export default function HeaderSearch() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [expanded, setExpanded] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -20,7 +22,8 @@ export default function HeaderSearch() {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        inputRef.current?.focus();
+        setExpanded(true);
+        setTimeout(() => inputRef.current?.focus(), 50);
       }
     };
     document.addEventListener('keydown', handler);
@@ -66,26 +69,23 @@ export default function HeaderSearch() {
         setResults(res);
         setOpen(true);
         setActiveIndex(-1);
-      } catch {
-        // Silently fail
+      } catch (err) {
+        console.error('Search failed:', err);
+        setResults(null);
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timerRef.current);
   }, [query]);
 
-  // Click outside
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  // Click outside: close dropdown AND collapse search if query is empty
+  const closeDropdown = useCallback(() => {
+    setOpen(false);
+    if (!query.trim()) setExpanded(false);
+  }, [query]);
+  useClickOutside(wrapperRef, closeDropdown);
 
   const handleSelect = (path: string) => {
     setOpen(false);
@@ -97,6 +97,8 @@ export default function HeaderSearch() {
     const items = flatItems();
     if (e.key === 'Escape') {
       setOpen(false);
+      setExpanded(false);
+      setQuery('');
       inputRef.current?.blur();
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -119,30 +121,45 @@ export default function HeaderSearch() {
 
   const hasResults = results && (results.jurisdictions.length > 0 || results.entities.length > 0);
 
+  const handleExpand = () => {
+    setExpanded(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
   return (
-    <div ref={wrapperRef} className="st-header-search-wrapper">
-      <div className="st-header-search">
-        <Search size={14} className="st-header-search-icon" />
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Search VASP or Jurisdiction..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => { if (results) setOpen(true); }}
-          onKeyDown={handleKeyDown}
-          className="st-header-search-input"
-          autoComplete="off"
-        />
-        {loading ? (
-          <div className="st-header-search-spinner" />
-        ) : (
-          !query && <kbd className="st-header-search-kbd">⌘K</kbd>
-        )}
-      </div>
+    <div ref={wrapperRef} className={`st-header-search-wrapper${expanded ? ' expanded' : ''}`}>
+      {!expanded ? (
+        <button
+          className="st-header-search-trigger"
+          onClick={handleExpand}
+          aria-label="Open search"
+        >
+          <Search size={16} />
+        </button>
+      ) : (
+        <div className="st-header-search">
+          <Search size={14} className="st-header-search-icon" />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search VASP or Jurisdiction..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => { if (results) setOpen(true); }}
+            onKeyDown={handleKeyDown}
+            className="st-header-search-input"
+            autoComplete="off"
+            role="combobox"
+            aria-expanded={open}
+            aria-controls="header-search-listbox"
+            aria-activedescendant={activeIndex >= 0 ? `search-item-${activeIndex}` : undefined}
+          />
+          {loading && <div className="st-header-search-spinner" />}
+        </div>
+      )}
 
       {open && results && (
-        <div className="st-search-dropdown">
+        <div className="st-search-dropdown" id="header-search-listbox" role="listbox">
           {!hasResults && (
             <div className="st-search-empty">No results for "{query}"</div>
           )}
@@ -156,13 +173,15 @@ export default function HeaderSearch() {
               {results.jurisdictions.map((j, i) => (
                 <button
                   key={j.code}
+                  id={`search-item-${i}`}
+                  role="option"
+                  aria-selected={activeIndex === i}
                   className={`st-search-item${activeIndex === i ? ' active' : ''}`}
                   onClick={() => handleSelect(`/jurisdictions/${j.code}`)}
                   onMouseEnter={() => setActiveIndex(i)}
                 >
                   <span className="st-search-item-flag">{countryCodeToFlag(j.code)}</span>
                   <span className="st-search-item-name">{j.name}</span>
-                  <span className="st-search-item-sub">{j.regulator}</span>
                 </button>
               ))}
             </>
@@ -179,6 +198,9 @@ export default function HeaderSearch() {
                 return (
                   <button
                     key={e.id}
+                    id={`search-item-${idx}`}
+                    role="option"
+                    aria-selected={activeIndex === idx}
                     className={`st-search-item${activeIndex === idx ? ' active' : ''}`}
                     onClick={() => handleSelect(`/entities/${e.id}`)}
                     onMouseEnter={() => setActiveIndex(idx)}

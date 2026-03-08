@@ -48,11 +48,16 @@ export function useReveal(trigger?: unknown) {
 /** Stagger reveal for elements with class `.stagger-in` inside the container */
 export function useStaggerReveal(trigger?: unknown) {
   const ref = useRef<HTMLDivElement>(null);
+  // Track batch triggers for scoped cleanup (C2 audit fix)
+  const batchRef = useRef<ScrollTrigger[]>([]);
 
   useEffect(() => {
     if (!ref.current) return;
     const els = ref.current.querySelectorAll('.stagger-in');
     if (!els.length) return;
+
+    // Snapshot triggers BEFORE creating batch
+    const beforeIds = new Set(ScrollTrigger.getAll().map((t) => t.vars.id ?? t));
 
     const timer = setTimeout(() => {
       gsap.set(els, { opacity: 0, y: 24 });
@@ -71,50 +76,67 @@ export function useStaggerReveal(trigger?: unknown) {
         },
       });
 
+      // Store only NEW triggers created by batch (not counter/reveal triggers)
+      batchRef.current = ScrollTrigger.getAll().filter((t) => !beforeIds.has(t.vars.id ?? t));
+
       ScrollTrigger.refresh();
     }, 100);
 
     return () => {
       clearTimeout(timer);
-      ScrollTrigger.getAll().forEach((t) => t.kill());
+      // C2 audit fix: only kill batch triggers, not ALL triggers (was destroying counter animations)
+      batchRef.current.forEach((t) => t.kill());
+      batchRef.current = [];
     };
   }, [trigger]);
 
   return ref;
 }
 
-/** Counter animation: animates numbers from 0 to target */
+/** Counter animation: animates numbers from 0 to target (C2 audit fix) */
 export function useCounter(target: number, duration = 2.5) {
   const ref = useRef<HTMLSpanElement>(null);
+  const triggerRef = useRef<ScrollTrigger | null>(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || target <= 0) return;
     const el = ref.current;
     const obj = { val: 0 };
 
-    const timer = setTimeout(() => {
-      const trigger = ScrollTrigger.create({
-        trigger: el,
-        start: 'top 92%',
-        once: true,
-        onEnter: () => {
-          gsap.to(obj, {
-            val: target,
-            duration,
-            ease: 'power2.out',
-            onUpdate: () => {
-              el.textContent = Math.round(obj.val).toLocaleString();
-            },
-          });
+    const animate = () => {
+      gsap.to(obj, {
+        val: target,
+        duration,
+        ease: 'power2.out',
+        onUpdate: () => {
+          el.textContent = Math.round(obj.val).toLocaleString();
         },
       });
+    };
 
-      ScrollTrigger.refresh();
+    // Delay slightly longer than stagger reveal (100ms) to avoid conflicts
+    const timer = setTimeout(() => {
+      triggerRef.current = ScrollTrigger.create({
+        trigger: el,
+        start: 'top 95%',
+        once: true,
+        onEnter: animate,
+      });
 
-      return () => trigger.kill();
-    }, 150);
+      ScrollTrigger.refresh(true);
 
-    return () => clearTimeout(timer);
+      // Fallback: if element was already in viewport, trigger may have fired but
+      // check if scroll position is already past the start and animation hasn't run
+      if (triggerRef.current.progress > 0 && obj.val === 0) {
+        animate();
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      triggerRef.current?.kill();
+      triggerRef.current = null;
+    };
   }, [target, duration]);
 
   return ref;

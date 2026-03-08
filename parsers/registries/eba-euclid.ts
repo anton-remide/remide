@@ -3,11 +3,13 @@
  *
  * Fetches the EBA EUCLID PIR (Payment Institutions Register) bulk JSON download.
  * ~318,900 total entities, filtered to ~4,500 relevant ones:
- *   - PSD_EMI:  E-money Institutions
- *   - PSD_PI:   Payment Institutions
- *   - PSD_EPI:  E-money Payment Institutions (dual-licensed)
- *   - PSD_EEMI: Exempt E-money Institutions
- *   - PSD_ENL:  Entities under National Law
+ *   - PSD_EMI:  E-money Institutions (shown on frontend)
+ *   - PSD_PI:   Payment Institutions (shown on frontend)
+ *   - PSD_EPI:  E-money Payment Institutions — micro-businesses (hidden from frontend, used for worker learning)
+ *   - PSD_EEMI: Exempt E-money Institutions (hidden from frontend)
+ *   - PSD_ENL:  Entities under National Law (hidden from frontend)
+ *
+ * Hidden types (EPI/EEMI/ENL) are stored with is_hidden=true so workers can learn from them.
  *
  * Excluded (not our segment):
  *   - PSD_AG:   Agents (~312K — agents of PIs, not licensed themselves)
@@ -39,13 +41,21 @@ import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity, ScrapeRun
 const REGISTRY_ID = 'eba-euclid';
 const METADATA_URL = 'https://euclid.eba.europa.eu/register/api/filemetadata';
 
-/** Entity types we care about */
+/** Entity types we store — EMI + PI shown on frontend, EPI + EEMI + ENL hidden (for worker learning).
+ *  EPI (micro-payment kiosks), EEMI (exempt), ENL (national law) marked is_hidden=true. */
 const RELEVANT_ENTITY_TYPES = new Set([
-  'PSD_EMI',   // E-money Institutions
-  'PSD_PI',    // Payment Institutions
-  'PSD_EPI',   // E-money Payment Institutions (dual-licensed)
-  'PSD_EEMI',  // Exempt E-money Institutions
-  'PSD_ENL',   // Entities under National Law
+  'PSD_EMI',   // E-money Institutions — shown
+  'PSD_PI',    // Payment Institutions — shown
+  'PSD_EPI',   // E-money Payment Institutions — hidden (micro-businesses, 0% crypto)
+  'PSD_EEMI',  // Exempt E-money Institutions — hidden
+  'PSD_ENL',   // Entities under National Law — hidden
+]);
+
+/** Entity types that should be marked as is_hidden=true after upsert */
+const HIDDEN_ENTITY_TYPES = new Set([
+  'PSD_EPI',
+  'PSD_EEMI',
+  'PSD_ENL',
 ]);
 
 /** Human-readable entity type labels */
@@ -449,6 +459,38 @@ async function fetchAndFilterEbaEntities(registryId: string): Promise<EbaFetchRe
   };
 }
 
+// ─── Mark hidden entities (EPI/EEMI/ENL) ─────────────────────────────
+
+const HIDDEN_REASON_MAP: Record<string, string> = {
+  'E-Money Payment Institution (EPI)': 'epi_micro',
+  'Exempt EMI': 'exempt_emi',
+  'Entity National Law': 'enl_national',
+};
+
+async function markHiddenEntities(countryCode: string, registryId: string): Promise<void> {
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  );
+
+  for (const [licenseType, reason] of Object.entries(HIDDEN_REASON_MAP)) {
+    const { count, error } = await sb
+      .from('entities')
+      .update({ is_hidden: true, hidden_reason: reason })
+      .eq('country_code', countryCode)
+      .eq('parser_id', registryId)
+      .eq('license_type', licenseType)
+      .eq('is_hidden', false);
+
+    if (error) {
+      logger.warn(registryId, `Failed to mark hidden (${licenseType}): ${error.message}`);
+    } else if (count && count > 0) {
+      logger.info(registryId, `  Marked ${count} ${licenseType} as hidden (${reason})`);
+    }
+  }
+}
+
 // ─── Process per-country ─────────────────────────────────────────────
 
 async function processCountry(
@@ -518,6 +560,11 @@ async function processCountry(
     const writeResult = await upsertEntities({ ...result, entities: validEntities });
     inserted = writeResult.inserted;
     writeErrors.push(...writeResult.errors);
+
+    // Mark hidden entity types (EPI, EEMI, ENL) — valid data but not shown on frontend
+    if (inserted > 0) {
+      await markHiddenEntities(countryCode, rid);
+    }
   }
 
   // Log scrape run

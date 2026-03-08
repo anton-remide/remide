@@ -1,6 +1,7 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useClickOutside } from '../../hooks/useClickOutside';
 import MobileMenu from './MobileMenu';
 import HeaderSearch from './HeaderSearch';
 
@@ -29,16 +30,9 @@ export default function Header() {
     setAvatarOpen(false);
   }, [location.pathname]);
 
-  // Close avatar dropdown on click outside
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
-        setAvatarOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  // Close avatar dropdown on click outside (E1 audit: extracted to hook)
+  const closeAvatar = useCallback(() => setAvatarOpen(false), []);
+  useClickOutside(avatarRef, closeAvatar);
 
   const navLinks = [
     { to: '/jurisdictions', label: 'Jurisdictions' },
@@ -65,8 +59,10 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Center: Search */}
-          <HeaderSearch />
+          {/* Center: Search icon */}
+          <div className="st-header-center">
+            <HeaderSearch />
+          </div>
 
           {/* Right: Nav + Auth */}
           <div className="st-header-right">
@@ -90,15 +86,17 @@ export default function Header() {
                       className="st-avatar-trigger"
                       onClick={() => setAvatarOpen(!avatarOpen)}
                       aria-label="Account menu"
+                      aria-haspopup="true"
+                      aria-expanded={avatarOpen}
                     >
                       <span className="st-header-avatar">
                         {(user.email ?? '?')[0].toUpperCase()}
                       </span>
                     </button>
                     {avatarOpen && (
-                      <div className="st-avatar-dropdown">
+                      <div className="st-avatar-dropdown" role="menu">
                         <div className="st-avatar-dropdown-email">{user.email}</div>
-                        <button className="st-avatar-dropdown-item" onClick={handleSignOut}>
+                        <button className="st-avatar-dropdown-item" role="menuitem" onClick={handleSignOut}>
                           Sign Out
                         </button>
                       </div>
@@ -107,7 +105,7 @@ export default function Header() {
                 ) : (
                   <>
                     <Link to="/login" className="st-header-auth-link">Sign In</Link>
-                    <Link to="/signup" className="st-btn st-btn-sm">Sign Up</Link>
+                    <Link to="/signup" className="st-header-auth-link">Register</Link>
                   </>
                 )}
               </div>

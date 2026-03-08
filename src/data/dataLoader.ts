@@ -6,6 +6,18 @@ import type {
 } from '../types';
 import { EU_MEMBER_CODES } from './regionCodes';
 
+// ── Inline name cleanup fallback (last resort when canonical_name is NULL) ──
+function cleanNameFallback(raw: string): string {
+  let s = raw;
+  // Strip fancy quotes: „ " « » " " ' '
+  s = s.replace(/^[„""«»'']+|[„""«»'']+$/g, '');
+  // Strip regular quotes
+  s = s.replace(/^["']+|["']+$/g, '');
+  // Collapse multiple spaces
+  s = s.replace(/\s{2,}/g, ' ');
+  return s.trim();
+}
+
 // ── Snake_case DB row → camelCase TypeScript ──
 
 interface JurisdictionRow {
@@ -99,7 +111,8 @@ function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
   };
 }
 
-function mapEntity(row: EntityRow): Entity {
+/** Map a DB row → Entity. Handles both full rows (select('*')) and partial rows (LIST_COLS). */
+function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'country_code' | 'country'>): Entity {
   // Enrichment data: prefer dedicated columns, fallback to raw_data JSONB
   const rd = row.raw_data;
   const description = row.description || rd?.enrichment_description || '';
@@ -109,17 +122,17 @@ function mapEntity(row: EntityRow): Entity {
 
   return {
     id: row.id,
-    // Prefer canonical_name (cleaned by Quality Worker) over raw parser name
-    name: row.canonical_name || row.name,
+    // Prefer canonical_name (cleaned by Quality Worker); fallback cleans raw name
+    name: row.canonical_name || cleanNameFallback(row.name),
     countryCode: row.country_code,
     country: row.country,
-    licenseNumber: row.license_number,
-    licenseType: row.license_type,
+    licenseNumber: row.license_number ?? '',
+    licenseType: row.license_type ?? '',
     entityTypes: row.entity_types ?? [],
     activities: row.activities ?? [],
-    status: row.status as Entity['status'],
-    regulator: row.regulator,
-    website: row.website,
+    status: (row.status as Entity['status']) ?? 'Unknown',
+    regulator: row.regulator ?? '',
+    website: row.website ?? '',
     description,
     registryUrl,
     linkedinUrl,
@@ -161,21 +174,77 @@ export async function getJurisdictionByCode(code: string): Promise<Jurisdiction 
   return mapJurisdiction(data as JurisdictionRow);
 }
 
+// Columns needed for list/table views (EntitiesPage, JurisdictionDetailPage).
+// Excludes heavy columns: raw_data, description, activities, entity_types, website, registry_url, linkedin_url, license_number
+const LIST_COLS = [
+  'id', 'name', 'canonical_name', 'country_code', 'country',
+  'sector', 'status', 'regulator', 'license_type',
+  'dns_status', 'is_garbage',
+].join(',');
+
+/** Partial row type for LIST_COLS-based queries (no raw_data, description, etc.) */
+type EntityListRow = Pick<EntityRow, 'id' | 'name' | 'canonical_name' | 'country_code' | 'country'
+  | 'sector' | 'status' | 'regulator' | 'license_type' | 'dns_status' | 'is_garbage'>;
+
+/** Fast count for landing page — no data transfer, just COUNT */
+export async function getEntityCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('entities')
+    .select('id', { count: 'exact', head: true })
+    .neq('is_garbage', true)
+    .neq('is_hidden', true)
+    .not('canonical_name', 'is', null);
+  if (error) throw new Error(`Failed to count entities: ${error.message}`);
+  return count ?? 0;
+}
+
+/** Sector-level stats for EntitiesPage header — instant COUNT queries */
+export interface EntityStats {
+  total: number;
+  crypto: number;
+  payments: number;
+  banking: number;
+}
+
+export async function getEntityStats(): Promise<EntityStats> {
+  const base = supabase.from('entities').select('id', { count: 'exact', head: true }).neq('is_garbage', true).neq('is_hidden', true).not('canonical_name', 'is', null);
+
+  const [totalRes, cryptoRes, paymentsRes, bankingRes] = await Promise.all([
+    base,
+    supabase.from('entities').select('id', { count: 'exact', head: true }).neq('is_garbage', true).neq('is_hidden', true).not('canonical_name', 'is', null).eq('sector', 'Crypto'),
+    supabase.from('entities').select('id', { count: 'exact', head: true }).neq('is_garbage', true).neq('is_hidden', true).not('canonical_name', 'is', null).eq('sector', 'Payments'),
+    supabase.from('entities').select('id', { count: 'exact', head: true }).neq('is_garbage', true).neq('is_hidden', true).not('canonical_name', 'is', null).eq('sector', 'Banking'),
+  ]);
+
+  if (totalRes.error) throw new Error(`Failed to count entities: ${totalRes.error.message}`);
+
+  return {
+    total: totalRes.count ?? 0,
+    crypto: cryptoRes.count ?? 0,
+    payments: paymentsRes.count ?? 0,
+    banking: bankingRes.count ?? 0,
+  };
+}
+
 export async function getEntities(): Promise<Entity[]> {
-  // Supabase default limit is 1000 — paginate to get all rows
-  const all: EntityRow[] = [];
+  // Use minimal columns for list view — ~80% less data than select('*')
+  const all: EntityListRow[] = [];
   const PAGE = 1000;
   let from = 0;
   let done = false;
   while (!done) {
     const { data, error } = await supabase
       .from('entities')
-      .select('*')
-      .order('name')
+      .select(LIST_COLS)
+      .not('canonical_name', 'is', null)
+      .neq('is_garbage', true)
+      .neq('is_hidden', true)
+      .order('canonical_name', { nullsFirst: false })
       .range(from, from + PAGE - 1);
     if (error) throw new Error(`Failed to load entities: ${error.message}`);
-    all.push(...(data as EntityRow[]));
-    if ((data as EntityRow[]).length < PAGE) done = true;
+    const rows = data as unknown as EntityListRow[];
+    all.push(...rows);
+    if (rows.length < PAGE) done = true;
     else from += PAGE;
   }
   return all.map(mapEntity);
@@ -214,6 +283,9 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
     supabase
       .from('entities')
       .select('id, name, canonical_name, country, country_code, regulator')
+      .not('canonical_name', 'is', null)
+      .neq('is_garbage', true)
+      .neq('is_hidden', true)
       .or(`name.ilike.${q},canonical_name.ilike.${q},country.ilike.${q},regulator.ilike.${q}`)
       .order('name')
       .limit(5),
@@ -236,20 +308,24 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
 }
 
 export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
-  const all: EntityRow[] = [];
+  const all: EntityListRow[] = [];
   const PAGE = 1000;
   let from = 0;
   let done = false;
   while (!done) {
     const { data, error } = await supabase
       .from('entities')
-      .select('*')
+      .select(LIST_COLS)
       .eq('country_code', code.toUpperCase())
+      .not('canonical_name', 'is', null)
+      .neq('is_garbage', true)
+      .neq('is_hidden', true)
       .order('name')
       .range(from, from + PAGE - 1);
     if (error) throw new Error(`Failed to load entities: ${error.message}`);
-    all.push(...(data as EntityRow[]));
-    if ((data as EntityRow[]).length < PAGE) done = true;
+    const rows = data as unknown as EntityListRow[];
+    all.push(...rows);
+    if (rows.length < PAGE) done = true;
     else from += PAGE;
   }
   return all.map(mapEntity);
@@ -264,20 +340,24 @@ export async function getEntitiesByRegion(code: string): Promise<Entity[]> {
   const isEU = upper === 'EU';
   const countryCodes = isEU ? [...EU_MEMBER_CODES] : [upper];
 
-  const all: EntityRow[] = [];
+  const all: EntityListRow[] = [];
   const PAGE = 1000;
   let from = 0;
   let done = false;
   while (!done) {
     const { data, error } = await supabase
       .from('entities')
-      .select('*')
+      .select(LIST_COLS)
       .in('country_code', countryCodes)
+      .not('canonical_name', 'is', null)
+      .neq('is_garbage', true)
+      .neq('is_hidden', true)
       .order('name')
       .range(from, from + PAGE - 1);
     if (error) throw new Error(`Failed to load entities: ${error.message}`);
-    all.push(...(data as EntityRow[]));
-    if ((data as EntityRow[]).length < PAGE) done = true;
+    const rows = data as unknown as EntityListRow[];
+    all.push(...rows);
+    if (rows.length < PAGE) done = true;
     else from += PAGE;
   }
   return all.map(mapEntity);

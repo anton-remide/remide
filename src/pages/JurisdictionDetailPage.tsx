@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   getJurisdictionByCode, getEntitiesByCountry, getStablecoinsByCountry,
   getCbdcsByCountry, getStablecoinLawsByCountry, getStablecoinEventsByCountry,
@@ -13,7 +13,10 @@ import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { usePaywall } from '../hooks/usePaywall';
+import { trackEvent } from '../utils/analytics';
 import { countryCodeToFlag } from '../utils/countryFlags';
+import { Lock, ArrowRight } from 'lucide-react';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
@@ -55,7 +58,22 @@ function BackingBadge({ value, alert }: { value: number | null; alert?: string }
 export default function JurisdictionDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const { isAnonymous, hasAccess } = usePaywall();
   const isEU = (code ?? '').toUpperCase() === 'EU';
+
+  /** Conditionally blur a value when user has no access */
+  const bv = (content: React.ReactNode) =>
+    !hasAccess ? <span className="st-blur-value">{content}</span> : <>{content}</>;
+
+  // Analytics: track detail page view + paywall impression
+  useEffect(() => {
+    if (code) {
+      trackEvent('jurisdiction_detail_view', { code });
+      if (isAnonymous) {
+        trackEvent('paywall_shown', { page: `/jurisdictions/${code}`, type: 'blur' });
+      }
+    }
+  }, [code, isAnonymous]);
 
   const jurisdictionFetcher = useCallback(() => getJurisdictionByCode(code ?? ''), [code]);
   // EU → aggregate entities from all 27 member states; regular → single country
@@ -79,15 +97,15 @@ export default function JurisdictionDetailPage() {
   const revealRef = useReveal(loading);
 
   useDocumentMeta({
-    title: jurisdiction ? `${jurisdiction.name} — Crypto Regulation` : 'Jurisdiction',
+    title: jurisdiction ? `${jurisdiction.name} — Stablecoin & VASP Regulation` : 'Jurisdiction',
     description: jurisdiction
-      ? `Cryptocurrency regulation in ${jurisdiction.name}: ${jurisdiction.regime} regime, ${(entities ?? []).length} licensed VASPs. Travel Rule: ${jurisdiction.travelRule}.`
+      ? `Stablecoin and VASP regulation in ${jurisdiction.name}: ${jurisdiction.regime} regime, ${(entities ?? []).length} regulated entities. Travel Rule: ${jurisdiction.travelRule}.`
       : 'Loading jurisdiction details...',
     path: code ? `/jurisdictions/${code}` : undefined,
     jsonLd: jurisdiction ? {
       '@context': 'https://schema.org',
       '@type': 'Article',
-      name: `${jurisdiction.name} — Crypto Regulation`,
+      name: `${jurisdiction.name} — Stablecoin & VASP Regulation`,
       description: `Cryptocurrency regulation in ${jurisdiction.name}: ${jurisdiction.regime} regime, ${(entities ?? []).length} licensed VASPs.`,
       url: `https://anton-remide.github.io/remide/jurisdictions/${code}`,
       publisher: { '@type': 'Organization', name: 'RemiDe' },
@@ -379,7 +397,7 @@ export default function JurisdictionDetailPage() {
           </div>
 
           {/* Backing rules grid */}
-          <div className="st-info-card clip-lg" style={{ margin: 0, marginBottom: 16 }}>
+          <div className={`st-info-card clip-lg${!hasAccess ? ' st-blur-card' : ''}`} style={{ margin: 0, marginBottom: 16 }}>
             <div className="st-info-row">
               <span className="st-info-label">Fiat-Backed</span>
               <span className="st-info-value">
@@ -408,107 +426,141 @@ export default function JurisdictionDetailPage() {
 
           {/* Description */}
           {jurisdiction.stablecoinDescription && (
-            <p style={{ color: 'var(--text)', lineHeight: 1.65, fontSize: '0.875rem', marginBottom: 16 }}>
+            <p className={!hasAccess ? 'st-blur-value' : ''} style={{ color: 'var(--text)', lineHeight: 1.65, fontSize: '0.875rem', marginBottom: 16 }}>
               {jurisdiction.stablecoinDescription}
             </p>
           )}
           {jurisdiction.regulatorDescription && (
-            <p style={{ color: 'var(--text-muted)', lineHeight: 1.55, fontSize: '0.8125rem', marginBottom: 16 }}>
+            <p className={!hasAccess ? 'st-blur-value' : ''} style={{ color: 'var(--text-muted)', lineHeight: 1.55, fontSize: '0.8125rem', marginBottom: 16 }}>
               {jurisdiction.regulatorDescription}
             </p>
           )}
 
-          {/* Laws */}
+          {/* Laws — first expanded for anonymous (teaser), rest collapsed; all visible for registered+ */}
           {countryLaws.length > 0 && (
             <div style={{ marginBottom: 16 }}>
               <h6 style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                Stablecoin Laws
+                Stablecoin Laws ({countryLaws.length})
               </h6>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {countryLaws.map((law: StablecoinLaw) => (
-                  <div key={law.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
-                          {law.citationUrl ? (
-                            <a href={law.citationUrl} target="_blank" rel="noopener noreferrer" className="st-inline-link">
-                              {law.title}
-                            </a>
-                          ) : law.title}
-                        </div>
-                        {law.description && (
-                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                            {law.description}
+                {countryLaws.map((law: StablecoinLaw, idx: number) => {
+                  // Anonymous: first law expanded (teaser), rest collapsed
+                  const isCollapsed = isAnonymous && idx > 0;
+                  if (isCollapsed) return null; // render collapsed summary below
+                  return (
+                    <div key={law.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
+                            {hasAccess && law.citationUrl ? (
+                              <a href={law.citationUrl} target="_blank" rel="noopener noreferrer" className="st-inline-link">
+                                {law.title}
+                              </a>
+                            ) : law.title}
                           </div>
+                          {law.description && (
+                            <div className={!hasAccess ? 'st-blur-value' : ''} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                              {law.description}
+                            </div>
+                          )}
+                        </div>
+                        {law.enactedDate && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            {new Date(law.enactedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+                          </span>
                         )}
                       </div>
-                      {law.enactedDate && (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                          {new Date(law.enactedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
-                        </span>
-                      )}
                     </div>
+                  );
+                })}
+                {/* Anonymous: show collapsed count for remaining laws */}
+                {isAnonymous && countryLaws.length > 1 && (
+                  <div className="st-info-card clip-lg" style={{
+                    margin: 0, padding: '12px 16px', opacity: 0.6,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <Lock size={13} style={{ color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      +{countryLaws.length - 1} more {countryLaws.length - 1 === 1 ? 'law' : 'laws'} — <Link to="/signup" style={{ fontWeight: 600 }}>register to view</Link>
+                    </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
 
-          {/* Events timeline */}
+          {/* Events timeline — first expanded for anonymous (teaser), rest collapsed; all visible for registered+ */}
           {countryEvents.length > 0 && (
             <div style={{ marginBottom: 16 }}>
               <h6 style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                Regulatory Events
+                Regulatory Events ({countryEvents.length})
               </h6>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {countryEvents
                   .sort((a: StablecoinEvent, b: StablecoinEvent) =>
                     (b.eventDate ?? '').localeCompare(a.eventDate ?? ''))
-                  .map((ev: StablecoinEvent) => (
-                  <div key={ev.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
-                          {ev.citationUrl ? (
-                            <a href={ev.citationUrl} target="_blank" rel="noopener noreferrer" className="st-inline-link">
-                              {ev.title}
-                            </a>
-                          ) : ev.title}
-                        </div>
-                        {ev.details && (
-                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                            {ev.details}
+                  .map((ev: StablecoinEvent, idx: number) => {
+                    // Anonymous: first event expanded (teaser), rest collapsed
+                    const isCollapsed = isAnonymous && idx > 0;
+                    if (isCollapsed) return null;
+                    return (
+                      <div key={ev.id} className="st-info-card clip-lg" style={{ margin: 0, padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 4 }}>
+                              {hasAccess && ev.citationUrl ? (
+                                <a href={ev.citationUrl} target="_blank" rel="noopener noreferrer" className="st-inline-link">
+                                  {ev.title}
+                                </a>
+                              ) : ev.title}
+                            </div>
+                            {ev.details && (
+                              <div className={!hasAccess ? 'st-blur-value' : ''} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                {ev.details}
+                              </div>
+                            )}
                           </div>
-                        )}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 4 }}>
+                            {ev.eventDate && (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                {new Date(ev.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                            {ev.eventType !== null && (
+                              <span style={{
+                                fontSize: '0.6875rem', padding: '1px 6px', borderRadius: 4,
+                                backgroundColor: ev.eventType === 2 ? '#EEF0FF' : '#F0FDFA',
+                                color: ev.eventType === 2 ? '#4B5CC4' : '#0D6857',
+                              }}>
+                                {ev.eventType === 2 ? 'Legislative' : 'Regulatory'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 4 }}>
-                        {ev.eventDate && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {new Date(ev.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                          </span>
-                        )}
-                        {ev.eventType !== null && (
-                          <span style={{
-                            fontSize: '0.6875rem', padding: '1px 6px', borderRadius: 4,
-                            backgroundColor: ev.eventType === 2 ? '#EEF0FF' : '#F0FDFA',
-                            color: ev.eventType === 2 ? '#4B5CC4' : '#0D6857',
-                          }}>
-                            {ev.eventType === 2 ? 'Legislative' : 'Regulatory'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    );
+                  })}
+                {/* Anonymous: show collapsed count for remaining events */}
+                {isAnonymous && countryEvents.length > 1 && (
+                  <div className="st-info-card clip-lg" style={{
+                    margin: 0, padding: '12px 16px', opacity: 0.6,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <Lock size={13} style={{ color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      +{countryEvents.length - 1} more {countryEvents.length - 1 === 1 ? 'event' : 'events'} — <Link to="/signup" style={{ fontWeight: 600 }}>register to view</Link>
+                    </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
 
-          {/* Issuer Licenses in this jurisdiction */}
+          {/* Issuer Licenses — title visible, details blurred */}
           {countryLicenses.length > 0 && (
             <div>
               <h6 style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                Issuer Licenses
+                Issuer Licenses ({countryLicenses.length})
               </h6>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {countryLicenses.map((lic: IssuerLicense) => (
@@ -517,17 +569,17 @@ export default function JurisdictionDetailPage() {
                       {lic.title}
                     </div>
                     {lic.subsidiaryName && (
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 2 }}>
+                      <div className={!hasAccess ? 'st-blur-value' : ''} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 2 }}>
                         {lic.subsidiaryName}
                       </div>
                     )}
                     {lic.detail && (
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                      <div className={!hasAccess ? 'st-blur-value' : ''} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                         {lic.detail}
                       </div>
                     )}
                     {lic.canIssue && (
-                      <span style={{
+                      <span className={!hasAccess ? 'st-blur-value' : ''} style={{
                         display: 'inline-block', marginTop: 4, padding: '1px 8px', borderRadius: 4,
                         fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#ECFDF3', color: '#2B7A4B',
                       }}>
@@ -539,10 +591,26 @@ export default function JurisdictionDetailPage() {
               </div>
             </div>
           )}
+
+          {/* CTA banner after Stablecoin Regulation section */}
+          {isAnonymous && (
+            <div className="st-blur-cta-banner" style={{ marginTop: 16 }}>
+              <Lock size={18} style={{ color: 'var(--text-muted)' }} />
+              <h6>Register to see full regulatory details</h6>
+              <p>Get access to backing rules, law descriptions, event details and license information.</p>
+              <Link
+                to="/signup"
+                className="st-btn"
+                onClick={() => trackEvent('paywall_cta_click', { page: `/jurisdictions/${code}`, section: 'stablecoin_regulation' })}
+              >
+                Register Free <ArrowRight size={15} />
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── CBDCs ── */}
+      {/* ── CBDCs — name + status visible, all values blurred ── */}
       {countryCbdcs.length > 0 && (
         <div className="reveal" style={{ marginTop: 32 }}>
           <h5 style={{ marginBottom: 16 }}>Central Bank Digital Currencies</h5>
@@ -557,31 +625,31 @@ export default function JurisdictionDetailPage() {
                 </div>
                 <div className="st-info-row">
                   <span className="st-info-label">Currency</span>
-                  <span className="st-info-value">{cbdc.currency || '—'}</span>
+                  <span className="st-info-value">{bv(cbdc.currency || '—')}</span>
                 </div>
                 <div className="st-info-row">
                   <span className="st-info-label">Central Bank</span>
-                  <span className="st-info-value">{cbdc.centralBank || '—'}</span>
+                  <span className="st-info-value">{bv(cbdc.centralBank || '—')}</span>
                 </div>
                 <div className="st-info-row">
                   <span className="st-info-label">Type</span>
-                  <span className="st-info-value">{cbdc.retailOrWholesale || '—'}</span>
+                  <span className="st-info-value">{bv(cbdc.retailOrWholesale || '—')}</span>
                 </div>
                 {cbdc.technology && (
                   <div className="st-info-row">
                     <span className="st-info-label">Technology</span>
-                    <span className="st-info-value">{cbdc.technology}</span>
+                    <span className="st-info-value">{bv(cbdc.technology)}</span>
                   </div>
                 )}
                 {cbdc.launchDate && (
                   <div className="st-info-row">
                     <span className="st-info-label">Launch Date</span>
                     <span className="st-info-value">
-                      {new Date(cbdc.launchDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                      {bv(new Date(cbdc.launchDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }))}
                     </span>
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                <div className={!hasAccess ? 'st-blur-value' : ''} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                   {cbdc.crossBorder && (
                     <span style={{
                       display: 'inline-block', padding: '2px 8px', borderRadius: 4,
@@ -618,33 +686,33 @@ export default function JurisdictionDetailPage() {
                 {cbdc.privacyModel && (
                   <div className="st-info-row" style={{ marginTop: 4 }}>
                     <span className="st-info-label">Privacy</span>
-                    <span className="st-info-value">{cbdc.privacyModel}</span>
+                    <span className="st-info-value">{bv(cbdc.privacyModel)}</span>
                   </div>
                 )}
                 {cbdc.crossBorderProjects.length > 0 && (
                   <div className="st-info-row">
                     <span className="st-info-label">Cross-Border Projects</span>
-                    <span className="st-info-value">{cbdc.crossBorderProjects.join(', ')}</span>
+                    <span className="st-info-value">{bv(cbdc.crossBorderProjects.join(', '))}</span>
                   </div>
                 )}
                 {cbdc.notes && (
                   <div className="st-info-row">
                     <span className="st-info-label">Notes</span>
-                    <span className="st-info-value" style={{ fontSize: '0.8125rem' }}>{cbdc.notes}</span>
+                    <span className="st-info-value" style={{ fontSize: '0.8125rem' }}>{bv(cbdc.notes)}</span>
                   </div>
                 )}
                 {cbdc.sources.length > 0 && (
                   <div className="st-info-row">
                     <span className="st-info-label">Sources</span>
                     <span className="st-info-value">
-                      {cbdc.sources.map((s, i) => (
+                      {bv(cbdc.sources.map((s, i) => (
                         <span key={i}>
                           {i > 0 && <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>·</span>}
                           <a href={s.url} target="_blank" rel="noopener noreferrer" className="st-inline-link">
                             {s.name}
                           </a>
                         </span>
-                      ))}
+                      )))}
                     </span>
                   </div>
                 )}
@@ -703,28 +771,102 @@ export default function JurisdictionDetailPage() {
 
       {safeEntities.length > 0 && (
         <>
-          <div className="reveal" style={{ marginBottom: 16 }}>
+          <div className="reveal" style={{ marginBottom: 16, marginTop: 32 }}>
             <h5>{isEU ? `All Licensed Entities across the EU` : `Entities in ${jurisdiction.name}`}</h5>
           </div>
-          <div className="reveal">
-            <DataTable
-              columns={entityColumns}
-              data={table.paginated as (Entity & Record<string, unknown>)[]}
-              sort={table.sort}
-              onSort={table.toggleSort}
-              onRowClick={(row) => navigate(`/entities/${(row as unknown as Entity).id}`)}
-              page={table.page}
-              totalPages={table.totalPages}
-              onPageChange={table.setPage}
-              totalFiltered={table.totalFiltered}
-              totalCount={safeEntities.length}
-              search={table.search}
-              onSearchChange={table.setSearch}
-              searchPlaceholder="Search entities..."
-              pageSize={table.pageSize}
-              onPageSizeChange={table.setPageSize}
-            />
-          </div>
+
+          {isAnonymous ? (
+            /* ── Anonymous: 3 clickable rows + blurred rows + CTA ── */
+            <div className="reveal st-entity-preview-locked">
+              <div className="st-table-scroll">
+                <table className="st-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      {isEU && <th>Country</th>}
+                      <th>Status</th>
+                      <th>License Type</th>
+                      <th>Activities</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* First 3 rows — clear + clickable */}
+                    {safeEntities.slice(0, 3).map((e) => (
+                      <tr key={e.id} onClick={() => navigate(`/entities/${e.id}`)} style={{ cursor: 'pointer' }} className="st-row-clickable">
+                        <td style={{ fontWeight: 500 }}>
+                          <Link to={`/entities/${e.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                            {e.name}
+                          </Link>
+                        </td>
+                        {isEU && (
+                          <td>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: '1rem' }}>{countryCodeToFlag(e.countryCode)}</span>
+                              {e.country}
+                            </span>
+                          </td>
+                        )}
+                        <td><Badge label={e.status} colorMap={STATUS_COLORS} /></td>
+                        <td>{e.licenseType || '—'}</td>
+                        <td>{e.activities.slice(0, 3).join(', ') || '—'}</td>
+                      </tr>
+                    ))}
+                    {/* Rows 4–8 — blurred */}
+                    {safeEntities.slice(3, 8).map((e) => (
+                      <tr key={e.id} className="st-blur-row">
+                        <td style={{ fontWeight: 500 }}>{e.name}</td>
+                        {isEU && (
+                          <td>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: '1rem' }}>{countryCodeToFlag(e.countryCode)}</span>
+                              {e.country}
+                            </span>
+                          </td>
+                        )}
+                        <td><Badge label={e.status} colorMap={STATUS_COLORS} /></td>
+                        <td>{e.licenseType || '—'}</td>
+                        <td>{e.activities.slice(0, 3).join(', ') || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Gradient fade + CTA */}
+              <div className="st-entity-preview-fade">
+                <Link
+                  to="/signup"
+                  className="st-btn"
+                  style={{ fontSize: '0.9375rem', padding: '0 24px', height: 44, fontWeight: 600 }}
+                  onClick={() => trackEvent('paywall_cta_click', { page: `/jurisdictions/${code}`, section: 'entities' })}
+                >
+                  <Lock size={15} style={{ marginRight: 4 }} />
+                  Register to see all {safeEntities.length.toLocaleString()} entities
+                  <ArrowRight size={15} />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* ── Unlocked: full DataTable ── */
+            <div className="reveal">
+              <DataTable
+                columns={entityColumns}
+                data={table.paginated as (Entity & Record<string, unknown>)[]}
+                sort={table.sort}
+                onSort={table.toggleSort}
+                onRowClick={(row) => navigate(`/entities/${(row as unknown as Entity).id}`)}
+                page={table.page}
+                totalPages={table.totalPages}
+                onPageChange={table.setPage}
+                totalFiltered={table.totalFiltered}
+                totalCount={safeEntities.length}
+                search={table.search}
+                onSearchChange={table.setSearch}
+                searchPlaceholder="Search entities..."
+                pageSize={table.pageSize}
+                onPageSizeChange={table.setPageSize}
+              />
+            </div>
+          )}
         </>
       )}
     </article>

@@ -343,6 +343,23 @@ export async function upsertEntities(
     logger.info(registryId, `INFRA-002: Restored quality data for ${restored}/${qualityBackup.size} entities${restoreErrors > 0 ? ` (${restoreErrors} not found — entity renamed?)` : ''}`);
   }
 
+  // ──────────────────────────────────────────────────────
+  // PIPELINE REMINDER: Entities without canonical_name are HIDDEN on frontend.
+  // Quality Worker MUST be run after parser to process new entities.
+  // See: npx tsx workers/quality/run.ts
+  // ──────────────────────────────────────────────────────
+  if (hasQualityColumns) {
+    const { count: nullCount } = await sb
+      .from('entities')
+      .select('id', { count: 'exact', head: true })
+      .eq('country_code', countryCode)
+      .is('canonical_name', null);
+    if (nullCount && nullCount > 0) {
+      logger.warn(registryId, `⚠ ${nullCount} entities have canonical_name=NULL — they are HIDDEN on frontend until Quality Worker runs!`);
+      logger.warn(registryId, `⚠ Run: npx tsx workers/quality/run.ts --country ${countryCode}`);
+    }
+  }
+
   logger.info(registryId, `Write complete: ${inserted} inserted, ${errors.length} chunk errors`);
   return { inserted, updated: 0, errors };
 }

@@ -119,3 +119,60 @@
 - **Decision:** Score ranges: T1 (name+license) = 10-30, T2 (+website+description) = 40-60, T3 (+LinkedIn+social) = 60-80, T4 (+revenue+products) = 80-100. Drives Firecrawl enrichment priority: enrich lowest-tier entities first.
 - **Confidence:** 88%
 - **Impact:** Quality Worker scoring rules, Firecrawl prioritization.
+
+## PAYWALL-001: Three-Tier Paywall Architecture
+- **Category:** Product/Monetization
+- **Date:** 2026-03-08
+- **Context:** Binary paywall (isLocked=!user) had high bounce rate. All-or-nothing approach doesn't show value before commitment. Need progressive disclosure to increase conversion.
+- **Alternatives:**
+  - A) Keep binary paywall, improve CTA copy (rejected: doesn't solve core problem)
+  - B) Three-tier: Anonymous (blurred) → Registered (free) → Paid $49 (chosen)
+  - C) Freemium with feature limits only (rejected: less visual impact)
+- **Decision:** Three-tier model via `usePaywall()` hook. Anonymous: see structure with blurred values, first 3 entity rows clickable. Registered: jurisdiction profiles, entity lists, basic details unlocked. Paid $49: license numbers, registry links, corporate structure, contract addresses, export.
+- **Confidence:** 85%
+- **Impact:** All detail pages migrated from `useAuth()` binary to `usePaywall()` three-tier. PaywallOverlay updated. PricingPage/SignupPage redesigned.
+
+## PAYWALL-002: Entity Table First-3-Rows Clickable Pattern
+- **Category:** UX
+- **Date:** 2026-03-08
+- **Context:** Anonymous users seeing 100% blurred entity table had no reason to register. Need a teaser that shows real value.
+- **Decision:** First 3 entity rows are clickable `<Link>` elements navigating to `/entities/:id`. Rows 4-8 blurred with gradient fade. CTA banner below. Registered users see full table.
+- **Confidence:** 80%
+- **Impact:** JurisdictionDetailPage entity table section.
+
+## PAYWALL-003: Laws/Events Collapsed Teaser Pattern
+- **Category:** UX
+- **Date:** 2026-03-08
+- **Context:** Completely hiding laws/events for anonymous users removes key content from SEO crawlers and gives no incentive to register.
+- **Decision:** First law/event fully expanded (visible teaser). Remaining items collapsed with lock icon and count indicator. Registered users see all expanded.
+- **Confidence:** 82%
+- **Impact:** JurisdictionDetailPage laws and events sections.
+
+---
+
+## Product Backlog from Feedback Screenshots (2026-03-08)
+
+> Items below were identified from 16 feedback screenshots in `/Feedback Screenshots/`.
+> Quick fixes are done ✅. Remaining items are product backlog for future sprints.
+
+### Done this session ✅
+- Footer: removed redundant "Pricing" link
+- PricingPage: removed "Everything Included" (8 feature cards) + "Built For Professionals" (6 audience cards) — redundant with comparison table
+- PricingPage Final CTA: clarified "14-day money-back guarantee" + reduced white space
+- Header nav: removed "Pricing" nav link (redundant with "Special Offer" button)
+- Search: removed regulator names from country results
+- Entity table on jurisdiction page: restored white background + border
+- Entity Detail: CTA button made full-width (max-width: 360px)
+- Verified: search loading spinner already exists, entity rows 1-3 already clickable in anonymous mode
+
+### Product Backlog (future sprints)
+1. **PAYWALL-FLOAT:** Paywall overlay should be floating white card with shadow over blurred content (not static)
+2. **SIGNUP-COMPARE:** SignupPage right side should show free-vs-paid feature comparison blocks
+3. **BLUR-COLORS:** Blurred text on colored backgrounds (badges, portal labels) looks weird — portal labels shouldn't be blurred
+4. **LAWS-ACCORDION:** Laws/Events sections — accordion pattern: first expanded, rest collapsed, CTA banner above
+5. **MAP-TOOLTIPS:** Map tooltip should be context-aware per active mini-stat tab
+6. **ENTITIES-LAZY:** Entities page loads 3-4s — need lazy loading (first 100 instant, rest background)
+7. **ENTITY-DESC:** Entity Detail — company description area from website parser data
+8. **ENTITY-SIMILAR:** Entity Detail — "Similar Companies" block below profile
+9. **ENTITY-OFFER:** Entity table blurred section — offer overlay on top of gradient (not just blur)
+10. **STRIPE-CHECKOUT:** Stripe integration with product `prod_U6qNlT7koH0SlO` ($49 one-time)

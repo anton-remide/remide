@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getJurisdictions, getCbdcs } from '../data/dataLoader';
 import { expandRegionalCode } from '../data/regionCodes';
@@ -17,14 +18,14 @@ import SegmentedControl from '../components/ui/SegmentedControl';
 
 export default function JurisdictionsPage() {
   useDocumentMeta({
-    title: 'Crypto Regulation Map — 206 Countries',
-    description: 'Interactive world map of cryptocurrency regulations. Compare VASP licensing regimes, Travel Rule compliance, and stablecoin status across 206 jurisdictions.',
+    title: 'Stablecoin Regulation Map — 206 Jurisdictions',
+    description: 'Interactive regulatory map covering stablecoin frameworks, VASP licensing regimes, Travel Rule compliance, and CBDC status across 206 jurisdictions.',
     path: '/jurisdictions',
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Dataset',
-      name: 'RemiDe Crypto Jurisdictions Dataset',
-      description: 'Regulatory classification of 206 countries for cryptocurrency and VASP licensing.',
+      name: 'RemiDe Stablecoin Regulatory Intelligence Dataset',
+      description: 'Stablecoin regulation, VASP licensing regimes, and Travel Rule compliance across 206 jurisdictions.',
       url: 'https://anton-remide.github.io/remide/jurisdictions',
       license: 'https://creativecommons.org/licenses/by-nc/4.0/',
     },
@@ -38,6 +39,7 @@ export default function JurisdictionsPage() {
 
   const [mapColorMode, setMapColorMode] = useState<MapColorMode>('regime');
   const [activeMiniStats, setActiveMiniStats] = useState<string[]>([]);
+  const [insightOpen, setInsightOpen] = useState(false);
 
   const safeJurisdictions = allJurisdictions ?? [];
 
@@ -72,6 +74,23 @@ export default function JurisdictionsPage() {
   const mapStatuses = mapColorMode === 'cbdc' ? cbdcStatuses
     : mapColorMode === 'stablecoin' ? stablecoinStatuses
     : stablecoinStatuses; // regime/travelRule don't use stablecoinStatuses, but it's harmless
+
+  // Quick regime counts for insight panel
+  const regimeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    safeJurisdictions.forEach((j) => { counts[j.regime] = (counts[j.regime] ?? 0) + 1; });
+    return counts;
+  }, [safeJurisdictions]);
+
+  const travelEnforced = useMemo(
+    () => safeJurisdictions.filter((j) => j.travelRule === 'Enforced').length,
+    [safeJurisdictions],
+  );
+
+  const stablecoinsLive = useMemo(
+    () => safeJurisdictions.filter((j) => j.stablecoinStage === 3).length,
+    [safeJurisdictions],
+  );
 
   // Column filters hook (works on full dataset)
   const colFilters = useColumnFilters<Jurisdiction & Record<string, unknown>>(
@@ -253,6 +272,40 @@ export default function JurisdictionsPage() {
             }}
           />
         </div>
+      </div>
+
+      {/* Collapsible insight panel */}
+      <div className="st-insight-panel">
+        <button
+          className={`st-insight-toggle${insightOpen ? ' is-open' : ''}`}
+          onClick={() => setInsightOpen((v) => !v)}
+          aria-expanded={insightOpen}
+        >
+          <span className="st-insight-toggle-label">About this data</span>
+          <ChevronDown size={16} className="st-insight-chevron" />
+        </button>
+        {insightOpen && (
+          <div className="st-insight-body">
+            <div className="st-insight-stats-row">
+              <span><strong>{safeJurisdictions.length}</strong> jurisdictions tracked</span>
+              <span className="st-insight-dot" />
+              <span><strong>{regimeCounts['Licensing'] ?? 0}</strong> require licensing</span>
+              <span className="st-insight-dot" />
+              <span><strong>{regimeCounts['Registration'] ?? 0}</strong> use registration</span>
+              <span className="st-insight-dot" />
+              <span><strong>{regimeCounts['Ban'] ?? 0}</strong> have bans</span>
+            </div>
+            <p className="st-insight-text">
+              RemiDe maps the regulatory landscape for crypto-asset service providers across {safeJurisdictions.length} jurisdictions worldwide.{' '}
+              {travelEnforced > 0 && <><strong>{travelEnforced}</strong> countries enforce the FATF Travel Rule. </>}
+              {stablecoinsLive > 0 && <><strong>{stablecoinsLive}</strong> have live stablecoin frameworks. </>}
+              Use the tabs above to switch between Regulation, Travel Rule, Stablecoin, and CBDC views.
+            </p>
+            <p className="st-insight-disclaimer">
+              Data is sourced from official regulators and public registries. Coverage is expanding continuously — some jurisdictions may have partial data.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Table */}

@@ -73,9 +73,9 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "jurisdictions_select_public"
   ON jurisdictions FOR SELECT USING (true);
 
--- Entities: authenticated read only
-CREATE POLICY "entities_select_authenticated"
-  ON entities FOR SELECT TO authenticated USING (true);
+-- Entities: public read (blur paywall is frontend-only)
+CREATE POLICY "entities_select_public"
+  ON entities FOR SELECT USING (true);
 
 -- Profiles: own data only
 CREATE POLICY "profiles_select_own"
