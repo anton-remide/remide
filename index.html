@@ -3,18 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Track cryptocurrency regulations, VASP licensing, and Travel Rule compliance across 60+ jurisdictions worldwide." />
+    <meta name="description" content="Stablecoin regulatory intelligence — track licensing frameworks, issuer compliance, CBDC projects, and Travel Rule status across 206 countries." />
     <meta name="theme-color" content="#080808" />
+
+    <!-- Open Graph (defaults — overridden per-page by useDocumentMeta) -->
+    <meta property="og:title" content="RemiDe — Stablecoin Intelligence Platform" />
+    <meta property="og:description" content="Stablecoin regulatory intelligence — track licensing frameworks, issuer compliance, CBDC projects, and Travel Rule status across 206 countries." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RemiDe" />
+    <meta property="og:url" content="https://tracker.remide.xyz" />
+    <meta property="og:image" content="https://tracker.remide.xyz/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RemiDe — Stablecoin Intelligence Platform" />
+    <meta name="twitter:description" content="Stablecoin regulatory intelligence — track licensing frameworks, issuer compliance, CBDC projects, and Travel Rule status across 206 countries." />
+    <meta name="twitter:image" content="https://tracker.remide.xyz/og-image.png" />
+
+    <link rel="canonical" href="https://tracker.remide.xyz" />
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./favicon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
-    <title>RemiDe — Global Crypto Registry</title>
+    <title>RemiDe — Stablecoin Intelligence Platform</title>
+
+    <!-- GitHub Pages SPA redirect handler.
+         404.html encodes the path as ?/path — this script restores it. -->
+    <script>
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location));
+    </script>
+
     <!-- Umami Analytics (privacy-friendly, no cookies) -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="SGFpyT9Tl"></script>
-    <script type="module" crossorigin src="./assets/index-DTQFppkM.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/recharts-Dm23rigF.js">
-    <link rel="modulepreload" crossorigin href="./assets/maplibre-CcOhjUbq.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CaucybG0.css">
+    <script type="module" crossorigin src="/assets/index-D_aEGp8L.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/recharts-Dm23rigF.js">
+    <link rel="modulepreload" crossorigin href="/assets/maplibre-CcOhjUbq.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DQYHzTEf.css">
   </head>
   <body>
     <div id="root"></div>
