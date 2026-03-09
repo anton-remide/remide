@@ -102,21 +102,21 @@ export default function SignupPage() {
 
   return (
     <div ref={revealRef} className="st-page" style={{ paddingBottom: 40 }}>
-      {/* Hero tagline */}
-      <div className="reveal st-signup-hero">
-        <h2 style={{ fontFamily: 'var(--font2)', margin: '0 0 8px', fontSize: '1.5rem', lineHeight: 1.25 }}>
-          Stablecoin Regulatory Intelligence
-        </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', margin: 0, lineHeight: 1.5, maxWidth: 520 }}>
-          Track licensing frameworks, entity registries, and compliance status across <strong style={{ color: 'var(--black)' }}>207 jurisdictions</strong>. Built for compliance teams.
-        </p>
-      </div>
-
       <div className="reveal st-signup-layout">
-        {/* Left: Value cards */}
+        {/* Left: Hero tagline + Value cards */}
         <div className="st-signup-offers">
+          {/* Hero tagline — inside left column */}
+          <div className="st-signup-hero">
+            <h2 style={{ fontFamily: 'var(--font2)', margin: '0 0 8px', fontSize: '1.5rem', lineHeight: 1.25 }}>
+              Stablecoin Regulatory Intelligence
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', margin: 0, lineHeight: 1.5 }}>
+              Track licensing frameworks, entity registries, and compliance status across <strong style={{ color: 'var(--black)' }}>207 jurisdictions</strong>. Built for compliance teams.
+            </p>
+          </div>
+
           {/* 1. Free — Instant Unlock */}
-          <div className="st-signup-offer-card">
+          <div className="st-signup-offer-card st-signup-offer-free">
             <h4 className="st-signup-offer-title">
               <Check size={16} style={{ color: '#16a34a' }} />
               Instant Unlock with Registration
