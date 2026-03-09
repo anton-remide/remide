@@ -1242,15 +1242,18 @@ ul {
 .st-table-toolbar-prefix {
   flex: 0 0 auto;
   z-index: 1;
+  order: 1;
 }
 
 .st-table-toolbar-controls {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+  order: 3;
 }
 
 .st-table-toolbar-count {
@@ -1258,6 +1261,7 @@ ul {
   color: var(--text-muted);
   white-space: nowrap;
   z-index: 1;
+  order: 2;
 }
 
 /* ==========================================================================
@@ -2643,6 +2647,10 @@ ul {
   padding-top: calc(var(--header-content-offset) + 48px);
 }
 
+.st-entities-page-title {
+  margin: 0 0 16px;
+}
+
 .st-page-wide {
   max-width: 100%;
   padding: var(--header-content-offset) 0 48px;
@@ -2918,6 +2926,7 @@ a, button, input, select, textarea {
 
   .st-table-toolbar-count {
     font-size: 0.75rem;
+    white-space: normal;
   }
 
   /* --- Pagination compact --- */
@@ -2973,16 +2982,29 @@ a, button, input, select, textarea {
 
   /* --- Map container: shorter on tablet --- */
   .st-map-container {
-    height: 45vh;
-    min-height: 260px;
-    /* Space for mini-stats that overflow below the fixed-height container */
-    margin-bottom: 48px;
+    --st-map-mobile-canvas-height: max(60vh, 340px);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
+  .st-map-container:not(.st-map-container--compact) > .st-map-canvas {
+    height: 60vh;
+    min-height: 340px;
   }
 
   .st-map-container--compact {
+    display: block;
     height: 280px;
     min-height: 180px;
     margin-bottom: 0;
+  }
+
+  .st-map-container--compact > .st-map-canvas {
+    height: 100%;
+    min-height: 0;
   }
 
   /* Clip map canvas for rounded corners (instead of overflow:hidden on container) */
@@ -2998,35 +3020,46 @@ a, button, input, select, textarea {
 
   .st-map-frame {
     border-radius: 8px;
-    /* Allow mini-stats + toggles overlay to overflow outside frame */
-    overflow: visible;
+    overflow: hidden;
   }
 
   .st-map-mini-stats {
-    position: relative;
-    bottom: auto;
-    left: auto;
+    position: static;
     flex-wrap: wrap;
-    padding: 8px 12px 0;
+    padding: 8px 12px 8px;
     justify-content: flex-start;
     z-index: 1;
   }
 
   .st-map-mini-stat {
-    min-width: 70px;
-    padding: 8px 10px;
+    min-width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 999px;
   }
 
   .st-map-mini-stat-value {
-    font-size: 1rem;
+    font-family: var(--font1);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1;
   }
 
   .st-map-mini-stat-label {
-    font-size: 0.5625rem;
+    font-family: var(--font1);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    margin-top: 0;
+    letter-spacing: normal;
+    text-transform: none;
   }
 
   .st-map-legend {
-    top: 8px;
+    top: 56px;
     right: 8px;
     padding: 8px 12px;
     font-size: 0.625rem;
@@ -3037,11 +3070,20 @@ a, button, input, select, textarea {
     padding: 8px 12px;
   }
 
-  /* --- Map toggles overlay: below map on mobile, tight to mini-stats --- */
+  .st-map-zoom-controls {
+    top: calc(var(--st-map-mobile-canvas-height) - 76px);
+    bottom: auto;
+    right: 8px;
+  }
+
+  /* --- Map toggles overlay: keep tabs over the map on mobile --- */
   .st-map-toggles-overlay {
-    position: static;
-    padding: 0 12px 8px;
-    z-index: 2;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 0;
+    z-index: 3;
   }
 
   /* --- Segmented control: full-width on mobile --- */
@@ -3186,6 +3228,23 @@ a, button, input, select, textarea {
     margin-bottom: 4px;
   }
 
+  /* DataTable toolbar: mobile = full-width search, hide "Showing ..." */
+  .st-table-toolbar-count {
+    display: none;
+  }
+
+  .st-table-toolbar-controls {
+    flex: 0 0 100%;
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .st-table-search {
+    width: 100%;
+    max-width: none;
+  }
+
   /* --- Auth form: compact for mobile — fits on one screen --- */
   .st-auth-form {
     padding: 16px 14px;
@@ -3250,9 +3309,15 @@ a, button, input, select, textarea {
 
   /* --- Map: shorter height --- */
   .st-map-container {
-    height: 280px;
-    min-height: 220px;
-    margin-bottom: 48px;
+    --st-map-mobile-canvas-height: max(60vh, 300px);
+    height: auto;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
+  .st-map-container:not(.st-map-container--compact) > .st-map-canvas {
+    height: 60vh;
+    min-height: 300px;
   }
 
   .st-map-container--compact {
@@ -3262,7 +3327,8 @@ a, button, input, select, textarea {
   }
 
   .st-map-zoom-controls {
-    bottom: 8px;
+    top: calc(var(--st-map-mobile-canvas-height) - 84px);
+    bottom: auto;
     right: 8px;
   }
 
@@ -3338,9 +3404,15 @@ a, button, input, select, textarea {
 
   /* --- Map container: phone size --- */
   .st-map-container {
-    height: 250px;
-    min-height: 200px;
-    margin-bottom: 44px;
+    --st-map-mobile-canvas-height: max(60vh, 260px);
+    height: auto;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
+  .st-map-container:not(.st-map-container--compact) > .st-map-canvas {
+    height: 60vh;
+    min-height: 260px;
   }
 
   .st-map-container--compact {
@@ -3539,9 +3611,15 @@ a, button, input, select, textarea {
 
   /* Map container: smallest */
   .st-map-container {
-    height: 220px;
-    min-height: 180px;
-    margin-bottom: 40px;
+    --st-map-mobile-canvas-height: max(60vh, 220px);
+    height: auto;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+
+  .st-map-container:not(.st-map-container--compact) > .st-map-canvas {
+    height: 60vh;
+    min-height: 220px;
   }
 
   .st-map-container--compact {
@@ -3565,17 +3643,17 @@ a, button, input, select, textarea {
   }
 
   .st-map-mini-stat {
-    min-width: 60px;
+    min-width: auto;
     padding: 6px 8px;
     flex-shrink: 0;
   }
 
   .st-map-mini-stat-value {
-    font-size: 0.875rem;
+    font-size: 13px;
   }
 
   .st-map-mini-stat-label {
-    font-size: 0.5rem;
+    font-size: 13px;
   }
 
   /* Legend: even more compact */
@@ -5902,6 +5980,19 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   color: var(--black);
   border-color: rgba(0, 0, 0, 0.18);
   background: #fff;
+}
+
+.st-header-nav-auth > a:nth-child(2) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.st-header-nav-auth > a:nth-child(2):hover,
+.st-header-nav-auth > a:nth-child(2).active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
 }
 
 /* Collapsible search: icon trigger */

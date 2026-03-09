@@ -671,6 +671,7 @@ export default function EntitiesPage() {
 
   return (
     <div ref={revealRef} className="st-page st-page-entities">
+      <h2 className="st-entities-page-title">Browse 10K+ Entities</h2>
       {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} tabSwitcher={tabSwitcher} stats={entityStats ?? null} />}
       {activeTab === 'stablecoins' && <StablecoinsTab codeToName={codeToName} tabSwitcher={tabSwitcher} />}
       {activeTab === 'cbdcs' && <CbdcsTab tabSwitcher={tabSwitcher} />}
