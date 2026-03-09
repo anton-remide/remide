@@ -234,17 +234,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Subscribe */}
-      <section className="st-landing-subscribe-section">
-        <div className="st-landing-container">
-          <div className="st-landing-subscribe reveal">
-            <h3>Stay informed on regulatory developments</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 20, lineHeight: 1.6 }}>
-              Weekly updates on new data sources, regulatory changes, and platform improvements.
-            </p>
-            <form
-              data-testid="landing-subscribe-form"
-              className={`st-landing-subscribe-form${subscribeFocused ? ' is-focused' : ''}${subscribeError ? ' is-error' : ''}${subscribeSent ? ' is-sent' : ''}`}
+	      {/* Subscribe */}
+	      <section className="st-landing-subscribe-section">
+	        <div className="st-landing-container">
+	          <div className="st-landing-subscribe clip-lg reveal">
+	            <h3>Stay informed on regulatory developments</h3>
+	            <p className="st-landing-subscribe-lede">
+	              Weekly updates on new data sources, regulatory changes, and platform improvements.
+	            </p>
+	            <form
+	              data-testid="landing-subscribe-form"
+	              className={`st-landing-subscribe-form${subscribeFocused ? ' is-focused' : ''}${subscribeError ? ' is-error' : ''}${subscribeSent ? ' is-sent' : ''}`}
               onSubmit={handleSubscribeSubmit}
               noValidate
             >
