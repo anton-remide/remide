@@ -169,7 +169,7 @@ export default function SignupPage() {
         {/* Right: Form */}
         <div className="st-signup-form-wrap">
           <form onSubmit={handleSubmit} className="st-auth-form st-auth-form-compact clip-lg">
-            <h3 style={{ fontFamily: 'var(--font2)', margin: '0 0 4px', fontSize: '1.25rem' }}>
+            <h3 style={{ fontFamily: 'var(--font2)', margin: '0 0 4px' }}>
               Create Free Account
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', margin: '0 0 16px', lineHeight: 1.4 }}>

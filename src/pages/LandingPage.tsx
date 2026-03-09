@@ -216,7 +216,7 @@ export default function LandingPage() {
                 <Zap size={14} />
                 Beta Access Available
               </div>
-              <h3>Get full platform access at early-bird pricing</h3>
+              <h2>Get full platform access at early-bird pricing</h2>
               <p>
                 Lock in founder pricing before public launch. One payment covers the entire beta period — including all future data sources and features.
               </p>
@@ -225,7 +225,7 @@ export default function LandingPage() {
                 <span className="st-landing-ea-current">$49</span>
                 <span className="st-landing-ea-label">one-time</span>
               </div>
-              <Link to="/pricing" className="st-landing-ea-cta" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
+              <Link to="/pricing" className="st-btn" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
                 View Pricing Details
                 <ArrowRight size={16} />
               </Link>

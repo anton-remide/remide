@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import MobileMenu from './MobileMenu';
@@ -56,7 +56,7 @@ export default function Header() {
           {/* Left: Logo */}
           <div className="st-header-left">
             <Link to="/" className="st-header-brand" aria-label="RemiDe Home">
-              <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={28} className="st-header-logo st-logo-black" />
+              <img src={`${import.meta.env.BASE_URL}logo-full.svg`} alt="RemiDe" height={32} className="st-header-logo st-logo-black" />
             </Link>
           </div>
 
@@ -118,7 +118,7 @@ export default function Header() {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
-            {menuOpen ? <X size={22} /> : <Search size={20} />}
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </header>

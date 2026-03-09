@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Zap, Clock, Star, ArrowRight, Check, X, Lock,
+  Zap, Clock, Flame, ArrowRight, Check, X, Lock,
   Gift, Bell, TrendingUp, BarChart3,
 } from 'lucide-react';
 import { useReveal } from '../hooks/useAnimations';
@@ -77,10 +77,6 @@ export default function PricingPage() {
       {/* Hero */}
       <section className="st-pricing-hero reveal">
         <div className="st-pricing-container">
-          <div className="st-pricing-hero-badge">
-            <Zap size={14} />
-            Limited Beta Access
-          </div>
           <h1 className="st-pricing-hero-title">
             The Regulatory Intelligence<br />
             Platform Built for Stablecoin<br />
@@ -100,7 +96,7 @@ export default function PricingPage() {
           <div className="st-pricing-card clip-lg reveal">
             <div className="st-pricing-card-header">
               <div className="st-pricing-card-badge">
-                <Star size={14} />
+                <Flame size={14} />
                 Founder Pricing
               </div>
               <div className="st-pricing-card-price">

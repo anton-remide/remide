@@ -20,6 +20,10 @@
   --radius-pill: 9999px;
   --radius-lg: 16px;
   --header-height: 80px;
+  --header-current-height: var(--header-height);
+  --header-content-gap: 48px;
+  --header-content-offset: calc(var(--header-current-height) + var(--header-content-gap));
+  --top-banner-height: 32px;
 
   /* Shadow inspired by react-app.js (used for search/buttons) */
   --shadow-soft: 0 12px 12px 0 rgba(0, 0, 0, 0.09),
@@ -101,6 +105,7 @@ h1, h2, h3 {
   letter-spacing: -0.03em;
   color: var(--black);
   line-height: 1.08;
+  text-transform: uppercase;
 }
 
 h1 { font-size: clamp(2.25rem, 5vw, 3.5rem); }
@@ -2061,7 +2066,7 @@ ul {
    ========================================================================== */
 
 .st-map-section {
-  padding: 104px 32px 48px;
+  padding: var(--header-content-offset) 32px 48px;
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -2631,12 +2636,12 @@ ul {
 .st-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 104px 24px 48px;
+  padding: var(--header-content-offset) 24px 48px;
 }
 
 .st-page-wide {
   max-width: 100%;
-  padding: 80px 0 48px;
+  padding: var(--header-content-offset) 0 48px;
 }
 
 /* ==========================================================================
@@ -2984,7 +2989,7 @@ a, button, input, select, textarea {
 
   /* --- Map --- */
   .st-map-section {
-    padding: 88px 12px 32px;
+    padding: var(--header-content-offset) 12px 32px;
   }
 
   .st-map-frame {
@@ -3069,7 +3074,7 @@ a, button, input, select, textarea {
 
   /* --- Page container --- */
   .st-page {
-    padding: 80px 16px 40px;
+    padding: var(--header-content-offset) 16px 40px;
   }
 
   /* --- Breadcrumb --- */
@@ -3164,12 +3169,10 @@ a, button, input, select, textarea {
 /* ===== SMALL TABLET / LARGE PHONE: max-width 600px ===== */
 @media (max-width: 600px) {
   h2 {
-    font-size: 1.375rem;
+    font-size: 1.5rem;
   }
 
-  h3 {
-    font-size: 1.125rem;
-  }
+  h3 { font-size: 1.375rem; }
 
   .st-section-title {
     margin-bottom: 16px;
@@ -3274,12 +3277,10 @@ a, button, input, select, textarea {
   }
 
   h2 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 
-  h3 {
-    font-size: 1.0625rem;
-  }
+  h3 { font-size: 1.375rem; }
 
   body {
     font-size: 15px;
@@ -3346,7 +3347,7 @@ a, button, input, select, textarea {
 
   /* --- Map section edge-to-edge --- */
   .st-map-section {
-    padding: 88px 0 24px;
+    padding: var(--header-content-offset) 0 24px;
   }
 
   .st-map-frame {
@@ -3387,7 +3388,7 @@ a, button, input, select, textarea {
 
   /* --- Page container tighter --- */
   .st-page {
-    padding: 72px 12px 32px;
+    padding: var(--header-content-offset) 12px 32px;
   }
 
   /* --- Filter pills: scrollable --- */
@@ -3422,12 +3423,10 @@ a, button, input, select, textarea {
   }
 
   h2 {
-    font-size: 1.125rem;
+    font-size: 1.375rem;
   }
 
-  h3 {
-    font-size: 1rem;
-  }
+  h3 { font-size: 1.375rem; }
 
   .st-hero {
     padding: 96px 12px 20px;
@@ -3584,7 +3583,7 @@ a, button, input, select, textarea {
 
   /* Page container: minimal padding */
   .st-page {
-    padding: 68px 10px 24px;
+    padding: var(--header-content-offset) 10px 24px;
   }
 
   /* Breadcrumb */
@@ -4462,7 +4461,7 @@ a, button, input, select, textarea {
    ========================================================================== */
 
 .st-pricing-page {
-  padding-bottom: 80px;
+  padding: var(--header-content-offset) 0 80px;
 }
 
 .st-pricing-container {
@@ -4494,22 +4493,6 @@ a, button, input, select, textarea {
 .st-pricing-hero {
   text-align: center;
   padding: 72px 24px 48px;
-}
-
-.st-pricing-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-  border: 1px solid #FDBA74;
-  border-radius: 99px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #9A3412;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 24px;
 }
 
 .st-pricing-hero-title {
@@ -4547,16 +4530,23 @@ a, button, input, select, textarea {
 }
 
 .st-pricing-card-badge {
+  --pricing-main-green: #5FDC4C;
+  --pricing-green-200: color-mix(in oklch, var(--pricing-main-green) 35%, white);
+  --pricing-green-300: color-mix(in oklch, var(--pricing-main-green) 48%, white);
+  --pricing-green-800: color-mix(in oklch, var(--pricing-main-green) 46%, black);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 5px 14px;
-  background: #FFF8EB;
-  border: 1px solid #FBBF24;
+  background: #EAF9E6;
+  background: var(--pricing-green-200);
+  border: 1px solid #CFEFC8;
+  border-color: var(--pricing-green-300);
   border-radius: 99px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #92610B;
+  color: #2A6B21;
+  color: var(--pricing-green-800);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 20px;
@@ -4824,7 +4814,7 @@ thead .st-pricing-col-highlight {
 
 .st-pricing-demo-content h3 {
   font-family: var(--font2);
-  font-size: 1.25rem;
+  font-size: 1.375rem;
   margin-bottom: 12px;
   color: var(--black);
 }
@@ -5080,7 +5070,7 @@ thead .st-pricing-col-highlight {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  margin-top: 80px;
+  margin-top: var(--header-content-offset);
   padding: 80px 0 64px;
   background: linear-gradient(180deg, #F6F2EE 0%, #F7F3EF 62%, #F6F2EE 100%);
   text-align: center;
@@ -5269,7 +5259,12 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-early-access-card {
-  background: linear-gradient(135deg, #0A2540 0%, #1A3A5C 100%);
+  background-color: var(--black);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 8px 8px;
+  background-position: 0 0;
   padding: 48px 40px;
   text-align: center;
   color: #ffffff;
@@ -5298,22 +5293,21 @@ thead .st-pricing-col-highlight {
   margin-bottom: 20px;
 }
 
-.st-landing-early-access-card h3 {
-  font-family: 'Doto', monospace;
-  font-size: clamp(1.25rem, 3vw, 1.5rem);
-  font-weight: 700;
+.st-landing-early-access-card h2 {
   margin: 0 0 12px;
   color: #ffffff;
 }
 
 .st-landing-early-access-card p {
-  font-size: 0.9375rem;
+  font-family: var(--font1);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
   color: rgba(255, 255, 255, 0.7);
   margin: 0 0 24px;
   max-width: 480px;
   margin-left: auto;
   margin-right: auto;
-  line-height: 1.6;
 }
 
 .st-landing-ea-price {
@@ -5341,30 +5335,6 @@ thead .st-pricing-col-highlight {
 .st-landing-ea-label {
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.6);
-}
-
-.st-landing-ea-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 48px;
-  padding: 0 32px;
-  background: #FF5F0F;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.st-landing-ea-cta:hover {
-  background: #E64E00;
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(255, 95, 15, 0.35);
 }
 
 @media (max-width: 768px) {
@@ -5410,14 +5380,6 @@ thead .st-pricing-col-highlight {
   text-align: center;
 }
 
-.st-landing-v2 .st-landing-section-header h2 {
-  font-family: var(--font2);
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.1;
-  text-transform: uppercase;
-}
-
 .st-landing-v2 .st-landing-subscribe {
   display: flex;
   flex-direction: column;
@@ -5434,13 +5396,8 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2 .st-landing-subscribe h3 {
   text-align: center;
-  font-family: var(--font1);
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--landing-text);
-  margin: 0;
-  letter-spacing: -0.01em;
-  text-transform: none;
+  color: var(--black);
+  margin: 0 0 12px;
 }
 
 .st-landing-v2 .st-landing-subscribe-lede {
@@ -5598,12 +5555,20 @@ thead .st-pricing-col-highlight {
   }
 
   .st-landing-v2 .st-hero {
-    margin-top: 72px;
+    margin-top: var(--header-content-offset);
     padding: 72px 0 56px;
   }
 
   .st-landing-v2 .st-hero-inner {
     width: min(1200px, calc(100% - (var(--landing-content-gutter) * 2)));
+  }
+
+  .st-landing-v2 .st-stats-section,
+  .st-landing-v2-features,
+  .st-landing-v2 .st-landing-subscribe-section,
+  .st-landing-early-access {
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .st-landing-v2 .st-stats-section {
@@ -5621,11 +5586,11 @@ thead .st-pricing-col-highlight {
 
 @media (max-width: 767px) {
   .st-landing-v2 {
-    --landing-content-gutter: 12px;
+    --landing-content-gutter: 16px;
   }
 
   .st-landing-v2 .st-hero {
-    margin-top: 72px;
+    margin-top: var(--header-content-offset);
     padding: 64px 0 24px;
   }
 
@@ -5656,16 +5621,16 @@ thead .st-pricing-col-highlight {
   }
 
   .st-landing-v2 .st-stats-section {
-    padding: 0 16px 48px;
+    padding: 0 0 48px;
   }
 
   .st-landing-v2-features {
-    padding: 0 16px 56px;
+    padding: 0 0 56px;
   }
 
   .st-landing-v2 .st-landing-subscribe-section {
     /* C3 audit fix: extra bottom padding for sticky bar overlap (~60px) */
-    padding: 0 16px 80px;
+    padding: 0 0 80px;
   }
 
   .st-landing-v2 .st-landing-stats-grid {
@@ -5686,8 +5651,8 @@ thead .st-pricing-col-highlight {
 
   .st-landing-v2 .st-landing-subscribe h3 {
     text-align: center;
-    font-size: 1rem;
-    margin-bottom: 12px;
+    color: var(--black);
+    margin: 0 0 12px;
   }
 
   .st-landing-v2 .st-landing-subscribe-form {
@@ -5755,6 +5720,7 @@ thead .st-pricing-col-highlight {
   z-index: 1001;
   background: var(--black);
   color: #fff;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .st-top-banner-inner {
@@ -5762,8 +5728,8 @@ thead .st-pricing-col-highlight {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 6px 24px;
   min-height: 32px;
+  padding: 6px 24px;
   max-width: 100%;
 }
 
@@ -5790,6 +5756,14 @@ thead .st-pricing-col-highlight {
   text-decoration: underline;
 }
 
+@media (max-width: 1024px) {
+  .st-top-banner-text a {
+    display: block;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+}
+
 /* ==========================================================================
    Header + Footer V2 (prototype-aligned, existing component structure)
    ========================================================================== */
@@ -5809,16 +5783,26 @@ thead .st-pricing-col-highlight {
 }
 
 /* Push header below the top banner when it's present */
+.st-top-banner + .st-header,
 body:has(.st-top-banner) .st-header {
-  top: 32px;
+  top: var(--top-banner-height);
 }
 
 /* Shift main content down when banner is visible */
 body:has(.st-top-banner) .st-page {
-  padding-top: 136px;
+  padding-top: calc(var(--header-content-offset) + var(--top-banner-height));
 }
 body:has(.st-top-banner) .st-map-section {
-  padding-top: 136px;
+  padding-top: calc(var(--header-content-offset) + var(--top-banner-height));
+}
+body:has(.st-top-banner) .st-page-wide {
+  padding-top: calc(var(--header-content-offset) + var(--top-banner-height));
+}
+body:has(.st-top-banner) .st-pricing-page {
+  padding-top: calc(var(--header-content-offset) + var(--top-banner-height));
+}
+body:has(.st-top-banner) .st-landing-v2 .st-hero {
+  margin-top: calc(var(--header-content-offset) + var(--top-banner-height));
 }
 
 .st-header.scrolled {
@@ -5850,7 +5834,7 @@ body:has(.st-top-banner) .st-map-section {
 }
 
 .st-header-logo {
-  height: 28px;
+  height: 32px;
   width: auto;
   border-radius: 0;
 }
@@ -6088,6 +6072,10 @@ body:has(.st-top-banner) .st-map-section {
 }
 
 @media (max-width: 991px) {
+  :root {
+    --header-current-height: 72px;
+  }
+
   .st-header {
     height: 72px;
   }
