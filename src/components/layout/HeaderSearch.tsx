@@ -12,7 +12,8 @@ export default function HeaderSearch() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [expanded, setExpanded] = useState(false);
+  // Keep header search expanded (regression: collapsed into a center icon)
+  const [expanded] = useState(true);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -22,7 +23,6 @@ export default function HeaderSearch() {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setExpanded(true);
         setTimeout(() => inputRef.current?.focus(), 50);
       }
     };
@@ -80,11 +80,10 @@ export default function HeaderSearch() {
     return () => clearTimeout(timerRef.current);
   }, [query]);
 
-  // Click outside: close dropdown AND collapse search if query is empty
+  // Click outside: close dropdown
   const closeDropdown = useCallback(() => {
     setOpen(false);
-    if (!query.trim()) setExpanded(false);
-  }, [query]);
+  }, []);
   useClickOutside(wrapperRef, closeDropdown);
 
   const handleSelect = (path: string) => {
@@ -97,7 +96,6 @@ export default function HeaderSearch() {
     const items = flatItems();
     if (e.key === 'Escape') {
       setOpen(false);
-      setExpanded(false);
       setQuery('');
       inputRef.current?.blur();
     } else if (e.key === 'ArrowDown') {
@@ -121,42 +119,27 @@ export default function HeaderSearch() {
 
   const hasResults = results && (results.jurisdictions.length > 0 || results.entities.length > 0);
 
-  const handleExpand = () => {
-    setExpanded(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  };
-
   return (
     <div ref={wrapperRef} className={`st-header-search-wrapper${expanded ? ' expanded' : ''}`}>
-      {!expanded ? (
-        <button
-          className="st-header-search-trigger"
-          onClick={handleExpand}
-          aria-label="Open search"
-        >
-          <Search size={16} />
-        </button>
-      ) : (
-        <div className="st-header-search">
-          <Search size={14} className="st-header-search-icon" />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Search VASP or Jurisdiction..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => { if (results) setOpen(true); }}
-            onKeyDown={handleKeyDown}
-            className="st-header-search-input"
-            autoComplete="off"
-            role="combobox"
-            aria-expanded={open}
-            aria-controls="header-search-listbox"
-            aria-activedescendant={activeIndex >= 0 ? `search-item-${activeIndex}` : undefined}
-          />
-          {loading && <div className="st-header-search-spinner" />}
-        </div>
-      )}
+      <div className="st-header-search">
+        <Search size={14} className="st-header-search-icon" />
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Search VASP or Jurisdiction..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => { if (results) setOpen(true); }}
+          onKeyDown={handleKeyDown}
+          className="st-header-search-input"
+          autoComplete="off"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="header-search-listbox"
+          aria-activedescendant={activeIndex >= 0 ? `search-item-${activeIndex}` : undefined}
+        />
+        {loading && <div className="st-header-search-spinner" />}
+      </div>
 
       {open && results && (
         <div className="st-search-dropdown" id="header-search-listbox" role="listbox">

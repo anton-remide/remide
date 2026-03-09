@@ -60,7 +60,7 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Center: Search icon */}
+          {/* Center: Search */}
           <div className="st-header-center">
             <HeaderSearch />
           </div>
