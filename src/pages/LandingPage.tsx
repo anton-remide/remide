@@ -238,7 +238,7 @@ export default function LandingPage() {
 	      <section className="st-landing-subscribe-section">
 	        <div className="st-landing-container">
 	          <div className="st-landing-subscribe clip-lg reveal">
-	            <h3>Stay informed on regulatory developments</h3>
+	            <h2>Stay informed on regulatory developments</h2>
 	            <p className="st-landing-subscribe-lede">
 	              Weekly updates on new data sources, regulatory changes, and platform improvements.
 	            </p>

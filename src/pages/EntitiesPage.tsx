@@ -670,7 +670,7 @@ export default function EntitiesPage() {
   );
 
   return (
-    <div ref={revealRef} className="st-page" style={{ paddingTop: 100 }}>
+    <div ref={revealRef} className="st-page st-page-entities">
       {activeTab === 'vasps' && <VaspsTab searchQuery={initialSearch} tabSwitcher={tabSwitcher} stats={entityStats ?? null} />}
       {activeTab === 'stablecoins' && <StablecoinsTab codeToName={codeToName} tabSwitcher={tabSwitcher} />}
       {activeTab === 'cbdcs' && <CbdcsTab tabSwitcher={tabSwitcher} />}

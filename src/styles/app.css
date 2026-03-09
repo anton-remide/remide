@@ -2639,6 +2639,10 @@ ul {
   padding: var(--header-content-offset) 24px 48px;
 }
 
+.st-page.st-page-entities {
+  padding-top: calc(var(--header-content-offset) + 48px);
+}
+
 .st-page-wide {
   max-width: 100%;
   padding: var(--header-content-offset) 0 48px;
@@ -5242,7 +5246,7 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2 .st-landing-stat-label {
   font-family: var(--font1);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--color-text-secondary);
   text-transform: none;
@@ -5394,7 +5398,7 @@ thead .st-pricing-col-highlight {
   background: rgba(141, 141, 134, 0.05);
 }
 
-.st-landing-v2 .st-landing-subscribe h3 {
+.st-landing-v2 .st-landing-subscribe h2 {
   text-align: center;
   color: var(--black);
   margin: 0 0 12px;
@@ -5599,7 +5603,7 @@ thead .st-pricing-col-highlight {
   }
 
   .st-landing-v2 .st-hero h1 {
-    font-size: clamp(2.05rem, 9vw, 3rem);
+    font-size: clamp(2.665rem, 11.7vw, 3.9rem);
   }
 
   .st-landing-v2 .st-hero p {
@@ -5649,7 +5653,7 @@ thead .st-pricing-col-highlight {
     padding: 20px;
   }
 
-  .st-landing-v2 .st-landing-subscribe h3 {
+  .st-landing-v2 .st-landing-subscribe h2 {
     text-align: center;
     color: var(--black);
     margin: 0 0 12px;
@@ -5791,6 +5795,9 @@ body:has(.st-top-banner) .st-header {
 /* Shift main content down when banner is visible */
 body:has(.st-top-banner) .st-page {
   padding-top: calc(var(--header-content-offset) + var(--top-banner-height));
+}
+body:has(.st-top-banner) .st-page.st-page-entities {
+  padding-top: calc(var(--header-content-offset) + var(--top-banner-height) + 48px);
 }
 body:has(.st-top-banner) .st-map-section {
   padding-top: calc(var(--header-content-offset) + var(--top-banner-height));
@@ -5991,6 +5998,11 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 32px;
+}
+
+#root > div > footer > div,
+#root > div > footer > div * {
+  font-size: 12px;
 }
 
 .st-footer-links {
