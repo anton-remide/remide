@@ -25,7 +25,7 @@ describe('MobileMenu', () => {
     );
 
     expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /register/i })).toBeInTheDocument();
   });
 
   it('shows sign out when authenticated', () => {

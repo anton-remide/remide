@@ -1846,23 +1846,6 @@ ul {
   }
 }
 
-.st-demo-hint {
-  background: rgba(10, 37, 64, 0.04);
-  border: 1px solid rgba(10, 37, 64, 0.1);
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-
-.st-demo-hint strong {
-  color: var(--black);
-  font-weight: 600;
-}
-
 .st-auth-error {
   background: #FFF0F0;
   color: #A93F3F;
@@ -1954,7 +1937,7 @@ ul {
    ========================================================================== */
 
 .st-map-section {
-  padding: 88px 32px 48px;
+  padding: 104px 32px 48px;
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -2182,13 +2165,13 @@ ul {
 .st-entity-stats-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .st-entity-stats-bar.st-region-bar {
-  margin-top: -4px;
-  margin-bottom: 16px;
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
 .st-entity-stat-chip {
@@ -2877,7 +2860,7 @@ a, button, input, select, textarea {
 
   /* --- Map --- */
   .st-map-section {
-    padding: 72px 12px 32px;
+    padding: 88px 12px 32px;
   }
 
   .st-map-frame {
@@ -3052,21 +3035,6 @@ a, button, input, select, textarea {
     flex: 1;
   }
 
-  /* --- Sticky bottom bar: compact on mobile --- */
-  .st-sticky-bar-row {
-    padding: 4px 12px;
-    flex-wrap: nowrap;
-    gap: 6px;
-  }
-
-  .st-sticky-bar-cookies {
-    padding: 6px 12px;
-  }
-
-  .st-sticky-bar-text {
-    font-size: 0.6875rem;
-    text-align: center;
-  }
 }
 
 /* ===== SMALL TABLET / LARGE PHONE: max-width 600px ===== */
@@ -3254,7 +3222,7 @@ a, button, input, select, textarea {
 
   /* --- Map section edge-to-edge --- */
   .st-map-section {
-    padding: 72px 0 24px;
+    padding: 88px 0 24px;
   }
 
   .st-map-frame {
@@ -3523,14 +3491,6 @@ a, button, input, select, textarea {
     gap: 6px;
   }
 
-  /* Sticky bar */
-  .st-sticky-bar-row {
-    padding: 4px 8px;
-  }
-
-  .st-sticky-bar-text {
-    font-size: 0.625rem;
-  }
 }
 
 /* ==========================================================================
@@ -4977,99 +4937,6 @@ thead .st-pricing-col-highlight {
 }
 
 /* ==========================================================================
-   Sticky Bottom Bar (WIP disclaimer + Cookie consent)
-   ========================================================================== */
-
-.st-sticky-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 900;
-  display: flex;
-  flex-direction: column;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border);
-  font-family: var(--font1);
-}
-
-.st-sticky-bar-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 8px 24px;
-  min-height: 36px;
-}
-
-.st-sticky-bar-row + .st-sticky-bar-row {
-  border-top: 1px solid var(--border);
-}
-
-.st-sticky-bar-text {
-  font-size: 0.75rem;
-  font-style: italic;
-  color: var(--text-muted);
-  letter-spacing: 0.01em;
-}
-
-.st-sticky-bar-text a {
-  color: var(--text-muted);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  font-weight: 500;
-}
-
-.st-sticky-bar-text a:hover {
-  color: var(--black);
-}
-
-.st-sticky-bar-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 150ms;
-}
-
-.st-sticky-bar-close:hover {
-  opacity: 1;
-}
-
-.st-sticky-bar-accept {
-  flex-shrink: 0;
-  height: 24px;
-  padding: 0 12px;
-  font-family: var(--font1);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--white);
-  background: var(--black);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: opacity 150ms;
-}
-
-.st-sticky-bar-accept:hover {
-  opacity: 0.85;
-}
-
-.st-sticky-bar-cookies .st-sticky-bar-text {
-  font-style: normal;
-}
-
-/* ==========================================================================
    Landing V2 (imported style adaptation from external React prototype)
    ========================================================================== */
 
@@ -5832,6 +5699,14 @@ body:has(.st-top-banner) .st-header {
   top: 32px;
 }
 
+/* Shift main content down when banner is visible */
+body:has(.st-top-banner) .st-page {
+  padding-top: 136px;
+}
+body:has(.st-top-banner) .st-map-section {
+  padding-top: 136px;
+}
+
 .st-header.scrolled {
   background: transparent;
   background-color: transparent;
@@ -5841,7 +5716,7 @@ body:has(.st-top-banner) .st-header {
 }
 
 .st-header-inner {
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto 1fr;
   width: 100%;
   height: 100%;
   margin: 0;

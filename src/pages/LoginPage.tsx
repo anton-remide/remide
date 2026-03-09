@@ -29,9 +29,8 @@ export default function LoginPage() {
     }
   }, [user, navigate, from]);
 
-  // Demo credentials pre-filled for easy access
-  const [email, setEmail] = useState('test@remide.dev');
-  const [password, setPassword] = useState('TestPass123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -52,7 +51,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div ref={revealRef} className="st-page" style={{ paddingTop: 80, paddingBottom: 80 }}>
+    <div ref={revealRef} className="st-page" style={{ paddingBottom: 80 }}>
       <div className="reveal" style={{ maxWidth: 440, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8 }}>Sign In</h2>
@@ -62,10 +61,6 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="st-auth-form clip-lg">
-          <div className="st-demo-hint">
-            <strong>Demo access</strong> — credentials are pre-filled. Just click Sign In.
-          </div>
-
           {error && (
             <div className="st-auth-error">{error}</div>
           )}

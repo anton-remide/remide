@@ -101,7 +101,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-page" style={{ paddingTop: 80, paddingBottom: 40 }}>
+    <div ref={revealRef} className="st-page" style={{ paddingBottom: 40 }}>
       <div className="reveal st-signup-layout">
         {/* Left: Form */}
         <div className="st-signup-form-wrap">
