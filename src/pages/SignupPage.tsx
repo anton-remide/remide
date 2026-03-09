@@ -102,6 +102,16 @@ export default function SignupPage() {
 
   return (
     <div ref={revealRef} className="st-page" style={{ paddingBottom: 40 }}>
+      {/* Hero tagline */}
+      <div className="reveal st-signup-hero">
+        <h2 style={{ fontFamily: 'var(--font2)', margin: '0 0 8px', fontSize: '1.5rem', lineHeight: 1.25 }}>
+          Stablecoin Regulatory Intelligence
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', margin: 0, lineHeight: 1.5, maxWidth: 520 }}>
+          Track licensing frameworks, entity registries, and compliance status across <strong style={{ color: 'var(--black)' }}>207 jurisdictions</strong>. Built for compliance teams.
+        </p>
+      </div>
+
       <div className="reveal st-signup-layout">
         {/* Left: Form */}
         <div className="st-signup-form-wrap">

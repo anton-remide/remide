@@ -83,4 +83,12 @@ describe('MobileMenu', () => {
     expect(container.querySelector('.st-mobile-menu.open')).not.toBeInTheDocument();
     expect(container.querySelector('.st-mobile-menu')).toBeInTheDocument();
   });
+
+  it('renders search input when open', () => {
+    renderWithProviders(
+      <MobileMenu open={true} onClose={vi.fn()} links={defaultLinks} user={null} onSignOut={vi.fn()} />,
+    );
+
+    expect(screen.getByPlaceholderText(/search vasp or jurisdiction/i)).toBeInTheDocument();
+  });
 });
