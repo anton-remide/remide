@@ -43,8 +43,9 @@ export default function AuthCallbackPage() {
           }
         }
 
-        // Redirect to home or saved destination
-        navigate('/', { replace: true });
+        // Redirect to welcome page (first-time) or home (returning)
+        const welcomed = localStorage.getItem('remide_welcome_shown');
+        navigate(welcomed ? '/' : '/welcome', { replace: true });
       } catch {
         setError('An unexpected error occurred during confirmation.');
       }

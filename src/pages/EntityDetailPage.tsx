@@ -11,7 +11,8 @@ import { trackEvent } from '../utils/analytics';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
-import PaywallOverlay from '../components/ui/PaywallOverlay';
+import PaywallGate from '../components/ui/PaywallGate';
+import FloatingPaywallCTA from '../components/ui/FloatingPaywallCTA';
 
 export default function EntityDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,11 +42,11 @@ export default function EntityDetailPage() {
   useEffect(() => {
     if (id) {
       trackEvent('entity_detail_view', { id });
-      if (isAnonymous) {
-        trackEvent('paywall_shown', { page: `/entities/${id}`, type: 'entity' });
+      if (!hasFullAccess) {
+        trackEvent('paywall_shown', { page: `/entities/${id}`, type: 'entity', tier: isAnonymous ? 'anonymous' : 'registered' });
       }
     }
-  }, [id, isAnonymous]);
+  }, [id, isAnonymous, hasFullAccess]);
 
   // Fetch related data once we have the entity
   const jurisdictionFetcher = useCallback(
@@ -64,6 +65,18 @@ export default function EntityDetailPage() {
     () => (allRelated ?? []).filter((e) => e.id !== entity?.id).slice(0, 10),
     [allRelated, entity?.id],
   );
+
+  // Count premium items for CTA messaging
+  const premiumCount = useMemo(() => {
+    let count = 0;
+    if (entity?.licenseNumber) count++;
+    if (entity?.website) count++;
+    if (entity?.registryUrl) count++;
+    if (entity?.linkedinUrl) count++;
+    if (entity?.twitterUrl) count++;
+    count += related.length;
+    return count;
+  }, [entity, related]);
 
   if (loading) {
     return (
@@ -104,6 +117,7 @@ export default function EntityDetailPage() {
         ]} />
       </div>
 
+      {/* ── Header — always visible for SEO + preview ── */}
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
         <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>
           {entity.name}
@@ -123,14 +137,14 @@ export default function EntityDetailPage() {
         </div>
       </div>
 
-      {/* Description */}
+      {/* ── Description — always visible ── */}
       {entity.description && (
         <div className="reveal" style={{ marginBottom: 28 }}>
           <p style={{ color: 'var(--text)', lineHeight: 1.65, fontSize: '0.9375rem' }}>{entity.description}</p>
         </div>
       )}
 
-      {/* Info card — always visible (free data) */}
+      {/* ── Info card — basic fields always visible, premium fields shown but gated ── */}
       <div className="reveal st-info-card clip-lg" style={{ marginBottom: 32 }}>
         <div className="st-info-row">
           <span className="st-info-label">Country</span>
@@ -148,91 +162,145 @@ export default function EntityDetailPage() {
           <span className="st-info-label">License Type</span>
           <span className="st-info-value">{entity.licenseType || '—'}</span>
         </div>
-        {!hasFullAccess ? (
-          /* Show teaser for paid fields */
-          <div className="st-info-row" style={{ opacity: 0.5 }}>
-            <span className="st-info-label">License Number</span>
-            <span className="st-info-value" style={{ filter: 'blur(4px)', userSelect: 'none' }}>ABC-12345-XX</span>
-          </div>
-        ) : (
-          <div className="st-info-row">
-            <span className="st-info-label">License Number</span>
+        {/* License Number — blurred teaser for non-paid, real for paid */}
+        <div className="st-info-row">
+          <span className="st-info-label">License Number</span>
+          {hasFullAccess ? (
             <span className="st-info-value">{entity.licenseNumber || '—'}</span>
-          </div>
-        )}
-        {hasFullAccess && entity.website && /^https?:\/\//.test(entity.website) && (
+          ) : (
+            <span className="st-info-value st-blur-value" style={{ opacity: 0.6 }}>
+              {entity.licenseNumber || 'LIC-2024-XXXX'}
+            </span>
+          )}
+        </div>
+        {/* Website — show blurred for non-paid */}
+        {entity.website && /^https?:\/\//.test(entity.website) && (
           <div className="st-info-row">
             <span className="st-info-label">Website</span>
-            <span className="st-info-value">
-              <a href={entity.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {hasFullAccess ? (
+              <span className="st-info-value">
+                <a href={entity.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {entity.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  <ExternalLink size={12} />
+                </a>
+              </span>
+            ) : (
+              <span className="st-info-value st-blur-value" style={{ opacity: 0.6 }}>
                 {entity.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                <ExternalLink size={12} />
-              </a>
-            </span>
+              </span>
+            )}
           </div>
         )}
-        {hasFullAccess && entity.registryUrl && (
+        {/* Registry — show blurred for non-paid */}
+        {entity.registryUrl && (
           <div className="st-info-row">
             <span className="st-info-label">Registry</span>
-            <span className="st-info-value">
-              <a href={entity.registryUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {hasFullAccess ? (
+              <span className="st-info-value">
+                <a href={entity.registryUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  Verify license
+                  <ExternalLink size={12} />
+                </a>
+              </span>
+            ) : (
+              <span className="st-info-value st-blur-value" style={{ opacity: 0.6 }}>
                 Verify license
-                <ExternalLink size={12} />
-              </a>
-            </span>
+              </span>
+            )}
           </div>
         )}
-        {hasFullAccess && entity.linkedinUrl && (
+        {/* LinkedIn — show blurred for non-paid */}
+        {entity.linkedinUrl && (
           <div className="st-info-row">
             <span className="st-info-label">LinkedIn</span>
-            <span className="st-info-value">
-              <a href={entity.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Linkedin size={14} />
-                Company page
-                <ExternalLink size={12} />
-              </a>
-            </span>
+            {hasFullAccess ? (
+              <span className="st-info-value">
+                <a href={entity.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Linkedin size={14} />
+                  Company page
+                  <ExternalLink size={12} />
+                </a>
+              </span>
+            ) : (
+              <span className="st-info-value st-blur-value" style={{ opacity: 0.6 }}>
+                <Linkedin size={14} /> Company page
+              </span>
+            )}
           </div>
         )}
-        {hasFullAccess && entity.twitterUrl && (
+        {/* Twitter — show blurred for non-paid */}
+        {entity.twitterUrl && (
           <div className="st-info-row">
             <span className="st-info-label">Twitter / X</span>
-            <span className="st-info-value">
-              <a href={entity.twitterUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Twitter size={14} />
-                @{entity.twitterUrl.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\//, '')}
-                <ExternalLink size={12} />
-              </a>
-            </span>
+            {hasFullAccess ? (
+              <span className="st-info-value">
+                <a href={entity.twitterUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Twitter size={14} />
+                  @{entity.twitterUrl.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\//, '')}
+                  <ExternalLink size={12} />
+                </a>
+              </span>
+            ) : (
+              <span className="st-info-value st-blur-value" style={{ opacity: 0.6 }}>
+                <Twitter size={14} /> @{entity.twitterUrl.replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\//, '').slice(0, 3)}...
+              </span>
+            )}
           </div>
         )}
       </div>
 
-      {/* ── Activities & Entity Types — visible for registered+ ── */}
-      {hasAccess && entity.activities.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 28 }}>
-          <h6 className="st-section-label" style={{ marginBottom: 12 }}>Activities</h6>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {entity.activities.map((a) => (
-              <span key={a} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, height: 26, fontSize: '0.75rem' }}>
-                {a}
-              </span>
-            ))}
+      {/* ── Activities — visible for registered+, blurred for anonymous ── */}
+      {entity.activities.length > 0 && (
+        hasAccess ? (
+          <div className="reveal" style={{ marginBottom: 28 }}>
+            <h6 className="st-section-label" style={{ marginBottom: 12 }}>Activities</h6>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {entity.activities.map((a) => (
+                <span key={a} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, height: 26, fontSize: '0.75rem' }}>
+                  {a}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="reveal" style={{ marginBottom: 28 }}>
+            <h6 className="st-section-label" style={{ marginBottom: 12 }}>Activities</h6>
+            <div className="st-blur-value" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {entity.activities.map((a) => (
+                <span key={a} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, height: 26, fontSize: '0.75rem' }}>
+                  {a}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
       )}
 
-      {hasAccess && entity.entityTypes.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 className="st-section-label" style={{ marginBottom: 12 }}>Entity Types</h6>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {entity.entityTypes.map((t) => (
-              <span key={t} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, height: 26, fontSize: '0.75rem' }}>
-                {t}
-              </span>
-            ))}
+      {/* ── Entity Types — visible for registered+, blurred for anonymous ── */}
+      {entity.entityTypes.length > 0 && (
+        hasAccess ? (
+          <div className="reveal" style={{ marginBottom: 32 }}>
+            <h6 className="st-section-label" style={{ marginBottom: 12 }}>Entity Types</h6>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {entity.entityTypes.map((t) => (
+                <span key={t} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, height: 26, fontSize: '0.75rem' }}>
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="reveal" style={{ marginBottom: 32 }}>
+            <h6 className="st-section-label" style={{ marginBottom: 12 }}>Entity Types</h6>
+            <div className="st-blur-value" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {entity.entityTypes.map((t) => (
+                <span key={t} className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 500, height: 26, fontSize: '0.75rem' }}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        )
       )}
 
       {/* ── Premium divider — for non-paid users ── */}
@@ -242,46 +310,59 @@ export default function EntityDetailPage() {
         </div>
       )}
 
-      {/* ── Paywall overlay for anonymous (signup) or registered (upgrade) ── */}
-      {isAnonymous ? (
-        <PaywallOverlay
-          title={`Unlock ${entity.name} Full Profile`}
-          count={entity.activities.length + entity.entityTypes.length + related.length}
-          noun="data records"
-          variant="signup"
-        />
-      ) : !hasFullAccess ? (
-        <PaywallOverlay
-          title={`Unlock ${entity.name} Premium Data`}
-          count={related.length + 1}
-          noun="premium records"
-          variant="upgrade"
-        />
-      ) : null}
-
-      {/* ── Related Entities — paid only ── */}
-      {hasFullAccess && related.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h6>
-              Other entities in {entity.country}
-              {jurisdiction && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8125rem' }}> · {jurisdiction.entityCount} total</span>}
-            </h6>
-            {jurisdiction && jurisdiction.entityCount > 11 && (
-              <Link to={`/jurisdictions/${entity.countryCode}`} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                View all →
-              </Link>
-            )}
+      {/* ── Related Entities — shown blurred via PaywallGate for non-paid ── */}
+      {related.length > 0 && (
+        <PaywallGate
+          locked={!hasFullAccess}
+          title={isAnonymous ? `Unlock ${entity.name} Full Profile` : `Unlock ${entity.name} Premium Data`}
+          count={premiumCount}
+          noun="premium data fields"
+          variant={isAnonymous ? 'signup' : 'upgrade'}
+        >
+          <div className="reveal" style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h6>
+                Other entities in {entity.country}
+                {jurisdiction && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8125rem' }}> · {jurisdiction.entityCount} total</span>}
+              </h6>
+              {jurisdiction && jurisdiction.entityCount > 11 && (
+                <Link to={`/jurisdictions/${entity.countryCode}`} style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                  View all →
+                </Link>
+              )}
+            </div>
+            <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
+              {related.map((r) => (
+                <Link key={r.id} to={`/entities/${r.id}`} className="st-related-link">
+                  {r.name}
+                </Link>
+              ))}
+            </div>
           </div>
-          <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
-            {related.map((r) => (
-              <Link key={r.id} to={`/entities/${r.id}`} className="st-related-link">
-                {r.name}
-              </Link>
-            ))}
-          </div>
-        </div>
+        </PaywallGate>
       )}
+
+      {/* ── If no related entities and not paid, still show a gate with CTA ── */}
+      {related.length === 0 && !hasFullAccess && (
+        <PaywallGate
+          locked={true}
+          title={isAnonymous ? `Unlock ${entity.name} Full Profile` : `Unlock Premium Data`}
+          count={premiumCount}
+          noun="premium data fields"
+          variant={isAnonymous ? 'signup' : 'upgrade'}
+        >
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
+              <div style={{ height: 14, background: 'var(--border)', borderRadius: 4, width: '80%' }} />
+              <div style={{ height: 14, background: 'var(--border)', borderRadius: 4, width: '60%' }} />
+              <div style={{ height: 14, background: 'var(--border)', borderRadius: 4, width: '70%' }} />
+            </div>
+          </div>
+        </PaywallGate>
+      )}
+
+      {/* ── Floating bottom CTA for non-paid users ── */}
+      <FloatingPaywallCTA />
     </article>
   );
 }

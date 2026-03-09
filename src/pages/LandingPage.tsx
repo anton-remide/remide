@@ -221,8 +221,8 @@ export default function LandingPage() {
                 Lock in founder pricing before public launch. One payment covers the entire beta period — including all future data sources and features.
               </p>
               <div className="st-landing-ea-price">
-                <span className="st-landing-ea-old">$1,200/yr</span>
-                <span className="st-landing-ea-current">$49</span>
+                <span className="st-landing-ea-old">€1,200/yr</span>
+                <span className="st-landing-ea-current">€49</span>
                 <span className="st-landing-ea-label">one-time</span>
               </div>
               <Link to="/pricing" className="st-btn" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>

@@ -15,7 +15,7 @@ interface PaywallOverlayProps {
   ctaTo?: string;
   /**
    * 'signup' — anonymous user, CTA → /signup ("Register Free")
-   * 'upgrade' — registered user, CTA → /pricing ("Get Full Access — $49")
+   * 'upgrade' — registered user, CTA → /pricing ("Get Full Access — €49")
    */
   variant?: 'signup' | 'upgrade';
 }
@@ -39,7 +39,7 @@ export default function PaywallOverlay({
 
   const isSignup = variant === 'signup';
   const resolvedTo = ctaTo ?? (isSignup ? '/signup' : '/pricing');
-  const resolvedText = ctaText ?? (isSignup ? 'Register Free' : 'Get Full Access — $49');
+  const resolvedText = ctaText ?? (isSignup ? 'Register Free' : 'Get Full Access — €49');
 
   const handleClick = () => {
     trackEvent('paywall_cta_click', {

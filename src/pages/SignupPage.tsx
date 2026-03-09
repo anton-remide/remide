@@ -40,7 +40,8 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (user) {
-      navigate('/pricing', { replace: true });
+      const welcomed = localStorage.getItem('remide_welcome_shown');
+      navigate(welcomed ? '/pricing' : '/welcome', { replace: true });
     }
   }, [user, navigate]);
 
@@ -128,7 +129,7 @@ export default function SignupPage() {
             </ul>
           </div>
 
-          {/* 2. Paid — $49 special offer */}
+          {/* 2. Paid — €49 special offer */}
           <div className="st-signup-offer-card st-signup-offer-paid">
             <div className="st-signup-offer-badge">
               <Star size={12} />
@@ -136,10 +137,10 @@ export default function SignupPage() {
             </div>
             <h4 className="st-signup-offer-title">
               <Lock size={16} style={{ color: 'var(--accent)' }} />
-              Full Access — $49
+              Full Access — €49
             </h4>
             <p className="st-signup-offer-desc">
-              <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.75rem' }}>$1,200/yr</span>{' '}
+              <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.75rem' }}>€1,200/yr</span>{' '}
               <strong style={{ color: 'var(--accent)' }}>96% off</strong>{' '}
               <span style={{ fontSize: '0.75rem' }}>· one-time · forever</span>
             </p>

@@ -3,6 +3,7 @@ import Header from './components/layout/Header';
 import TopBanner from './components/layout/TopBanner';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/layout/ErrorBoundary';
+import ScrollToTop from './components/layout/ScrollToTop';
 import LandingPage from './pages/LandingPage';
 import JurisdictionsPage from './pages/JurisdictionsPage';
 import JurisdictionDetailPage from './pages/JurisdictionDetailPage';
@@ -15,6 +16,7 @@ import StablecoinDetailPage from './pages/StablecoinDetailPage';
 import CbdcDetailPage from './pages/CbdcDetailPage';
 import IssuerDetailPage from './pages/IssuerDetailPage';
 import PricingPage from './pages/PricingPage';
+import WelcomePage from './pages/WelcomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /* BrowserRouter basename — matches Vite base config.
@@ -25,6 +27,7 @@ const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
 export default function App() {
   return (
     <BrowserRouter basename={basename}>
+      <ScrollToTop />
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <TopBanner />
         <Header />
@@ -39,6 +42,7 @@ export default function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/welcome" element={<WelcomePage />} />
 
               {/* Redirects from old routes */}
               <Route path="/stablecoins" element={<Navigate to="/entities?tab=stablecoins" replace />} />

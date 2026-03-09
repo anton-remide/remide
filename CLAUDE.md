@@ -1,7 +1,29 @@
-# RemiDe — VASP & Crypto Registry Tracker
+# RemiDe — Stablecoin Intelligence Platform
+
+## 🚀 CURRENT MODE: PRE-LAUNCH FINALIZATION
+
+**All work must drive towards launch readiness. No new features unless they're on the pre-launch checklist.**
+
+### Pre-Launch Task Tracking (MANDATORY)
+- **All pre-launch tasks are in Notion KB** with `Release Name: Pre-Launch`, `Version: 2`
+- **When completing ANY task:** immediately update Notion KB Status → Done + set Completed Date
+- **Task prefixes in Notion:**
+  - `LAUNCH:` — Business logic tasks (Claude Code + Anton)
+  - `UI/SASHA:` — Visual/layout tasks (delegated to Sasha)
+- **Priority order:**
+  1. Stripe integration + payment flow
+  2. Paywall tiers (2-tier overlay, blurred content logic)
+  3. Remove demo access, real auth only
+  4. Conversion flow (free → paid)
+  5. Quick fixes (text, spacing, Enterprise removal)
+
+### Work Split for Pre-Launch
+- **Anton + Claude Code:** Business logic, Stripe, paywall tiers, auth flow, data loading perf
+- **Sasha:** All UI/SASHA tasks — spacing, icons, layout, responsive, visual polish, mobile
+- **Rule:** Claude Code does NOT touch UI/SASHA tasks. If a UI issue is found, log it in Notion with `UI/SASHA:` prefix and move on.
 
 ## What This Project Is
-A public regulatory intelligence platform that tracks licensed crypto asset service providers (VASPs) across 206 jurisdictions worldwide. Built as a React SPA with SquareType theme 1:1 visual match.
+A public regulatory intelligence platform that tracks stablecoin regulations, licensed entities (VASPs, CASPs, EMIs, PIs), and compliance status across 206 jurisdictions worldwide. Built as a React SPA with SquareType theme 1:1 visual match.
 
 ## Team & Roles
 

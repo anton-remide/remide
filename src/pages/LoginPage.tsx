@@ -25,7 +25,9 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate(from, { replace: true });
+      const welcomed = localStorage.getItem('remide_welcome_shown');
+      // First login ever → send to welcome page for conversion nudge
+      navigate(welcomed ? from : '/welcome', { replace: true });
     }
   }, [user, navigate, from]);
 
@@ -46,7 +48,8 @@ export default function LoginPage() {
       setError(err);
     } else {
       trackEvent('login_completed');
-      navigate(from, { replace: true });
+      const welcomed = localStorage.getItem('remide_welcome_shown');
+      navigate(welcomed ? from : '/welcome', { replace: true });
     }
   };
 

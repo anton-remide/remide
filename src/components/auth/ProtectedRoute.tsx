@@ -29,14 +29,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Early-bird deadline: 14 days from now (cached per session)
+  // Founder pricing deadline: Friday 13 March 2026, 23:59 CET (UTC+1)
   const [deadline] = useState(() => {
-    const stored = sessionStorage.getItem('remide_eb_deadline');
-    if (stored) return new Date(stored);
-    const d = new Date();
-    d.setDate(d.getDate() + 14);
-    sessionStorage.setItem('remide_eb_deadline', d.toISOString());
-    return d;
+    return new Date('2026-03-13T22:59:00Z');
   });
   const countdown = useCountdown(deadline);
 
@@ -83,13 +78,13 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             {/* Pricing */}
             <div className="st-paywall-pricing">
               <div className="st-paywall-price-row">
-                <span className="st-paywall-price-old">$1,200/yr</span>
-                <span className="st-paywall-price-current">$49</span>
+                <span className="st-paywall-price-old">€1,200/yr</span>
+                <span className="st-paywall-price-current">€49</span>
                 <span className="st-paywall-price-period">one-time beta access</span>
               </div>
               <div className="st-paywall-savings">
                 <Star size={14} />
-                <span>Save $1,151 — early supporters only</span>
+                <span>Save €1,151 — early supporters only</span>
               </div>
             </div>
 
@@ -145,7 +140,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
               state={{ from: location.pathname }}
               className="st-paywall-cta"
             >
-              Get Early Access — $49
+              Get Early Access — €49
               <ArrowRight size={16} />
             </Link>
 

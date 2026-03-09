@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
-  Zap, Clock, Flame, ArrowRight, Check, X, Lock,
+  Zap, Flame, ArrowRight, Check, X, Lock,
   Gift, Bell, TrendingUp, BarChart3,
 } from 'lucide-react';
 import { useReveal } from '../hooks/useAnimations';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { useAuth } from '../hooks/useAuth';
+import { usePaywall } from '../hooks/usePaywall';
+import { redirectToCheckout } from '../lib/stripe';
 import { trackEvent } from '../utils/analytics';
 
 /* Countdown hook */
 function useCountdown(targetDate: Date) {
   const [timeLeft, setTimeLeft] = useState(getTimeLeft(targetDate));
   useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(getTimeLeft(targetDate)), 60_000);
+    const timer = setInterval(() => setTimeLeft(getTimeLeft(targetDate)), 1_000);
     return () => clearInterval(timer);
   }, [targetDate]);
   return timeLeft;
@@ -25,37 +27,58 @@ function getTimeLeft(target: Date) {
     days: Math.floor(diff / 86_400_000),
     hours: Math.floor((diff % 86_400_000) / 3_600_000),
     minutes: Math.floor((diff % 3_600_000) / 60_000),
+    seconds: Math.floor((diff % 60_000) / 1_000),
   };
 }
 
 export default function PricingPage() {
   useDocumentMeta({
     title: 'Early Access Pricing',
-    description: 'Get early access to the most comprehensive stablecoin regulatory intelligence platform. Lock in founder pricing at $49.',
+    description: 'Get early access to the most comprehensive stablecoin regulatory intelligence platform. Lock in founder pricing at €49.',
     path: '/pricing',
   });
 
   const { user } = useAuth();
+  const { isPaid, refresh: refreshTier } = usePaywall();
+  const [searchParams] = useSearchParams();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
+
+  // Handle Stripe redirect back (?success=true or ?canceled=true)
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      refreshTier();
+      trackEvent('payment_completed');
+    }
+    if (searchParams.get('canceled') === 'true') {
+      trackEvent('payment_canceled');
+    }
+  }, [searchParams, refreshTier]);
 
   useEffect(() => {
     trackEvent('pricing_page_view');
   }, []);
 
+  const handleCheckout = async () => {
+    setCheckoutError('');
+    setCheckoutLoading(true);
+    trackEvent('pricing_checkout_click');
+    const { error } = await redirectToCheckout();
+    if (error) {
+      setCheckoutError(error);
+      setCheckoutLoading(false);
+    }
+    // If no error, user is being redirected to Stripe — don't reset loading
+  };
+
   const revealRef = useReveal();
 
-  // Early-bird deadline: 14 days from first visit (session-cached)
-  const [deadline] = useState(() => {
-    const stored = sessionStorage.getItem('remide_eb_deadline');
-    if (stored) return new Date(stored);
-    const d = new Date();
-    d.setDate(d.getDate() + 14);
-    sessionStorage.setItem('remide_eb_deadline', d.toISOString());
-    return d;
-  });
+  // Founder pricing deadline: Friday 13 March 2026, 23:59 CET (UTC+1)
+  const deadline = new Date('2026-03-13T22:59:00Z');
   const countdown = useCountdown(deadline);
 
   const faqs = [
-    { q: 'What happens after the beta period?', a: 'When we launch the full version (projected Q3 2026), early supporters will receive a significant discount on annual subscriptions. Your $49 beta access covers the entire beta period.' },
+    { q: 'What happens after the beta period?', a: 'When we launch the full version (projected Q3 2026), early supporters will receive a significant discount on annual subscriptions. Your €49 beta access covers the entire beta period.' },
     { q: 'How often is the data updated?', a: 'We run automated parsers across 49+ regulatory registries weekly. Major regulatory changes are reflected within 48 hours.' },
     { q: 'Who is this for?', a: 'Compliance officers, legal counsel, regulatory affairs teams, and policy professionals working with stablecoins, digital assets, or cross-border payments.' },
     { q: 'Can I get a refund?', a: 'Yes. If you\'re not satisfied within 14 days, we\'ll refund your purchase — no questions asked.' },
@@ -65,14 +88,24 @@ export default function PricingPage() {
 
   return (
     <div ref={revealRef} className="st-pricing-page">
-      {/* Urgency Banner */}
-      <div className="st-pricing-urgency-banner">
-        <Clock size={16} />
-        <span>
-          Early-bird pricing closes in{' '}
-          <strong>{countdown.days} days, {countdown.hours} hours, {countdown.minutes} minutes</strong>
-        </span>
-      </div>
+      {/* Payment Success Banner */}
+      {searchParams.get('success') === 'true' && (
+        <div style={{
+          background: '#16a34a', color: '#fff', textAlign: 'center',
+          padding: '12px 20px', fontSize: '0.9375rem', fontWeight: 600,
+        }}>
+          <Check size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+          Payment successful! You now have full access to all features.
+        </div>
+      )}
+      {searchParams.get('canceled') === 'true' && (
+        <div style={{
+          background: '#f59e0b', color: '#000', textAlign: 'center',
+          padding: '12px 20px', fontSize: '0.9375rem',
+        }}>
+          Payment was canceled. You can try again anytime.
+        </div>
+      )}
 
       {/* Hero */}
       <section className="st-pricing-hero reveal">
@@ -90,6 +123,41 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* Urgency Banner */}
+      <section className="st-pricing-card-section">
+        <div className="st-pricing-container">
+          <div className="st-pricing-urgency-banner">
+            <div className="st-urgency-inner">
+              <div className="st-urgency-label">
+                <Flame size={14} />
+                <span>Founder pricing ends in</span>
+              </div>
+              <div className="st-urgency-countdown">
+                <div className="st-urgency-unit">
+                  <span className="st-urgency-num">{String(countdown.days).padStart(2, '0')}</span>
+                  <span className="st-urgency-txt">days</span>
+                </div>
+                <span className="st-urgency-sep">:</span>
+                <div className="st-urgency-unit">
+                  <span className="st-urgency-num">{String(countdown.hours).padStart(2, '0')}</span>
+                  <span className="st-urgency-txt">hrs</span>
+                </div>
+                <span className="st-urgency-sep">:</span>
+                <div className="st-urgency-unit">
+                  <span className="st-urgency-num">{String(countdown.minutes).padStart(2, '0')}</span>
+                  <span className="st-urgency-txt">min</span>
+                </div>
+                <span className="st-urgency-sep">:</span>
+                <div className="st-urgency-unit">
+                  <span className="st-urgency-num">{String(countdown.seconds).padStart(2, '0')}</span>
+                  <span className="st-urgency-txt">sec</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Card */}
       <section className="st-pricing-card-section">
         <div className="st-pricing-container">
@@ -100,9 +168,9 @@ export default function PricingPage() {
                 Founder Pricing
               </div>
               <div className="st-pricing-card-price">
-                <span className="st-pricing-card-old-price">$1,200/yr</span>
+                <span className="st-pricing-card-old-price">€1,200/yr</span>
                 <div className="st-pricing-card-current-price">
-                  <span className="st-pricing-price-amount">$49</span>
+                  <span className="st-pricing-price-amount">€49</span>
                   <span className="st-pricing-price-label">one-time beta access</span>
                 </div>
               </div>
@@ -113,10 +181,24 @@ export default function PricingPage() {
             </div>
 
             <div className="st-pricing-card-cta-wrap">
-              {user ? (
-                <span className="st-pricing-card-cta" style={{ opacity: 0.6, cursor: 'default' }}>
-                  Checkout Coming Soon
+              {checkoutError && (
+                <div style={{ color: '#dc2626', fontSize: '0.8125rem', marginBottom: 8, textAlign: 'center' }}>{checkoutError}</div>
+              )}
+              {isPaid ? (
+                <span className="st-pricing-card-cta" style={{ background: '#16a34a', cursor: 'default' }}>
+                  <Check size={18} />
+                  Full Access Unlocked
                 </span>
+              ) : user ? (
+                <button
+                  className="st-pricing-card-cta"
+                  style={{ border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                >
+                  {checkoutLoading ? 'Redirecting to checkout...' : 'Get Full Access — €49'}
+                  {!checkoutLoading && <ArrowRight size={18} />}
+                </button>
               ) : (
                 <Link to="/signup" className="st-pricing-card-cta" onClick={() => trackEvent('pricing_cta_click', { location: 'card' })}>
                   Get Early Access Now
@@ -166,7 +248,7 @@ export default function PricingPage() {
                   <th>Feature</th>
                   <th>Anonymous</th>
                   <th>Registered <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 400, color: 'var(--text-muted)' }}>Free</span></th>
-                  <th className="st-pricing-col-highlight">Full Access <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 400 }}>$49</span></th>
+                  <th className="st-pricing-col-highlight">Full Access <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 400 }}>€49</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -213,13 +295,23 @@ export default function PricingPage() {
                 Register Free
               </Link>
             )}
-            {user ? (
-              <span className="st-btn" style={{ opacity: 0.6, cursor: 'default' }}>
-                Checkout Coming Soon
+            {isPaid ? (
+              <span className="st-btn" style={{ background: '#16a34a', color: '#fff', cursor: 'default' }}>
+                <Check size={14} /> Full Access
               </span>
+            ) : user ? (
+              <button
+                className="st-btn"
+                style={{ border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+              >
+                {checkoutLoading ? 'Redirecting...' : 'Get Full Access — €49'}
+                {!checkoutLoading && <ArrowRight size={16} />}
+              </button>
             ) : (
               <Link to="/signup" className="st-btn" onClick={() => trackEvent('pricing_cta_click', { location: 'comparison' })}>
-                Get Full Access — $49
+                Get Full Access — €49
                 <ArrowRight size={16} />
               </Link>
             )}
@@ -264,6 +356,17 @@ export default function PricingPage() {
                 <ArrowRight size={16} />
               </Link>
             )}
+            {user && !isPaid && (
+              <button
+                className="st-btn"
+                style={{ marginTop: 8, border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+              >
+                {checkoutLoading ? 'Redirecting...' : 'Upgrade to Full Access — €49'}
+                <ArrowRight size={16} />
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -306,13 +409,24 @@ export default function PricingPage() {
             Join during beta and lock in founder pricing.
             Full platform access, all future updates, 14-day money-back guarantee.
           </p>
-          {user ? (
-            <span className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto', opacity: 0.6, cursor: 'default' }}>
-              Checkout Coming Soon
+          {isPaid ? (
+            <span className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto', background: '#16a34a', cursor: 'default' }}>
+              <Check size={18} />
+              Full Access Unlocked
             </span>
+          ) : user ? (
+            <button
+              className="st-pricing-card-cta"
+              style={{ maxWidth: 360, margin: '0 auto', border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+              onClick={handleCheckout}
+              disabled={checkoutLoading}
+            >
+              {checkoutLoading ? 'Redirecting to checkout...' : 'Get Full Access — €49'}
+              {!checkoutLoading && <ArrowRight size={18} />}
+            </button>
           ) : (
             <Link to="/signup" className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto' }} onClick={() => trackEvent('pricing_cta_click', { location: 'footer' })}>
-              Get Early Access — $49
+              Get Early Access — €49
               <ArrowRight size={18} />
             </Link>
           )}
