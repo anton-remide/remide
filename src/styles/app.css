@@ -630,22 +630,16 @@ ul {
 /* Hamburger */
 .st-hamburger {
   display: none;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   margin-left: auto;
-}
-
-.st-hamburger span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--black);
-  margin: 5px auto;
-  transition: all 200ms ease;
+  align-items: center;
+  justify-content: center;
+  color: var(--black);
 }
 
 /* ==========================================================================
@@ -1962,6 +1956,9 @@ ul {
     grid-template-columns: 1fr;
     gap: 24px;
     max-width: 480px;
+  }
+  .st-signup-form-wrap {
+    order: -1;
   }
   .st-signup-offers {
     gap: 12px;
@@ -5766,6 +5763,7 @@ thead .st-pricing-col-highlight {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.01em;
+  text-align: center;
 }
 
 .st-top-banner-text strong {
@@ -5781,24 +5779,6 @@ thead .st-pricing-col-highlight {
 
 .st-top-banner-text a:hover {
   text-decoration: underline;
-}
-
-.st-top-banner-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: color 150ms;
-}
-
-.st-top-banner-close:hover {
-  color: #fff;
 }
 
 /* ==========================================================================

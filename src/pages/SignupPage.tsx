@@ -113,7 +113,60 @@ export default function SignupPage() {
       </div>
 
       <div className="reveal st-signup-layout">
-        {/* Left: Form */}
+        {/* Left: Value cards */}
+        <div className="st-signup-offers">
+          {/* 1. Free — Instant Unlock */}
+          <div className="st-signup-offer-card">
+            <h4 className="st-signup-offer-title">
+              <Check size={16} style={{ color: '#16a34a' }} />
+              Instant Unlock with Registration
+            </h4>
+            <ul className="st-signup-offer-list">
+              {freeFeatures.map((f) => (
+                <li key={f}><Check size={13} />{f}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 2. Paid — $49 special offer */}
+          <div className="st-signup-offer-card st-signup-offer-paid">
+            <div className="st-signup-offer-badge">
+              <Star size={12} />
+              Beta Pricing
+            </div>
+            <h4 className="st-signup-offer-title">
+              <Lock size={16} style={{ color: 'var(--accent)' }} />
+              Full Access — $49
+            </h4>
+            <p className="st-signup-offer-desc">
+              <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.75rem' }}>$1,200/yr</span>{' '}
+              <strong style={{ color: 'var(--accent)' }}>96% off</strong>{' '}
+              <span style={{ fontSize: '0.75rem' }}>· one-time · forever</span>
+            </p>
+            <p className="st-signup-offer-includes">Everything in Free, plus:</p>
+            <ul className="st-signup-offer-list">
+              {paidFeatures.map((f) => (
+                <li key={f}><Check size={13} />{f}</li>
+              ))}
+            </ul>
+            <Link
+              to="/pricing"
+              className="st-btn st-btn-sm"
+              style={{ width: '100%', marginTop: 12 }}
+              onClick={() => trackEvent('signup_pricing_click')}
+            >
+              See Full Comparison
+              <ArrowRight size={14} />
+            </Link>
+            <p className="st-signup-offer-guarantee">
+              <Shield size={11} />
+              14-day money-back guarantee
+            </p>
+          </div>
+
+        </div>
+
+        {/* Right: Form */}
         <div className="st-signup-form-wrap">
           <form onSubmit={handleSubmit} className="st-auth-form st-auth-form-compact clip-lg">
             <h3 style={{ fontFamily: 'var(--font2)', margin: '0 0 4px', fontSize: '1.25rem' }}>
@@ -181,59 +234,6 @@ export default function SignupPage() {
               <Link to="/login" style={{ color: 'var(--black)', fontWeight: 600 }}>Sign in</Link>
             </p>
           </form>
-        </div>
-
-        {/* Right: 3 value cards */}
-        <div className="st-signup-offers">
-          {/* 1. Free — Instant Unlock */}
-          <div className="st-signup-offer-card">
-            <h4 className="st-signup-offer-title">
-              <Check size={16} style={{ color: '#16a34a' }} />
-              Instant Unlock with Registration
-            </h4>
-            <ul className="st-signup-offer-list">
-              {freeFeatures.map((f) => (
-                <li key={f}><Check size={13} />{f}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 2. Paid — $49 special offer */}
-          <div className="st-signup-offer-card st-signup-offer-paid">
-            <div className="st-signup-offer-badge">
-              <Star size={12} />
-              Beta Pricing
-            </div>
-            <h4 className="st-signup-offer-title">
-              <Lock size={16} style={{ color: 'var(--accent)' }} />
-              Full Access — $49
-            </h4>
-            <p className="st-signup-offer-desc">
-              <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.75rem' }}>$1,200/yr</span>{' '}
-              <strong style={{ color: 'var(--accent)' }}>96% off</strong>{' '}
-              <span style={{ fontSize: '0.75rem' }}>· one-time · forever</span>
-            </p>
-            <p className="st-signup-offer-includes">Everything in Free, plus:</p>
-            <ul className="st-signup-offer-list">
-              {paidFeatures.map((f) => (
-                <li key={f}><Check size={13} />{f}</li>
-              ))}
-            </ul>
-            <Link
-              to="/pricing"
-              className="st-btn st-btn-sm"
-              style={{ width: '100%', marginTop: 12 }}
-              onClick={() => trackEvent('signup_pricing_click')}
-            >
-              See Full Comparison
-              <ArrowRight size={14} />
-            </Link>
-            <p className="st-signup-offer-guarantee">
-              <Shield size={11} />
-              14-day money-back guarantee
-            </p>
-          </div>
-
         </div>
       </div>
     </div>

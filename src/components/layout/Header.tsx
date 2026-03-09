@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import MobileMenu from './MobileMenu';
@@ -117,7 +118,7 @@ export default function Header() {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
-            <span /><span /><span />
+            {menuOpen ? <X size={22} /> : <Search size={20} />}
           </button>
         </div>
       </header>
