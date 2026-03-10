@@ -1,6 +1,6 @@
 import type { ComponentType, FormEvent } from 'react';
 import { useState, useEffect } from 'react';
-import { Scale, BookOpen, Search, ArrowRight, Coins, Globe, Building2, Landmark, Zap } from 'lucide-react';
+import { Scale, BookOpen, Search, ArrowRight, Coins, Globe, Building2, Landmark, Zap, TrendingUp, Shield } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getJurisdictions, getEntityCount, getStablecoins, getCbdcs } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
@@ -150,21 +150,54 @@ export default function LandingPage() {
         <div className="st-hero-inner">
           <div className="st-hero-content">
             <h1 className="reveal st-landing-hero-title">
-              <span>Stablecoin</span>
-              <span>Intelligence</span>
-              <span>Platform</span>
+              <span>Stablecoin Intelligence</span>
             </h1>
-            <p className="reveal">
-              Track stablecoin licensing frameworks, issuer compliance, and Travel Rule status across{' '}
-              <strong>{jurisdictions?.length ?? 0} jurisdictions</strong>{' '}
-              worldwide
-            </p>
+            {/* Audience split */}
+            <div className="st-audience-grid st-audience-grid--hero reveal">
+              <div className="st-audience-card clip-lg">
+                <div className="st-audience-header">
+                  <div className="st-audience-icon">
+                    <TrendingUp size={22} />
+                  </div>
+                  <h3>Business Development</h3>
+                </div>
+                <p>
+                  A live database of regulated entities across 206 jurisdictions.
+                  Spot market trends and identify expansion opportunities before
+                  competitors as new licenses are issued.
+                </p>
+                <ul className="st-audience-bullets">
+                  <li>Entity contact database</li>
+                  <li>Market entry trends</li>
+                  <li>Competitor intelligence</li>
+                </ul>
+              </div>
+              <div className="st-audience-card clip-lg">
+                <div className="st-audience-header">
+                  <div className="st-audience-icon">
+                    <Shield size={22} />
+                  </div>
+                  <h3>Compliance &amp; Legal</h3>
+                </div>
+                <p>
+                  Every licensing framework, stablecoin law, and regulatory
+                  change — structured and continuously updated from 49+
+                  official sources. Built for audit-ready workflows.
+                </p>
+                <ul className="st-audience-bullets">
+                  <li>License framework tracker</li>
+                  <li>Regulatory trend alerts</li>
+                  <li>Compliance audit support</li>
+                </ul>
+              </div>
+            </div>
+
             <div className="st-hero-buttons reveal">
-              <button className="st-btn" onClick={() => { trackEvent('landing_cta_click', { cta: 'explore_map' }); navigate('/jurisdictions'); }}>
-                Explore Regulatory Map
-              </button>
               <button className="st-btn-outline" onClick={() => { trackEvent('landing_cta_click', { cta: 'browse_entities' }); navigate('/entities'); }}>
                 Browse {totalEntities.toLocaleString()}+ Entities <ArrowRight size={16} className="st-landing-cta-icon" />
+              </button>
+              <button className="st-btn" onClick={() => { trackEvent('landing_cta_click', { cta: 'explore_map' }); navigate('/jurisdictions'); }}>
+                Explore Regulatory Map
               </button>
             </div>
           </div>
@@ -225,7 +258,7 @@ export default function LandingPage() {
                 <span className="st-landing-ea-current">€49</span>
                 <span className="st-landing-ea-label">one-time</span>
               </div>
-              <Link to="/pricing" className="st-btn" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
+              <Link to="/pricing#pricing-card" className="st-btn" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
                 View Pricing Details
                 <ArrowRight size={16} />
               </Link>

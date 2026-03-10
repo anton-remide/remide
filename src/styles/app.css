@@ -5221,7 +5221,7 @@ thead .st-pricing-col-highlight {
   overflow: hidden;
   isolation: isolate;
   margin-top: var(--header-content-offset);
-  padding: 80px 0 64px;
+  padding: 32px 0 64px;
   background: linear-gradient(180deg, #F6F2EE 0%, #F7F3EF 62%, #F6F2EE 100%);
   text-align: center;
 }
@@ -5254,7 +5254,7 @@ thead .st-pricing-col-highlight {
   margin-left: auto;
   margin-right: auto;
   color: var(--landing-text);
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .st-landing-v2 .st-landing-hero-title {
@@ -5276,10 +5276,16 @@ thead .st-pricing-col-highlight {
 .st-landing-v2 .st-hero p strong {
   color: var(--landing-text);
 }
+.st-landing-v2 .st-hero .st-audience-card p {
+  max-width: none;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
 
 .st-landing-v2 .st-hero-buttons {
   gap: 16px;
-  margin-bottom: 48px;
+  margin-bottom: 36px;
 }
 
 .st-landing-v2 .st-landing-cta-icon {
@@ -5322,7 +5328,7 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2 .st-stats-section {
   background: transparent;
-  padding: 0 24px 56px;
+  padding: 0 24px 42px;
 }
 
 .st-landing-v2 .st-landing-container {
@@ -5401,6 +5407,110 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2-features {
   padding: 0 24px 96px;
+}
+
+/* ── Audience Split (Two-Column) ── */
+.st-audience-section {
+  padding: 48px 24px 0;
+}
+.st-audience-section--pricing {
+  padding: 0 24px 32px;
+}
+.st-audience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.st-audience-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  align-items: center;
+}
+.st-audience-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.st-audience-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.st-audience-card h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.st-audience-card p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}
+.st-audience-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.st-audience-bullets li {
+  font-size: 0.8125rem;
+  color: var(--text);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.st-audience-bullets li::before {
+  content: '✓';
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.st-audience-grid--hero {
+  margin-top: 20px;
+  margin-bottom: 28px;
+  max-width: 1030px;
+}
+
+@media (max-width: 640px) {
+  .st-audience-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .st-audience-section {
+    padding: 32px 16px 0;
+  }
+  .st-audience-section--pricing {
+    padding: 0 16px 24px;
+  }
+  .st-audience-card {
+    padding: 20px 18px;
+  }
+  .st-audience-grid--hero {
+    margin-top: 24px;
+  }
 }
 
 /* ── Landing Early Access Banner ── */

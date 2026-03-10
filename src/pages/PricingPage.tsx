@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Zap, Flame, ArrowRight, Check, X, Lock,
-  Gift, Bell, TrendingUp, BarChart3,
+  Gift, Bell, TrendingUp, BarChart3, Shield,
 } from 'lucide-react';
 import { useReveal } from '../hooks/useAnimations';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
@@ -123,6 +123,50 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* Who Is This For */}
+      <section className="st-audience-section st-audience-section--pricing">
+        <div className="st-pricing-container">
+          <div className="st-audience-grid reveal">
+            <div className="st-audience-card clip-lg">
+              <div className="st-audience-header">
+                <div className="st-audience-icon">
+                  <TrendingUp size={22} />
+                </div>
+                <h3>Business Development</h3>
+              </div>
+              <p>
+                A live database of regulated entities across 206 jurisdictions.
+                Spot market trends and identify expansion opportunities before
+                competitors as new licenses are issued.
+              </p>
+              <ul className="st-audience-bullets">
+                <li>Entity contact database</li>
+                <li>Market entry trends</li>
+                <li>Competitor intelligence</li>
+              </ul>
+            </div>
+            <div className="st-audience-card clip-lg">
+              <div className="st-audience-header">
+                <div className="st-audience-icon">
+                  <Shield size={22} />
+                </div>
+                <h3>Compliance &amp; Legal</h3>
+              </div>
+              <p>
+                Every licensing framework, stablecoin law, and regulatory
+                change — structured and continuously updated from 49+
+                official sources. Built for audit-ready workflows.
+              </p>
+              <ul className="st-audience-bullets">
+                <li>License framework tracker</li>
+                <li>Regulatory trend alerts</li>
+                <li>Compliance audit support</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Urgency Banner */}
       <section className="st-pricing-card-section">
         <div className="st-pricing-container">
@@ -159,7 +203,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Card */}
-      <section className="st-pricing-card-section">
+      <section id="pricing-card" className="st-pricing-card-section">
         <div className="st-pricing-container">
           <div className="st-pricing-card clip-lg reveal">
             <div className="st-pricing-card-header">
