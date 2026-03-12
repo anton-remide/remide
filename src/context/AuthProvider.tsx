@@ -65,7 +65,16 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
     });
-    return { error: error?.message ?? null };
+    if (!error) return { error: null };
+    // Map cryptic Supabase errors to user-friendly messages
+    const msg = error.message?.toLowerCase() ?? '';
+    if (msg.includes('rate limit') || msg.includes('too many'))
+      return { error: 'Too many attempts. Please wait a few minutes and try again.' };
+    if (msg.includes('not found') || msg.includes('no user'))
+      return { error: 'If this email is registered, you\'ll receive a reset link shortly.' };
+    if (msg.includes('sending') || msg.includes('smtp') || msg.includes('email'))
+      return { error: 'We couldn\'t send the email right now. Please try again later or contact support@remide.xyz.' };
+    return { error: 'Something went wrong. Please try again or contact support@remide.xyz.' };
   }, []);
 
   const updatePassword = useCallback(async (password: string) => {
