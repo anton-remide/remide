@@ -211,7 +211,6 @@ ul {
     0 0 0 1px rgba(0, 0, 0, 0.05),
     0 -1.5px 1.5px 0 rgba(255, 255, 255, 0.18) inset,
     0 1.5px 1.5px 0 rgba(255, 255, 255, 0.18) inset;
-  transform: translateY(-1px);
 }
 
 .st-btn:active {
@@ -254,7 +253,6 @@ ul {
   border-color: rgba(0, 0, 0, 0.18);
   color: var(--black);
   box-shadow: 0 12px 18px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
 }
 
 .st-btn-outline:active {
@@ -5254,12 +5252,18 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2 .st-stats-section {
   background: transparent;
-  padding: 0 24px 56px;
+  padding: 0 24px 80px;
 }
 
 .st-landing-v2 .st-landing-container {
   width: min(1200px, calc(100% - (var(--landing-content-gutter) * 2)));
   margin: 0 auto;
+}
+
+.st-landing-v2-features .st-landing-container {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
 }
 
 .st-landing-v2 .st-landing-stats-grid {
@@ -5458,7 +5462,7 @@ thead .st-pricing-col-highlight {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 0;
   text-align: center;
 }
 
