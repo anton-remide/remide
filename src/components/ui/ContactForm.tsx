@@ -22,17 +22,17 @@ export default function ContactForm() {
 
   return (
     <form className="st-contact-form clip-lg" onSubmit={handleSubmit}>
-      <div className="row g-3">
-        <div className="col-12 col-md-6">
+      <div className="st-form-grid st-form-grid--2 st-form-grid--1-mobile">
+        <div>
           <input className="st-input" type="text" placeholder="Name" required />
         </div>
-        <div className="col-12 col-md-6">
+        <div>
           <input className="st-input" type="email" placeholder="Email" required />
         </div>
-        <div className="col-12">
+        <div className="st-form-grid__full">
           <textarea className="st-textarea" placeholder="Message" rows={4} required />
         </div>
-        <div className="col-12">
+        <div className="st-form-grid__full">
           <button type="submit" className="st-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             Send Message <Send size={16} />
           </button>

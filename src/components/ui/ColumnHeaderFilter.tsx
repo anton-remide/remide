@@ -2,9 +2,10 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronUp, ChevronDown, Filter, Search, Check } from 'lucide-react';
 import type { SortDirection } from '../../types';
+import { BREAKPOINTS } from '../../constants/breakpoints';
 
-/** Detect mobile viewport (matches CSS 768px breakpoint) */
-const isMobileViewport = () => window.innerWidth <= 768;
+/** Detect mobile viewport (matches shared breakpoint registry) */
+const isMobileViewport = () => window.innerWidth <= BREAKPOINTS.md;
 
 interface Props {
   label: string;

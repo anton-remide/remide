@@ -1742,6 +1742,25 @@ ul {
   margin: 0 auto;
 }
 
+.st-form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.st-form-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.st-form-grid__full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 767px) {
+  .st-form-grid--1-mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
 .st-input {
   width: 100%;
   height: 44px;
@@ -1949,7 +1968,7 @@ ul {
   color: var(--accent);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .st-signup-hero {
     text-align: center;
     margin-bottom: 4px;
@@ -2715,7 +2734,7 @@ a, button, input, select, textarea {
 
 /* ==========================================================================
    Responsive — Mobile-First Stripe-Quality System
-   Breakpoints: 768px (tablet), 600px (small tablet), 480px (phone), 375px (iPhone SE)
+   Breakpoints: 767px (tablet), 600px (small tablet), 480px (phone), 375px (iPhone SE)
    ========================================================================== */
 
 /* --- prefers-reduced-motion: disable ALL animations & transitions --- */
@@ -2751,8 +2770,8 @@ a, button, input, select, textarea {
   }
 }
 
-/* ===== TABLET: max-width 768px ===== */
-@media (max-width: 768px) {
+/* ===== TABLET: max-width 767px ===== */
+@media (max-width: 767px) {
   /* --- Header --- */
   .st-header-nav {
     display: none;
@@ -3263,9 +3282,8 @@ a, button, input, select, textarea {
     font-size: 15px;
   }
 
-  .st-auth-form .row.g-3 {
-    --bs-gutter-y: 0.375rem;
-    --bs-gutter-x: 0.5rem;
+  .st-auth-form .st-form-grid {
+    gap: 6px 8px;
   }
 
   .st-auth-form .st-btn {
@@ -4504,7 +4522,7 @@ a, button, input, select, textarea {
 }
 
 /* ── Paywall responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .st-paywall {
     max-width: 100%;
     margin: 0 8px;
@@ -4628,7 +4646,7 @@ a, button, input, select, textarea {
   margin-bottom: 14px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .st-pricing-urgency-banner {
     padding: 16px 16px;
   }
@@ -5154,7 +5172,7 @@ thead .st-pricing-col-highlight {
 }
 
 /* ── Pricing Page responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .st-pricing-hero {
     padding: 24px 16px 24px;
   }
@@ -5601,7 +5619,7 @@ thead .st-pricing-col-highlight {
   color: rgba(255, 255, 255, 0.6);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .st-landing-early-access-card {
     padding: 32px 20px;
   }

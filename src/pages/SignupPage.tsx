@@ -181,14 +181,14 @@ export default function SignupPage() {
               <div className="st-auth-error">{error}</div>
             )}
 
-            <div className="row g-3">
-              <div className="col-6">
+            <div className="st-form-grid st-form-grid--2 st-form-grid--1-mobile">
+              <div>
                 <div className="st-field">
                   <label className="st-field-label" htmlFor="firstName">First Name</label>
                   <input id="firstName" type="text" className="st-input" value={form.firstName} onChange={set('firstName')} placeholder="Jane" required />
                 </div>
               </div>
-              <div className="col-6">
+              <div>
                 <div className="st-field">
                   <label className="st-field-label" htmlFor="lastName">Last Name</label>
                   <input id="lastName" type="text" className="st-input" value={form.lastName} onChange={set('lastName')} placeholder="Doe" required />
@@ -201,14 +201,14 @@ export default function SignupPage() {
               <input id="businessEmail" type="email" className="st-input" value={form.businessEmail} onChange={set('businessEmail')} placeholder="jane@company.com" required autoComplete="email" />
             </div>
 
-            <div className="row g-3">
-              <div className="col-6">
+            <div className="st-form-grid st-form-grid--2 st-form-grid--1-mobile">
+              <div>
                 <div className="st-field">
                   <label className="st-field-label" htmlFor="phone">Phone</label>
                   <input id="phone" type="tel" className="st-input" value={form.phone} onChange={set('phone')} placeholder="+1 555 0123" required />
                 </div>
               </div>
-              <div className="col-6">
+              <div>
                 <div className="st-field">
                   <label className="st-field-label" htmlFor="roleTitle">Role</label>
                   <input id="roleTitle" type="text" className="st-input" value={form.roleTitle} onChange={set('roleTitle')} placeholder="Compliance Officer" required />
