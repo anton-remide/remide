@@ -8,6 +8,17 @@ function isFigmaCaptureMode() {
   return typeof window !== 'undefined' && window.location.hash.includes('figmacapture=');
 }
 
+/** Respect user's motion preference (a11y). Skips all animations when reduced motion is preferred. */
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** True when animations should be skipped — either figma capture or reduced motion */
+function shouldSkipAnimations(): boolean {
+  return isFigmaCaptureMode() || prefersReducedMotion();
+}
+
 /** Fade-up reveal for elements with class `.reveal` inside the container */
 export function useReveal(trigger?: unknown) {
   const ref = useRef<HTMLDivElement>(null);
@@ -16,7 +27,7 @@ export function useReveal(trigger?: unknown) {
     if (!ref.current) return;
     const els = ref.current.querySelectorAll('.reveal');
     if (!els.length) return;
-    if (isFigmaCaptureMode()) {
+    if (shouldSkipAnimations()) {
       gsap.set(els, { opacity: 1, y: 0, clearProps: 'animation' });
       return;
     }
@@ -63,7 +74,7 @@ export function useStaggerReveal(trigger?: unknown) {
     if (!ref.current) return;
     const els = ref.current.querySelectorAll('.stagger-in');
     if (!els.length) return;
-    if (isFigmaCaptureMode()) {
+    if (shouldSkipAnimations()) {
       gsap.set(els, { opacity: 1, y: 0, clearProps: 'animation' });
       return;
     }
@@ -113,7 +124,7 @@ export function useCounter(target: number, duration = 2.5) {
   useEffect(() => {
     if (!ref.current || target <= 0) return;
     const el = ref.current;
-    if (isFigmaCaptureMode()) {
+    if (shouldSkipAnimations()) {
       el.textContent = Math.round(target).toLocaleString();
       return;
     }

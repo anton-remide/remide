@@ -3030,6 +3030,18 @@ a, button, input, select, textarea {
   .stats_item:hover {
     transform: none !important;
   }
+
+  .st-search-overlay {
+    animation: none !important;
+  }
+
+  .st-page-loader__bar,
+  .st-page-loader__title,
+  .st-page-loader__line,
+  .st-page-loader__block {
+    animation: none !important;
+    background: var(--gray-200) !important;
+  }
 }
 
 /* ===== TABLET: max-width 767px ===== */
