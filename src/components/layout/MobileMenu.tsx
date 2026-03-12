@@ -98,7 +98,7 @@ export default function MobileMenu({ open, onClose, links, user, onSignOut }: Pr
 
       {/* Search */}
       <div className="st-mobile-search">
-        <Search size={16} className="st-mobile-search-icon" />
+        <Search size={16} className="st-mobile-search-icon" aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -108,7 +108,7 @@ export default function MobileMenu({ open, onClose, links, user, onSignOut }: Pr
           className="st-mobile-search-input"
           autoComplete="off"
         />
-        {loading && <div className="st-header-search-spinner" />}
+        {loading && <div className="st-header-search-spinner" role="status" aria-label="Loading search results" />}
       </div>
 
       {/* Search results */}

@@ -122,7 +122,7 @@ export default function HeaderSearch() {
   return (
     <div ref={wrapperRef} className={`st-header-search-wrapper${expanded ? ' expanded' : ''}`}>
       <div className="st-header-search">
-        <Search size={14} className="st-header-search-icon" />
+        <Search size={14} className="st-header-search-icon" aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -138,7 +138,7 @@ export default function HeaderSearch() {
           aria-controls="header-search-listbox"
           aria-activedescendant={activeIndex >= 0 ? `search-item-${activeIndex}` : undefined}
         />
-        {loading && <div className="st-header-search-spinner" />}
+        {loading && <div className="st-header-search-spinner" role="status" aria-label="Loading search results" />}
       </div>
 
       {open && results && (

@@ -61,8 +61,8 @@ export default function PaywallGate({
 
   return (
     <div className={`st-paywall-gate ${className ?? ''}`}>
-      {/* Real content — blurred */}
-      <div className="st-paywall-gate__content" aria-hidden="true">
+      {/* Real content — blurred (inert prevents focus but keeps in a11y tree) */}
+      <div className="st-paywall-gate__content" inert={true}>
         {children}
       </div>
 

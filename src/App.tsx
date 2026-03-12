@@ -29,9 +29,10 @@ export default function App() {
     <BrowserRouter basename={basename}>
       <ScrollToTop />
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <a href="#main-content" className="st-skip-link">Skip to main content</a>
         <TopBanner />
         <Header />
-        <main style={{ flexGrow: 1 }}>
+        <main id="main-content" style={{ flexGrow: 1 }}>
           <ErrorBoundary>
             <Routes>
               {/* Public routes */}

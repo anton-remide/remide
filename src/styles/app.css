@@ -6771,3 +6771,31 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
     right: 8px;
   }
 }
+
+/* ── Skip-to-content link (a11y) ── */
+.st-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+}
+.st-skip-link:focus {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  overflow: visible;
+  padding: 10px 24px;
+  background: var(--black);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}

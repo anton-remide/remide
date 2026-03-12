@@ -212,10 +212,10 @@ export default function DataTable<T extends Record<string, unknown>>({
                   >
                     {col.label}
                     {col.sortable && sort.field === col.key && sort.direction === 'asc' && (
-                      <ChevronUp size={14} style={{ marginLeft: 4, verticalAlign: 'middle' }} />
+                      <ChevronUp size={14} aria-hidden="true" style={{ marginLeft: 4, verticalAlign: 'middle' }} />
                     )}
                     {col.sortable && sort.field === col.key && sort.direction === 'desc' && (
-                      <ChevronDown size={14} style={{ marginLeft: 4, verticalAlign: 'middle' }} />
+                      <ChevronDown size={14} aria-hidden="true" style={{ marginLeft: 4, verticalAlign: 'middle' }} />
                     )}
                   </th>
                 );
