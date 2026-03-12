@@ -21,6 +21,7 @@ import type { Document as FirecrawlDocument, DocumentMetadata } from '@mendable/
 import { config } from '../../shared/config.js';
 import { getSupabase } from '../../shared/supabase.js';
 import { logger, sendTelegramAlert } from '../../shared/logger.js';
+import { SYSTEM_LIMITS, enforceBatchLimit, acquireLock, releaseLock, setRuntimeTimeout, withRetry } from '../../shared/guards.js';
 
 const SCOPE = 'enrichment';
 const DEFAULT_LIMIT = 50;
@@ -476,7 +477,12 @@ async function logEnrichmentRun(stats: RunStats, errors: string[]): Promise<void
 
 async function main() {
   const startTime = Date.now();
-  const { country, limit } = parseArgs();
+  const { country, limit: rawLimit } = parseArgs();
+
+  // Enforce system limits + acquire process lock + set runtime timeout
+  const limit = enforceBatchLimit(rawLimit, SYSTEM_LIMITS.ENRICHMENT_MAX_BATCH, SCOPE);
+  const lockFile = acquireLock(SCOPE);
+  const clearRuntimeTimeout = setRuntimeTimeout(SCOPE);
 
   logger.info(SCOPE, '=======================================');
   logger.info(SCOPE, '  Firecrawl Enrichment Worker');
@@ -615,6 +621,10 @@ async function main() {
       true,
     );
   }
+
+  // 8. Cleanup
+  clearRuntimeTimeout();
+  releaseLock(lockFile);
 }
 
 main().catch(async (err) => {

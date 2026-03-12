@@ -24,11 +24,12 @@
 import { config } from '../../shared/config.js';
 import { getSupabase } from '../../shared/supabase.js';
 import { logger, sendTelegramAlert } from '../../shared/logger.js';
+import { SYSTEM_LIMITS, enforceBatchLimit, acquireLock, releaseLock, setRuntimeTimeout, withRetry } from '../../shared/guards.js';
 import { processEntity, type QualityInput, type QualityResult } from './rules.js';
 
 const SCOPE = 'quality';
 const DEFAULT_LIMIT = 5000;
-const BATCH_SIZE = 50;  // Supabase write chunk size
+const BATCH_SIZE = SYSTEM_LIMITS.SUPABASE_WRITE_BATCH;  // Supabase write chunk size
 
 /* ── Types ── */
 
@@ -258,8 +259,13 @@ async function logQualityRun(stats: RunStats, errors: string[]): Promise<void> {
 
 async function main() {
   const startTime = Date.now();
-  const { country, parser, limit, force } = parseArgs();
+  const { country, parser, limit: rawLimit, force } = parseArgs();
   const dryRun = config.flags.dryRun;
+
+  // Enforce system limits + acquire process lock + set runtime timeout
+  const limit = enforceBatchLimit(rawLimit, SYSTEM_LIMITS.QUALITY_MAX_BATCH, SCOPE);
+  const lockFile = acquireLock(SCOPE);
+  const clearRuntimeTimeout = setRuntimeTimeout(SCOPE);
 
   logger.info(SCOPE, '═══════════════════════════════════════════');
   logger.info(SCOPE, '  Quality Worker — Cleanup + Classify + Score');
@@ -374,6 +380,10 @@ async function main() {
       true,
     );
   }
+
+  // 7. Cleanup
+  clearRuntimeTimeout();
+  releaseLock(lockFile);
 }
 
 main().catch(async (err) => {

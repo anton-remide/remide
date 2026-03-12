@@ -26,6 +26,7 @@ import { promises as dns } from 'node:dns';
 import { config } from '../../shared/config.js';
 import { getSupabase } from '../../shared/supabase.js';
 import { logger, sendTelegramAlert } from '../../shared/logger.js';
+import { SYSTEM_LIMITS, enforceBatchLimit, acquireLock, releaseLock, setRuntimeTimeout, withRetry } from '../../shared/guards.js';
 
 const SCOPE = 'verify';
 const DEFAULT_LIMIT = 500;
@@ -361,8 +362,13 @@ async function runBatch<T, R>(
 
 async function main() {
   const startTime = Date.now();
-  const { country, limit, force } = parseArgs();
+  const { country, limit: rawLimit, force } = parseArgs();
   const dryRun = config.flags.dryRun;
+
+  // Enforce system limits + acquire process lock + set runtime timeout
+  const limit = enforceBatchLimit(rawLimit, SYSTEM_LIMITS.VERIFY_MAX_BATCH, SCOPE);
+  const lockFile = acquireLock(SCOPE);
+  const clearRuntimeTimeout = setRuntimeTimeout(SCOPE);
 
   logger.info(SCOPE, '═══════════════════════════════════════════');
   logger.info(SCOPE, '  Verify Worker — DNS + HTTP Liveness');
@@ -454,6 +460,10 @@ async function main() {
       true,
     );
   }
+
+  // 7. Cleanup
+  clearRuntimeTimeout();
+  releaseLock(lockFile);
 }
 
 main().catch(async (err) => {
