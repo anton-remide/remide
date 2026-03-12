@@ -417,12 +417,65 @@ export default function WorldMap({
     mapRef.current.setPaintProperty('countries-focus-border', 'line-color', '#FFFFFF');
   }, [loaded, focusCodes]);
 
-  // Hover + click handlers
+  // Hover + click handlers (desktop: mousemove tooltip, click navigate)
+  // Touch: first tap shows tooltip, second tap on same country navigates
   useEffect(() => {
     if (!loaded || !mapRef.current) return;
     const map = mapRef.current;
     const tooltip = tooltipRef.current;
     let hoveredId: string | null = null;
+    let touchSelectedCode: string | null = null;
+    let touchTimer: ReturnType<typeof setTimeout> | undefined;
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    /** Build tooltip HTML for a feature */
+    const buildTooltipHTML = (f: maplibregl.MapGeoJSONFeature) => {
+      const name = f.properties?.countryName || '';
+      const regime = f.properties?.regime || '';
+      const travelRule = f.properties?.travelRule || '';
+      const entities = f.properties?.entityCount || 0;
+      const regulator = f.properties?.regulator || '';
+      const stablecoinStatus = f.properties?.stablecoinStatus || 'No Data';
+      return `
+        <strong>${name}</strong>
+        <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
+          ${regime} · ${travelRule}
+          <br/>${entities} entities${stablecoinStatus !== 'No Data' ? ` · Stablecoins: ${stablecoinStatus}` : ''}
+          ${regulator ? `<br/>${regulator}` : ''}
+        </div>
+        ${isTouchDevice ? '<div style="margin-top:6px;font-size:0.6875rem;opacity:0.6">Tap again to open</div>' : ''}
+      `;
+    };
+
+    /** Position tooltip: at cursor on desktop, centered bottom on mobile */
+    const positionTooltip = (point: maplibregl.Point) => {
+      if (!tooltip) return;
+      if (isTouchDevice) {
+        // Center horizontally, anchor near bottom of map
+        tooltip.style.left = '50%';
+        tooltip.style.top = '';
+        tooltip.style.bottom = '12px';
+        tooltip.style.transform = 'translateX(-50%)';
+      } else {
+        tooltip.style.left = `${point.x + 12}px`;
+        tooltip.style.top = `${point.y - 12}px`;
+        tooltip.style.bottom = '';
+        tooltip.style.transform = '';
+      }
+    };
+
+    const showHover = (alpha2: string) => {
+      map.setPaintProperty('countries-hover', 'fill-opacity', [
+        'case',
+        ['==', ['get', 'alpha2'], alpha2],
+        0.1,
+        0,
+      ]);
+    };
+
+    const clearHover = () => {
+      map.setPaintProperty('countries-hover', 'fill-opacity', 0);
+    };
 
     const onMouseMove = (e: maplibregl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: ['countries-fill'] });
@@ -433,39 +486,19 @@ export default function WorldMap({
 
         if (tooltip && alpha2 !== hoveredId) {
           hoveredId = alpha2;
-          const name = f.properties?.countryName || '';
-          const regime = f.properties?.regime || '';
-          const travelRule = f.properties?.travelRule || '';
-          const entities = f.properties?.entityCount || 0;
-          const regulator = f.properties?.regulator || '';
-          const stablecoinStatus = f.properties?.stablecoinStatus || 'No Data';
-          tooltip.innerHTML = `
-            <strong>${name}</strong>
-            <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
-              ${regime} · ${travelRule}
-              <br/>${entities} entities${stablecoinStatus !== 'No Data' ? ` · Stablecoins: ${stablecoinStatus}` : ''}
-              ${regulator ? `<br/>${regulator}` : ''}
-            </div>
-          `;
+          tooltip.innerHTML = buildTooltipHTML(f);
         }
 
         if (tooltip) {
           tooltip.classList.add('visible');
-          tooltip.style.left = `${e.point.x + 12}px`;
-          tooltip.style.top = `${e.point.y - 12}px`;
+          positionTooltip(e.point);
         }
-
-        map.setPaintProperty('countries-hover', 'fill-opacity', [
-          'case',
-          ['==', ['get', 'alpha2'], alpha2],
-          0.1,
-          0,
-        ]);
+        showHover(alpha2);
       } else {
         map.getCanvas().style.cursor = '';
         if (tooltip) tooltip.classList.remove('visible');
         hoveredId = null;
-        map.setPaintProperty('countries-hover', 'fill-opacity', 0);
+        clearHover();
       }
     };
 
@@ -473,14 +506,53 @@ export default function WorldMap({
       map.getCanvas().style.cursor = '';
       if (tooltip) tooltip.classList.remove('visible');
       hoveredId = null;
-      map.setPaintProperty('countries-hover', 'fill-opacity', 0);
+      clearHover();
     };
 
     const onClick = (e: maplibregl.MapMouseEvent) => {
       const features = map.queryRenderedFeatures(e.point, { layers: ['countries-fill'] });
-      if (features.length && onCountryClick) {
-        const alpha2 = features[0].properties?.alpha2;
-        if (alpha2) onCountryClick(alpha2);
+      if (!features.length) {
+        // Tapped empty area — clear selection
+        if (isTouchDevice) {
+          touchSelectedCode = null;
+          if (tooltip) tooltip.classList.remove('visible');
+          clearHover();
+        }
+        return;
+      }
+
+      const alpha2 = features[0].properties?.alpha2;
+      if (!alpha2) return;
+
+      if (isTouchDevice) {
+        // Touch: first tap = preview tooltip, second tap on same country = navigate
+        if (touchSelectedCode === alpha2 && onCountryClick) {
+          // Second tap — navigate
+          touchSelectedCode = null;
+          if (tooltip) tooltip.classList.remove('visible');
+          clearHover();
+          onCountryClick(alpha2);
+        } else {
+          // First tap — show tooltip
+          touchSelectedCode = alpha2;
+          if (tooltip) {
+            tooltip.innerHTML = buildTooltipHTML(features[0]);
+            tooltip.classList.add('visible');
+            positionTooltip(e.point);
+          }
+          showHover(alpha2);
+
+          // Auto-dismiss after 4s
+          clearTimeout(touchTimer);
+          touchTimer = setTimeout(() => {
+            touchSelectedCode = null;
+            if (tooltip) tooltip.classList.remove('visible');
+            clearHover();
+          }, 4000);
+        }
+      } else {
+        // Desktop: direct navigation
+        if (onCountryClick) onCountryClick(alpha2);
       }
     };
 
@@ -492,6 +564,7 @@ export default function WorldMap({
       map.off('mousemove', onMouseMove);
       map.off('mouseleave', 'countries-fill', onMouseLeave);
       map.off('click', onClick);
+      clearTimeout(touchTimer);
     };
   }, [loaded, onCountryClick]);
 

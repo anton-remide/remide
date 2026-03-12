@@ -3406,6 +3406,13 @@ a, button, input, select, textarea {
     max-width: 140px;
   }
 
+  /* --- Map tooltip: centered at bottom on touch devices --- */
+  .st-map-tooltip {
+    white-space: normal;
+    max-width: calc(100% - 32px);
+    text-align: center;
+  }
+
   .st-map-toolbar {
     padding: 8px 12px;
   }
