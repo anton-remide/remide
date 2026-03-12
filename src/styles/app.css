@@ -7025,6 +7025,11 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   }
 }
 
+/* Ensure footer clears the floating CTA bar on detail pages */
+article.st-page:has(.st-floating-cta) {
+  padding-bottom: 140px;
+}
+
 /* ── Skip-to-content link (a11y) ── */
 .st-skip-link {
   position: absolute;
