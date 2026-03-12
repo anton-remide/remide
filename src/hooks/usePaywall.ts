@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
+import { useSubscription } from './useSubscription';
 
 export type PaywallTier = 'anonymous' | 'registered' | 'paid';
 
 interface PaywallContext {
-  /** Current tier: anonymous → registered (free) → paid ($49) */
+  /** Current tier: anonymous → registered (free) → paid (€49) */
   tier: PaywallTier;
   /** Not logged in */
   isAnonymous: boolean;
@@ -16,6 +17,10 @@ interface PaywallContext {
   hasAccess: boolean;
   /** Shorthand: has full paid access */
   hasFullAccess: boolean;
+  /** True while fetching tier from DB */
+  loading: boolean;
+  /** Re-fetch tier from DB (e.g. after Stripe redirect) */
+  refresh: () => Promise<void>;
 }
 
 /**
@@ -25,11 +30,12 @@ interface PaywallContext {
  * Tier 1 — Registered: VALUES visible, limited depth, detail pages behind paywall
  * Tier 2 — Paid:       Everything unlocked
  *
- * `isPaid` is determined by user_metadata.paid_at or app_metadata.is_paid.
- * Until payment integration is done, all registered users are Tier 1 only.
+ * Reads subscription tier from `user_profiles` table (via useSubscription).
+ * Falls back to user_metadata/app_metadata for backward compat.
  */
 export function usePaywall(): PaywallContext {
   const { user } = useAuth();
+  const { tier: dbTier, loading, refresh } = useSubscription();
 
   return useMemo(() => {
     if (!user) {
@@ -40,15 +46,14 @@ export function usePaywall(): PaywallContext {
         isPaid: false,
         hasAccess: false,
         hasFullAccess: false,
+        loading,
+        refresh,
       };
     }
 
-    // Check for paid status in user metadata
-    const meta = user.user_metadata ?? {};
-    const appMeta = user.app_metadata ?? {};
-    const paid = !!(meta.paid_at || appMeta.is_paid || meta.is_paid);
+    const isPaid = dbTier === 'paid';
 
-    if (paid) {
+    if (isPaid) {
       return {
         tier: 'paid' as const,
         isAnonymous: false,
@@ -56,6 +61,8 @@ export function usePaywall(): PaywallContext {
         isPaid: true,
         hasAccess: true,
         hasFullAccess: true,
+        loading,
+        refresh,
       };
     }
 
@@ -66,6 +73,8 @@ export function usePaywall(): PaywallContext {
       isPaid: false,
       hasAccess: true,
       hasFullAccess: false,
+      loading,
+      refresh,
     };
-  }, [user]);
+  }, [user, dbTier, loading, refresh]);
 }

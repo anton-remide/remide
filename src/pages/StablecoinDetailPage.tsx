@@ -11,7 +11,8 @@ import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import Badge from '../components/ui/Badge';
-import PaywallOverlay from '../components/ui/PaywallOverlay';
+import PaywallGate from '../components/ui/PaywallGate';
+import FloatingPaywallCTA from '../components/ui/FloatingPaywallCTA';
 import { useState, useEffect } from 'react';
 
 /* ── Helpers ── */
@@ -423,56 +424,51 @@ export default function StablecoinDetailPage() {
         </div>
       )}
 
-      {isAnonymous ? (
-        <PaywallOverlay
-          title={`Unlock ${coin.ticker} Full Intelligence`}
-          count={(blockchains?.length ?? 0) + (licenses?.length ?? 0) + coin.majorJurisdictions.length}
-          noun="data records"
-          variant="signup"
-        />
-      ) : !hasFullAccess ? (
-        <PaywallOverlay
-          title={`Unlock ${coin.ticker} Premium Data`}
-          count={(licenses?.length ?? 0)}
+      {/* ── Issuer Licenses — shown blurred for non-paid via PaywallGate ── */}
+      {licenses && licenses.length > 0 && (
+        <PaywallGate
+          locked={!hasFullAccess}
+          title={isAnonymous ? `Unlock ${coin.ticker} Full Intelligence` : `Unlock ${coin.ticker} Premium Data`}
+          count={licenses.length}
           noun="license records"
-          variant="upgrade"
-        />
-      ) : null}
-
-      {/* ── Issuer Licenses — paid only ── */}
-      {hasFullAccess && licenses && licenses.length > 0 && (
-        <div className="reveal" style={{ marginBottom: 32 }}>
-          <h6 className="st-section-label">
-            <Shield size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-            Issuer Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({licenses.length})</span>
-          </h6>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-            {licenses.map((lic) => (
-              <div key={lic.id} className="st-card clip-lg" style={{ padding: '14px 18px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <h6 style={{ fontSize: '0.8125rem', fontWeight: 600, margin: 0, flex: 1 }}>{lic.title}</h6>
-                  {lic.canIssue && (
-                    <span className="st-badge" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
+          variant={isAnonymous ? 'signup' : 'upgrade'}
+        >
+          <div className="reveal" style={{ marginBottom: 32 }}>
+            <h6 className="st-section-label">
+              <Shield size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
+              Issuer Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({licenses.length})</span>
+            </h6>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+              {licenses.map((lic) => (
+                <div key={lic.id} className="st-card clip-lg" style={{ padding: '14px 18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <h6 style={{ fontSize: '0.8125rem', fontWeight: 600, margin: 0, flex: 1 }}>{lic.title}</h6>
+                    {lic.canIssue && (
+                      <span className="st-badge" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
+                    )}
+                  </div>
+                  {lic.detail && (
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '6px 0 0', lineHeight: 1.5 }}>
+                      {lic.detail.length > 150 ? `${lic.detail.slice(0, 150)}…` : lic.detail}
+                    </p>
                   )}
+                  <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {lic.countryCode && (
+                      <span>{countryCodeToFlag(lic.countryCode)} {lic.country || lic.countryCode}</span>
+                    )}
+                    {lic.subsidiaryName && (
+                      <span>via {lic.subsidiaryName}</span>
+                    )}
+                  </div>
                 </div>
-                {lic.detail && (
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '6px 0 0', lineHeight: 1.5 }}>
-                    {lic.detail.length > 150 ? `${lic.detail.slice(0, 150)}…` : lic.detail}
-                  </p>
-                )}
-                <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  {lic.countryCode && (
-                    <span>{countryCodeToFlag(lic.countryCode)} {lic.country || lic.countryCode}</span>
-                  )}
-                  {lic.subsidiaryName && (
-                    <span>via {lic.subsidiaryName}</span>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </PaywallGate>
       )}
+
+      {/* ── Floating bottom CTA for non-paid users ── */}
+      <FloatingPaywallCTA />
     </article>
   );
 }

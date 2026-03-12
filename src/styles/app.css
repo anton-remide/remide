@@ -4550,29 +4550,97 @@ a, button, input, select, textarea {
   padding: 0 24px;
 }
 
-/* Urgency Banner */
+/* Urgency Banner — dark card style (matches landing early-access) */
 .st-pricing-urgency-banner {
+  background-color: var(--black);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 8px 8px;
+  background-position: 0 0;
+  padding: 20px 24px;
+  border-radius: 16px;
+}
+
+.st-urgency-inner {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: #0A2540;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.st-pricing-urgency-banner strong {
+.st-urgency-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.st-urgency-label svg {
   color: #FF5F0F;
+}
+
+.st-urgency-countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.st-urgency-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+}
+
+.st-urgency-num {
   font-family: 'Doto', monospace;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #FF5F0F;
+  background: rgba(255, 95, 15, 0.08);
+  border: 1px solid rgba(255, 95, 15, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-width: 44px;
+  text-align: center;
+}
+
+.st-urgency-txt {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+
+.st-urgency-sep {
+  font-family: 'Doto', monospace;
+  font-size: 1.1rem;
   font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+  .st-pricing-urgency-banner {
+    padding: 16px 16px;
+  }
+  .st-urgency-inner {
+    gap: 12px;
+  }
 }
 
 /* Hero */
 .st-pricing-hero {
   text-align: center;
-  padding: 72px 24px 48px;
+  padding: 12px 24px 24px;
 }
 
 .st-pricing-hero-title {
@@ -5088,7 +5156,7 @@ thead .st-pricing-col-highlight {
 /* ── Pricing Page responsive ── */
 @media (max-width: 768px) {
   .st-pricing-hero {
-    padding: 48px 16px 32px;
+    padding: 24px 16px 24px;
   }
   .st-pricing-card {
     padding: 32px 20px 28px;
@@ -5151,7 +5219,7 @@ thead .st-pricing-col-highlight {
   overflow: hidden;
   isolation: isolate;
   margin-top: var(--header-content-offset);
-  padding: 80px 0 64px;
+  padding: 32px 0 64px;
   background: linear-gradient(180deg, #F6F2EE 0%, #F7F3EF 62%, #F6F2EE 100%);
   text-align: center;
 }
@@ -5184,7 +5252,7 @@ thead .st-pricing-col-highlight {
   margin-left: auto;
   margin-right: auto;
   color: var(--landing-text);
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .st-landing-v2 .st-landing-hero-title {
@@ -5206,10 +5274,16 @@ thead .st-pricing-col-highlight {
 .st-landing-v2 .st-hero p strong {
   color: var(--landing-text);
 }
+.st-landing-v2 .st-hero .st-audience-card p {
+  max-width: none;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
 
 .st-landing-v2 .st-hero-buttons {
   gap: 16px;
-  margin-bottom: 48px;
+  margin-bottom: 36px;
 }
 
 .st-landing-v2 .st-landing-cta-icon {
@@ -5337,6 +5411,110 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2-features {
   padding: 0 24px 96px;
+}
+
+/* ── Audience Split (Two-Column) ── */
+.st-audience-section {
+  padding: 48px 24px 0;
+}
+.st-audience-section--pricing {
+  padding: 0 24px 32px;
+}
+.st-audience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.st-audience-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  align-items: center;
+}
+.st-audience-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.st-audience-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.st-audience-card h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.st-audience-card p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}
+.st-audience-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.st-audience-bullets li {
+  font-size: 0.8125rem;
+  color: var(--text);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.st-audience-bullets li::before {
+  content: '✓';
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.st-audience-grid--hero {
+  margin-top: 20px;
+  margin-bottom: 28px;
+  max-width: 1030px;
+}
+
+@media (max-width: 640px) {
+  .st-audience-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .st-audience-section {
+    padding: 32px 16px 0;
+  }
+  .st-audience-section--pricing {
+    padding: 0 16px 24px;
+  }
+  .st-audience-card {
+    padding: 20px 18px;
+  }
+  .st-audience-grid--hero {
+    margin-top: 24px;
+  }
 }
 
 /* ── Landing Early Access Banner ── */
@@ -6298,4 +6476,213 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   padding: 0 24px;
   height: 44px;
   font-weight: 600;
+}
+
+/* ==========================================================================
+   PaywallGate — Blur Real Content + Floating CTA
+   Shows actual content blurred (not fake bars) for better FOMO
+   ========================================================================== */
+
+.st-paywall-gate {
+  position: relative;
+  min-height: 180px;
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.st-paywall-gate__content {
+  filter: blur(6px);
+  opacity: 0.65;
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+/* Bottom gradient fade over blurred content */
+.st-paywall-gate__fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(
+    to bottom,
+    rgba(246, 242, 238, 0) 0%,
+    rgba(246, 242, 238, 0.85) 60%,
+    rgba(246, 242, 238, 1) 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* CTA overlay card — centered */
+.st-paywall-gate__card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(1px);
+}
+
+.st-paywall-gate__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: 0 2px 8px rgba(10, 37, 64, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.st-paywall-gate__title {
+  font-family: var(--font2);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.st-paywall-gate__teaser {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.st-paywall-gate__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1rem;
+  padding: 0 28px;
+  height: 48px;
+  font-weight: 600;
+  width: 100%;
+  max-width: 340px;
+}
+
+.st-paywall-gate__sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+  display: flex;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Floating Bottom CTA Bar — Sticky bar for non-paid users
+   ========================================================================== */
+
+.st-floating-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  padding: 0 16px 16px;
+  pointer-events: none;
+  animation: st-float-up 0.4s ease-out;
+}
+
+@keyframes st-float-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.st-floating-cta__inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(10, 37, 64, 0.12), 0 2px 8px rgba(10, 37, 64, 0.06);
+  pointer-events: auto;
+}
+
+.st-floating-cta__text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.st-floating-cta__text svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.st-floating-cta__btn {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  padding: 0 18px;
+  height: 36px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.st-floating-cta__dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-floating-cta__dismiss:hover {
+  opacity: 1;
+}
+
+/* Mobile: stack floating CTA vertically */
+@media (max-width: 600px) {
+  .st-floating-cta__inner {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    position: relative;
+  }
+  .st-floating-cta__text {
+    flex-basis: 100%;
+    font-size: 0.75rem;
+  }
+  .st-floating-cta__btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .st-floating-cta__dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
 }
