@@ -5251,12 +5251,33 @@ thead .st-pricing-col-highlight {
     -webkit-overflow-scrolling: touch;
   }
   .st-pricing-comparison-table table {
-    min-width: 560px;
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+  }
+  .st-pricing-comparison-table th:first-child,
+  .st-pricing-comparison-table td:first-child {
+    width: 52%;
+    word-wrap: break-word;
   }
   .st-pricing-comparison-table th,
   .st-pricing-comparison-table td {
-    padding: 10px 12px;
-    font-size: 0.8125rem;
+    padding: 9px 6px;
+    font-size: 0.75rem;
+  }
+  .st-pricing-comparison-table th:nth-child(2),
+  .st-pricing-comparison-table th:nth-child(3),
+  .st-pricing-comparison-table th:nth-child(4) {
+    width: 16%;
+    padding: 9px 2px;
+    font-size: 0.5625rem;
+    line-height: 1.2;
+  }
+  .st-pricing-comparison-table td:nth-child(2),
+  .st-pricing-comparison-table td:nth-child(3),
+  .st-pricing-comparison-table td:nth-child(4) {
+    padding: 9px 2px;
+    font-size: 0.6875rem;
   }
   .st-pricing-demo-card {
     padding: 32px 20px;
