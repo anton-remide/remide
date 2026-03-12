@@ -1,10 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import MobileMenu from './MobileMenu';
 import HeaderSearch from './HeaderSearch';
+import MobileSearchOverlay from './MobileSearchOverlay';
 
 export default function Header() {
   const location = useLocation();
@@ -13,6 +14,7 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +30,7 @@ export default function Header() {
   // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
+    setSearchOpen(false);
     setAvatarOpen(false);
   }, [location.pathname]);
 
@@ -113,6 +116,14 @@ export default function Header() {
             </nav>
           </div>
 
+          {/* Mobile: search + hamburger */}
+          <button
+            className="st-mobile-search-btn"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Open search"
+          >
+            <Search size={20} />
+          </button>
           <button
             className={`st-hamburger${menuOpen ? ' open' : ''}`}
             onClick={() => setMenuOpen(!menuOpen)}
@@ -128,6 +139,10 @@ export default function Header() {
         links={navLinks}
         user={user}
         onSignOut={handleSignOut}
+      />
+      <MobileSearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
       />
     </>
   );

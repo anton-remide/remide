@@ -631,6 +631,20 @@ ul {
   color: var(--black);
 }
 
+/* Mobile search button (visible only on mobile, next to hamburger) */
+.st-mobile-search-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--black);
+}
+
 /* Hamburger */
 .st-hamburger {
   display: none;
@@ -866,6 +880,161 @@ ul {
   color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Mobile Search Overlay (full-screen, opened from header search icon)
+   ========================================================================== */
+.st-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  animation: st-search-overlay-in 0.2s ease-out;
+}
+@keyframes st-search-overlay-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.st-search-overlay__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+}
+.st-search-overlay__icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.st-search-overlay__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+}
+.st-search-overlay__input::placeholder {
+  color: var(--text-muted);
+}
+.st-search-overlay__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--bg-light);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.st-search-overlay__close:hover { background: var(--border); }
+
+.st-search-overlay__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Recent searches */
+.st-search-overlay__recent { padding: 8px 16px; }
+.st-search-overlay__recent-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.st-search-overlay__recent-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.st-search-overlay__recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.st-search-overlay__recent-item svg { color: var(--text-muted); flex-shrink: 0; }
+.st-search-overlay__recent-item:last-child { border-bottom: none; }
+
+/* Results */
+.st-search-overlay__results { padding: 0 16px; }
+.st-search-overlay__cat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 0 6px;
+}
+.st-search-overlay__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9375rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.st-search-overlay__item:last-child { border-bottom: none; }
+.st-search-overlay__item:active { background: var(--bg-light); }
+.st-search-overlay__item-flag { font-size: 1.1em; flex-shrink: 0; }
+.st-search-overlay__item-icon { color: var(--text-muted); flex-shrink: 0; }
+.st-search-overlay__item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-search-overlay__item-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.st-search-overlay__empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 /* ==========================================================================
@@ -6495,6 +6664,11 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   .st-header-center,
   .st-header-right {
     display: none;
+  }
+
+  .st-mobile-search-btn {
+    display: flex;
+    margin-left: auto;
   }
 
   .st-hamburger {
