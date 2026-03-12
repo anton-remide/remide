@@ -4,7 +4,17 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 import { Plus, Minus } from 'lucide-react';
-import { REGIME_COLORS, TRAVEL_RULE_MAP_COLORS, STABLECOIN_STAGE_MAP_COLORS, CBDC_MAP_COLORS } from '../../theme';
+import {
+  COLORS,
+  REGIME_COLORS,
+  REGIME_DIM_COLORS,
+  TRAVEL_RULE_MAP_COLORS,
+  TRAVEL_RULE_MAP_DIM_COLORS,
+  STABLECOIN_STAGE_MAP_COLORS,
+  STABLECOIN_STAGE_MAP_DIM_COLORS,
+  CBDC_MAP_COLORS,
+  CBDC_MAP_DIM_COLORS,
+} from '../../theme';
 import { numericToAlpha2 } from '../../data/isoMapping';
 import { expandRegionalCode } from '../../data/regionCodes';
 import type { Jurisdiction, RegimeType, TravelRuleStatus } from '../../types';
@@ -29,47 +39,70 @@ interface Props {
 }
 
 /* Build a MapLibre match expression for fill-color */
-function buildFillExpression(mode: MapColorMode): maplibregl.ExpressionSpecification {
+function buildFillExpression(
+  mode: MapColorMode,
+  dimmed = false,
+): maplibregl.ExpressionSpecification {
+  const cbdcColors = dimmed ? CBDC_MAP_DIM_COLORS : CBDC_MAP_COLORS;
+  const stablecoinColors = dimmed ? STABLECOIN_STAGE_MAP_DIM_COLORS : STABLECOIN_STAGE_MAP_COLORS;
+  const travelRuleColors = dimmed ? TRAVEL_RULE_MAP_DIM_COLORS : TRAVEL_RULE_MAP_COLORS;
+  const regimeColors = dimmed ? REGIME_DIM_COLORS : REGIME_COLORS;
+  const fallback = dimmed ? '#f8fafc' : '#E2E8F0';
+
   if (mode === 'cbdc') {
     return [
       'match', ['get', 'stablecoinStatus'],
-      'Launched', CBDC_MAP_COLORS['Launched'],
-      'Pilot', CBDC_MAP_COLORS['Pilot'],
-      'Development', CBDC_MAP_COLORS['Development'],
-      'Research', CBDC_MAP_COLORS['Research'],
-      'Cancelled', CBDC_MAP_COLORS['Cancelled'],
-      'Inactive', CBDC_MAP_COLORS['Inactive'],
-      '#E2E8F0', // no CBDC data
+      'Launched', cbdcColors['Launched'],
+      'Pilot', cbdcColors['Pilot'],
+      'Development', cbdcColors['Development'],
+      'Research', cbdcColors['Research'],
+      'Cancelled', cbdcColors['Cancelled'],
+      'Inactive', cbdcColors['Inactive'],
+      fallback, // no CBDC data
     ];
   }
   if (mode === 'stablecoin') {
     return [
       'match', ['get', 'stablecoinStatus'],
-      'Live', STABLECOIN_STAGE_MAP_COLORS['Live'],
-      'In Progress', STABLECOIN_STAGE_MAP_COLORS['In Progress'],
-      'Developing', STABLECOIN_STAGE_MAP_COLORS['Developing'],
-      'No Framework', STABLECOIN_STAGE_MAP_COLORS['No Framework'],
-      STABLECOIN_STAGE_MAP_COLORS['No Data'],
+      'Live', stablecoinColors['Live'],
+      'In Progress', stablecoinColors['In Progress'],
+      'Developing', stablecoinColors['Developing'],
+      'No Framework', stablecoinColors['No Framework'],
+      stablecoinColors['No Data'],
     ];
   }
   if (mode === 'travelRule') {
     return [
       'match', ['get', 'travelRule'],
-      'Enforced', TRAVEL_RULE_MAP_COLORS['Enforced'],
-      'Legislated', TRAVEL_RULE_MAP_COLORS['Legislated'],
-      'In Progress', TRAVEL_RULE_MAP_COLORS['In Progress'],
-      'Not Implemented', TRAVEL_RULE_MAP_COLORS['Not Implemented'],
-      TRAVEL_RULE_MAP_COLORS['N/A'],
+      'Enforced', travelRuleColors['Enforced'],
+      'Legislated', travelRuleColors['Legislated'],
+      'In Progress', travelRuleColors['In Progress'],
+      'Not Implemented', travelRuleColors['Not Implemented'],
+      travelRuleColors['N/A'],
     ];
   }
   return [
     'match', ['get', 'regime'],
-    'Licensing', REGIME_COLORS.Licensing,
-    'Registration', REGIME_COLORS.Registration,
-    'Sandbox', REGIME_COLORS.Sandbox,
-    'Ban', REGIME_COLORS.Ban,
-    'Unclear', REGIME_COLORS.Unclear,
-    REGIME_COLORS.None,
+    'Licensing', regimeColors.Licensing,
+    'Registration', regimeColors.Registration,
+    'Sandbox', regimeColors.Sandbox,
+    'Ban', regimeColors.Ban,
+    'Unclear', regimeColors.Unclear,
+    regimeColors.None,
+  ];
+}
+
+function buildFocusedFillExpression(
+  mode: MapColorMode,
+  focusCodes: string[],
+): maplibregl.ExpressionSpecification {
+  if (focusCodes.length === 0) return buildFillExpression(mode);
+
+  return [
+    'case',
+    ['in', ['get', 'alpha2'], ['literal', focusCodes]],
+    buildFillExpression(mode),
+    buildFillExpression(mode, true),
   ];
 }
 
@@ -99,6 +132,11 @@ export default function WorldMap({
     jurisdictions.forEach((j) => m.set(j.code.toUpperCase(), j));
     return m;
   }, [jurisdictions]);
+
+  const focusCodes = useMemo(
+    () => (focusCountry ? expandRegionalCode(focusCountry).map((code) => code.toUpperCase()) : []),
+    [focusCountry],
+  );
 
   // Active country codes based on filter state
   const activeCodes = useMemo(() => {
@@ -167,7 +205,7 @@ export default function WorldMap({
         layers: [{
           id: 'background',
           type: 'background',
-          paint: { 'background-color': '#F6F9FC' },
+          paint: { 'background-color': COLORS.white },
         }],
       },
       center: [20, 20],
@@ -238,7 +276,7 @@ export default function WorldMap({
         type: 'fill',
         source: 'countries',
         paint: {
-          'fill-color': buildFillExpression(colorMode) as unknown as string,
+          'fill-color': buildFocusedFillExpression(colorMode, focusCodes) as unknown as string,
           'fill-opacity': 0.82,
         },
       });
@@ -254,7 +292,7 @@ export default function WorldMap({
         id: 'countries-focus-border',
         type: 'line',
         source: 'countries',
-        paint: { 'line-color': '#0A2540', 'line-width': 0, 'line-opacity': 0.7 },
+        paint: { 'line-color': '#FFFFFF', 'line-width': 0, 'line-opacity': 1 },
       });
 
       map.addLayer({
@@ -305,9 +343,9 @@ export default function WorldMap({
     mapRef.current.setPaintProperty(
       'countries-fill',
       'fill-color',
-      buildFillExpression(colorMode) as unknown as string,
+      buildFocusedFillExpression(colorMode, focusCodes) as unknown as string,
     );
-  }, [loaded, colorMode]);
+  }, [loaded, colorMode, focusCodes]);
 
   // Active stablecoin country codes (for opacity when stablecoin filters are active)
   const activeStablecoinCodes = useMemo(() => {
@@ -350,12 +388,10 @@ export default function WorldMap({
   // Zoom to focused country/region (for detail page mini-map)
   // Supports regional codes like 'EU' → zooms to fit all 27 member states
   useEffect(() => {
-    if (!loaded || !mapRef.current || !focusCountry) return;
+    if (!loaded || !mapRef.current || focusCodes.length === 0) return;
     const features = featuresRef.current as Array<{ properties?: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }>;
-
-    const codes = expandRegionalCode(focusCountry);
     const targets = features.filter((f) =>
-      codes.includes(((f.properties?.alpha2 as string) ?? '').toUpperCase()),
+      focusCodes.includes(((f.properties?.alpha2 as string) ?? '').toUpperCase()),
     );
     if (targets.length === 0) return;
 
@@ -373,14 +409,13 @@ export default function WorldMap({
     }
 
     // Highlight focused country borders with thicker stroke
-    const focusCodes = codes;
     const filterExpr: maplibregl.FilterSpecification = focusCodes.length === 1
       ? ['==', ['get', 'alpha2'], focusCodes[0]]
       : ['in', ['get', 'alpha2'], ['literal', focusCodes]];
     mapRef.current.setFilter('countries-focus-border', filterExpr);
     mapRef.current.setPaintProperty('countries-focus-border', 'line-width', 2.5);
-    mapRef.current.setPaintProperty('countries-focus-border', 'line-color', '#0A2540');
-  }, [loaded, focusCountry]);
+    mapRef.current.setPaintProperty('countries-focus-border', 'line-color', '#FFFFFF');
+  }, [loaded, focusCodes]);
 
   // Hover + click handlers
   useEffect(() => {

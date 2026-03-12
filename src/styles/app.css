@@ -24,6 +24,7 @@
   --header-content-gap: 48px;
   --header-content-offset: calc(var(--header-current-height) + var(--header-content-gap));
   --top-banner-height: 32px;
+  --content-max-width: 1200px;
 
   /* Shadow inspired by react-app.js (used for search/buttons) */
   --shadow-soft: 0 12px 12px 0 rgba(0, 0, 0, 0.09),
@@ -2087,8 +2088,8 @@ ul {
    ========================================================================== */
 
 .st-map-section {
-  padding: var(--header-content-offset) 32px 48px;
-  max-width: 1600px;
+  width: min(var(--content-max-width), calc(100% - 48px));
+  padding: var(--header-content-offset) 0 48px;
   margin: 0 auto;
 }
 
@@ -2655,9 +2656,9 @@ ul {
    ========================================================================== */
 
 .st-page {
-  max-width: 1200px;
+  width: min(var(--content-max-width), calc(100% - 48px));
   margin: 0 auto;
-  padding: var(--header-content-offset) 24px 48px;
+  padding: var(--header-content-offset) 0 48px;
 }
 
 .st-page.st-page-entities {
@@ -5228,6 +5229,7 @@ thead .st-pricing-col-highlight {
   --landing-accent: var(--color-accent);
   --landing-card: rgba(141, 141, 134, 0.05);
   --landing-content-gutter: 24px;
+  --landing-hero-map-display: none;
   background: var(--landing-bg);
   color: var(--landing-text);
 }
@@ -5249,7 +5251,7 @@ thead .st-pricing-col-highlight {
 .st-landing-v2 .st-hero-inner {
   position: relative;
   z-index: 1;
-  width: min(1200px, calc(100% - (var(--landing-content-gutter) * 2)));
+  width: min(var(--content-max-width), calc(100% - (var(--landing-content-gutter) * 2)));
   margin: 0 auto;
 }
 
@@ -5348,7 +5350,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-v2 .st-landing-container {
-  width: min(1200px, calc(100% - (var(--landing-content-gutter) * 2)));
+  width: min(var(--content-max-width), calc(100% - (var(--landing-content-gutter) * 2)));
   margin: 0 auto;
 }
 
@@ -6339,10 +6341,11 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   top: 0;
   bottom: 0;
   left: 50%;
-  width: min(1200px, calc(100% - (var(--landing-content-gutter) * 2)));
+  width: min(var(--content-max-width), calc(100% - (var(--landing-content-gutter) * 2)));
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 0;
+  display: var(--landing-hero-map-display);
 }
 
 @media (max-width: 1280px) {

@@ -235,7 +235,7 @@ export default function JurisdictionsPage() {
   }
 
   return (
-    <div ref={revealRef} className="st-map-section" style={{ paddingLeft: 16, paddingRight: 16 }}>
+    <div ref={revealRef} className="st-map-section">
       {/* Map Frame — rounded corners */}
       <div className="st-map-frame">
         <WorldMap
