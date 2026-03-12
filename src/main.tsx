@@ -5,6 +5,10 @@ import './styles/app.css';
 import AuthProvider from './context/AuthProvider';
 import App from './App';
 
+if (window.location.hash.includes('figmacapture=')) {
+  document.documentElement.classList.add('figma-capture-mode');
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>

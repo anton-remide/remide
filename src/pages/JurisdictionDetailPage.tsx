@@ -8,7 +8,14 @@ import {
 } from '../data/dataLoader';
 import { expandRegionalCode } from '../data/regionCodes';
 import type { Entity, Jurisdiction, Cbdc, StablecoinLaw, StablecoinEvent, IssuerLicense } from '../types';
-import { REGIME_CHIP_COLORS, TRAVEL_RULE_COLORS, STATUS_COLORS, STABLECOIN_STAGE_COLORS, CBDC_STATUS_COLORS } from '../theme';
+import {
+  REGIME_CHIP_COLORS,
+  TRAVEL_RULE_COLORS,
+  STATUS_COLORS,
+  STABLECOIN_STAGE_COLORS,
+  CBDC_STATUS_COLORS,
+  YIELD_COLORS,
+} from '../theme';
 import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
@@ -377,20 +384,23 @@ export default function JurisdictionDetailPage() {
               colorMap={STABLECOIN_STAGE_COLORS}
             />
             {jurisdiction.yieldAllowed !== null && (
-              <span style={{
-                display: 'inline-block', padding: '2px 10px', borderRadius: 6,
-                fontSize: '0.8125rem', fontWeight: 500,
-                backgroundColor: jurisdiction.yieldAllowed ? '#ECFDF3' : '#FFF0F0',
-                color: jurisdiction.yieldAllowed ? '#2B7A4B' : '#A93F3F',
-              }}>
-                Yield {jurisdiction.yieldAllowed ? 'Allowed' : 'Prohibited'}
-              </span>
+              <Badge
+                label={jurisdiction.yieldAllowed ? 'Yield Allowed' : 'Yield Prohibited'}
+                colorMap={YIELD_COLORS}
+              />
             )}
             {jurisdiction.isStablecoinSpecific && (
-              <span style={{
-                display: 'inline-block', padding: '2px 10px', borderRadius: 6,
-                fontSize: '0.8125rem', fontWeight: 500, backgroundColor: '#EEF0FF', color: '#4B5CC4',
-              }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '2px 10px',
+                  borderRadius: 6,
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  backgroundColor: '#EEF0FF',
+                  color: '#4B5CC4',
+                }}
+              >
                 Stablecoin-Specific Law
               </span>
             )}
