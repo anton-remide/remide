@@ -3149,6 +3149,55 @@ a, button, input, select, textarea {
     display: none;
   }
 
+  /* --- Entity stat chips: tighter + region bar horizontal scroll --- */
+  .st-entity-stats-bar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .st-entity-stats-bar.st-region-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 16px;
+  }
+
+  .st-entity-stats-bar.st-region-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .st-entity-stats-bar.st-region-bar .st-entity-stat-chip {
+    flex-shrink: 0;
+  }
+
+  .st-entity-stat-chip {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .st-entity-stat-value {
+    font-size: 0.875rem;
+  }
+
+  .st-entity-stat-label {
+    font-size: 0.625rem;
+  }
+
+  .st-entity-stat-chip.compact {
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .st-entity-stat-chip.compact .st-entity-stat-value {
+    font-size: 0.75rem;
+  }
+
+  .st-entity-stat-chip.compact .st-entity-stat-label {
+    font-size: 0.5625rem;
+  }
+
   /* --- DataTable mobile --- */
   .st-table-scroll {
     overflow-x: auto;
