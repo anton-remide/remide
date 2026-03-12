@@ -29,6 +29,7 @@ import Badge from '../components/ui/Badge';
 import DataTable, { type Column } from '../components/ui/DataTable';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import WorldMap, { type MapColorMode } from '../components/map/WorldMap';
+import FloatingPaywallCTA from '../components/ui/FloatingPaywallCTA';
 
 /* ── Helpers ── */
 
@@ -879,6 +880,8 @@ export default function JurisdictionDetailPage() {
           )}
         </>
       )}
+      {/* ── Floating bottom CTA for non-paid users ── */}
+      <FloatingPaywallCTA />
     </article>
   );
 }

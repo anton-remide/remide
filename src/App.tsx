@@ -23,6 +23,8 @@ const CbdcDetailPage = lazy(() => import('./pages/CbdcDetailPage'));
 const IssuerDetailPage = lazy(() => import('./pages/IssuerDetailPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const WelcomePage = lazy(() => import('./pages/WelcomePage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 /* BrowserRouter basename — matches Vite base config.
@@ -51,6 +53,8 @@ export default function App() {
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/welcome" element={<WelcomePage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* Redirects from old routes */}
                 <Route path="/stablecoins" element={<Navigate to="/entities?tab=stablecoins" replace />} />

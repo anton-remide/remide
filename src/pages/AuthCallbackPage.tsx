@@ -7,6 +7,14 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Listen for auth events — PASSWORD_RECOVERY needs special handling
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked password reset link — redirect to set new password
+        navigate('/reset-password', { replace: true });
+      }
+    });
+
     const handleCallback = async () => {
       try {
         // Supabase automatically exchanges the token from the URL hash
@@ -19,6 +27,13 @@ export default function AuthCallbackPage() {
 
         if (!session) {
           setError('No session found. Please try signing in again.');
+          return;
+        }
+
+        // Check if this is a password recovery flow (hash contains type=recovery)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        if (hashParams.get('type') === 'recovery') {
+          navigate('/reset-password', { replace: true });
           return;
         }
 
@@ -52,6 +67,8 @@ export default function AuthCallbackPage() {
     };
 
     handleCallback();
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   if (error) {
