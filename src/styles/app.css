@@ -1302,6 +1302,8 @@ ul {
 .st-table-search-icon {
   position: absolute;
   left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
 }
@@ -2348,13 +2350,13 @@ ul {
 .st-entity-stats-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .st-entity-stats-bar.st-region-bar {
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .st-entity-stat-chip {
