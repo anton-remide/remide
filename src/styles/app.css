@@ -2711,6 +2711,18 @@ ul {
   animation: revealFallback 0.5s ease forwards 3.2s;
 }
 
+html.figma-capture-mode .reveal,
+html.figma-capture-mode .stagger-in {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+html.figma-capture-mode .st-loading-pulse {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
 @keyframes revealFallback {
   to {
     opacity: 1;
@@ -5374,22 +5386,24 @@ thead .st-pricing-col-highlight {
   border: none;
   border-radius: 16px;
   box-shadow: none;
-  padding: 20px 24px;
+  min-height: 102px;
+  padding: 24px;
   text-align: left;
   transition: none;
-  gap: 8px;
+  gap: 12px;
 }
 
 .st-landing-v2 .st-landing-stat-card:hover {
   transform: none;
-  background: rgba(141, 141, 134, 0.08);
+  background: rgba(141, 141, 134, 0.05);
 }
 
 /* Icon + value on same row */
 .st-landing-v2 .st-landing-stat-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   width: 100%;
 }
 
@@ -5408,22 +5422,31 @@ thead .st-pricing-col-highlight {
   justify-content: center;
   margin-bottom: 0;
   color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.st-landing-v2 .st-landing-stat-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .st-landing-v2 .st-landing-stat-value {
   font-family: var(--font2);
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 36px;
   color: var(--color-primary);
   display: block;
   margin-bottom: 0;
+  letter-spacing: 0;
 }
 
 .st-landing-v2 .st-landing-stat-label {
   font-family: var(--font1);
   font-size: 14px;
   font-weight: 400;
+  line-height: 22.4px;
   color: var(--color-text-secondary);
   text-transform: none;
   letter-spacing: normal;
@@ -5970,15 +5993,13 @@ thead .st-pricing-col-highlight {
   }
 
   .st-landing-v2 .st-landing-stat-card {
-    padding: 16px 20px;
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
+    min-height: 0;
+    padding: 18px 20px;
+    gap: 10px;
   }
 
   .st-landing-v2 .st-landing-stat-row {
-    gap: 10px;
-    flex: 1;
+    gap: 12px;
   }
 
   .st-landing-v2 .st-landing-stat-icon {
@@ -5989,6 +6010,7 @@ thead .st-pricing-col-highlight {
 
   .st-landing-v2 .st-landing-stat-value {
     font-size: 28px;
+    line-height: 28px;
   }
 }
 

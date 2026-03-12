@@ -4,6 +4,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+function isFigmaCaptureMode() {
+  return typeof window !== 'undefined' && window.location.hash.includes('figmacapture=');
+}
+
 /** Fade-up reveal for elements with class `.reveal` inside the container */
 export function useReveal(trigger?: unknown) {
   const ref = useRef<HTMLDivElement>(null);
@@ -12,6 +16,10 @@ export function useReveal(trigger?: unknown) {
     if (!ref.current) return;
     const els = ref.current.querySelectorAll('.reveal');
     if (!els.length) return;
+    if (isFigmaCaptureMode()) {
+      gsap.set(els, { opacity: 1, y: 0, clearProps: 'animation' });
+      return;
+    }
 
     // Small delay to let layout settle (async map, images, etc.)
     const timer = setTimeout(() => {
@@ -55,6 +63,10 @@ export function useStaggerReveal(trigger?: unknown) {
     if (!ref.current) return;
     const els = ref.current.querySelectorAll('.stagger-in');
     if (!els.length) return;
+    if (isFigmaCaptureMode()) {
+      gsap.set(els, { opacity: 1, y: 0, clearProps: 'animation' });
+      return;
+    }
 
     // Snapshot triggers BEFORE creating batch
     const beforeIds = new Set(ScrollTrigger.getAll().map((t) => t.vars.id ?? t));
@@ -101,6 +113,10 @@ export function useCounter(target: number, duration = 2.5) {
   useEffect(() => {
     if (!ref.current || target <= 0) return;
     const el = ref.current;
+    if (isFigmaCaptureMode()) {
+      el.textContent = Math.round(target).toLocaleString();
+      return;
+    }
     const obj = { val: 0 };
 
     const animate = () => {

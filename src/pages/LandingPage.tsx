@@ -1,6 +1,6 @@
-import type { ComponentType, FormEvent } from 'react';
+import type { ComponentType, FormEvent, SVGProps } from 'react';
 import { useState, useEffect } from 'react';
-import { Scale, BookOpen, Search, ArrowRight, Coins, Globe, Building2, Landmark, Zap, TrendingUp, Shield } from 'lucide-react';
+import { Scale, BookOpen, Search, ArrowRight, Coins, Zap, TrendingUp, Shield } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { getJurisdictions, getEntityCount, getStablecoins, getCbdcs } from '../data/dataLoader';
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
@@ -9,12 +9,60 @@ import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { trackEvent } from '../utils/analytics';
 import HeroWorldMapCanvas from '../components/ui/HeroWorldMapCanvas';
 
+type StatIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
+
+function GlobeStatIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" {...props}>
+      <path d="M8 14.6667C11.6819 14.6667 14.6667 11.6819 14.6667 8C14.6667 4.3181 11.6819 1.33333 8 1.33333C4.3181 1.33333 1.33333 4.3181 1.33333 8C1.33333 11.6819 4.3181 14.6667 8 14.6667Z" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 1.33333C6.28816 3.13077 5.33333 5.51783 5.33333 8C5.33333 10.4822 6.28816 12.8692 8 14.6667C9.71184 12.8692 10.6667 10.4822 10.6667 8C10.6667 5.51783 9.71184 3.13077 8 1.33333Z" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M1.33333 8H14.6667" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function EntityStatIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" {...props}>
+      <path d="M6.66667 8H9.33333" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.66667 5.33333H9.33333" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.33333 14V12C9.33333 11.6464 9.19286 11.3072 8.94281 11.0572C8.69276 10.8071 8.35362 10.6667 8 10.6667C7.64638 10.6667 7.30724 10.8071 7.05719 11.0572C6.80714 11.3072 6.66667 11.6464 6.66667 12V14" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 6.66667H2.66667C2.31304 6.66667 1.97391 6.80714 1.72386 7.05719C1.47381 7.30724 1.33333 7.64638 1.33333 8V12.6667C1.33333 13.0203 1.47381 13.3594 1.72386 13.6095C1.97391 13.8595 2.31304 14 2.66667 14H13.3333C13.687 14 14.0261 13.8595 14.2761 13.6095C14.5262 13.3594 14.6667 13.0203 14.6667 12.6667V6C14.6667 5.64638 14.5262 5.30724 14.2761 5.05719C14.0261 4.80714 13.687 4.66667 13.3333 4.66667H12" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 14V3.33333C4 2.97971 4.14048 2.64057 4.39052 2.39052C4.64057 2.14048 4.97971 2 5.33333 2H10.6667C11.0203 2 11.3594 2.14048 11.6095 2.39052C11.8595 2.64057 12 2.97971 12 3.33333V14" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function StablecoinStatIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" {...props}>
+      <path d="M9.16267 11.824C8.96254 12.4857 8.59431 13.0843 8.09391 13.5613C7.59352 14.0383 6.97803 14.3775 6.30748 14.5458C5.63693 14.714 4.93422 14.7056 4.26789 14.5214C3.60156 14.3371 2.99436 13.9833 2.50551 13.4945C2.01666 13.0056 1.66286 12.3984 1.47861 11.7321C1.29436 11.0658 1.28596 10.3631 1.45422 9.69252C1.62248 9.02197 1.96166 8.40648 2.43868 7.90609C2.9157 7.40569 3.51427 7.03746 4.176 6.83733" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 4H10.6667V6.66667" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4.08933 9.84533L4.66667 9.512L6 11.8213" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.6667 9.33333C12.8758 9.33333 14.6667 7.54247 14.6667 5.33333C14.6667 3.12419 12.8758 1.33333 10.6667 1.33333C8.45753 1.33333 6.66667 3.12419 6.66667 5.33333C6.66667 7.54247 8.45753 9.33333 10.6667 9.33333Z" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CbdcStatIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" {...props}>
+      <path d="M6.66667 12V7.33333" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7.41333 1.46533C7.59626 1.37647 7.79709 1.33064 8.00046 1.33133C8.20383 1.33202 8.40435 1.37923 8.58667 1.46933L13.8307 4.034C14.148 4.18933 14.0373 4.66667 13.684 4.66667H2.316C1.96267 4.66667 1.85267 4.18933 2.16933 4.034L7.41333 1.46533Z" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.33333 12V7.33333" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 12V7.33333" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 14.6667H14" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 12V7.33333" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function StatCard({
   icon: Icon,
   label,
   value,
 }: {
-  icon: ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+  icon: StatIconComponent;
   label: string;
   value: number;
 }) {
@@ -22,10 +70,10 @@ function StatCard({
   return (
     <div className="st-landing-stat-card stagger-in">
       <div className="st-landing-stat-row">
-        <div className="st-landing-stat-icon" aria-hidden="true">
-          <Icon size={16} color="currentColor" strokeWidth={2} />
-        </div>
         <span className="st-landing-stat-value"><span ref={counterRef}>0</span></span>
+        <div className="st-landing-stat-icon" aria-hidden="true">
+          <Icon />
+        </div>
       </div>
       <span className="st-landing-stat-label">{label}</span>
     </div>
@@ -89,10 +137,10 @@ export default function LandingPage() {
   };
 
   const stats = [
-    { icon: Globe, label: 'Jurisdictions Tracked', value: jurisdictions?.length ?? 0 },
-    { icon: Building2, label: 'Regulated Entities', value: totalEntities },
-    { icon: Coins, label: 'Stablecoins Monitored', value: totalStablecoins },
-    { icon: Landmark, label: 'CBDC Projects', value: totalCbdcs },
+    { icon: GlobeStatIcon, label: 'Jurisdictions Tracked', value: jurisdictions?.length ?? 0 },
+    { icon: EntityStatIcon, label: 'Regulated Entities', value: totalEntities },
+    { icon: StablecoinStatIcon, label: 'Stablecoins Monitored', value: totalStablecoins },
+    { icon: CbdcStatIcon, label: 'CBDC Projects', value: totalCbdcs },
   ];
 
   const features = [
