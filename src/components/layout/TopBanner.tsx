@@ -1,12 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { usePaywall } from '../../hooks/usePaywall';
 
 export default function TopBanner() {
   const bannerRef = useRef<HTMLDivElement>(null);
+  const { isPaid } = usePaywall();
 
   useEffect(() => {
     const updateBannerHeight = () => {
-      if (!bannerRef.current) return;
+      if (!bannerRef.current) {
+        // Banner hidden — reset CSS var
+        document.documentElement.style.setProperty('--top-banner-height', '0px');
+        return;
+      }
       const height = Math.ceil(bannerRef.current.getBoundingClientRect().height);
       document.documentElement.style.setProperty('--top-banner-height', `${height}px`);
     };
@@ -23,7 +29,10 @@ export default function TopBanner() {
       window.removeEventListener('resize', updateBannerHeight);
       document.documentElement.style.removeProperty('--top-banner-height');
     };
-  }, []);
+  }, [isPaid]);
+
+  // Paid users don't see the promo banner
+  if (isPaid) return null;
 
   return (
     <div ref={bannerRef} className="st-top-banner">

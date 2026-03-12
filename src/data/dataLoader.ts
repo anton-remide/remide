@@ -6,6 +6,25 @@ import type {
 } from '../types';
 import { EU_MEMBER_CODES } from './regionCodes';
 
+// ── In-memory cache ── Avoids refetching on page navigation ──
+
+const CACHE_TTL = 5 * 60_000; // 5 minutes
+const cache = new Map<string, { data: unknown; ts: number }>();
+
+function getCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry || Date.now() - entry.ts > CACHE_TTL) return null;
+  return entry.data as T;
+}
+
+function setCache(key: string, data: unknown): void {
+  cache.set(key, { data, ts: Date.now() });
+}
+
+export function clearEntityCache(): void {
+  cache.delete('entities');
+}
+
 // ── Inline name cleanup fallback (last resort when canonical_name is NULL) ──
 function cleanNameFallback(raw: string): string {
   let s = raw;
@@ -151,13 +170,18 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
 // ── Public API (all async) ──
 
 export async function getJurisdictions(): Promise<Jurisdiction[]> {
+  const cached = getCached<Jurisdiction[]>('jurisdictions');
+  if (cached) return cached;
+
   const { data, error } = await supabase
     .from('jurisdictions')
     .select('*')
     .order('entity_count', { ascending: false });
 
   if (error) throw new Error(`Failed to load jurisdictions: ${error.message}`);
-  return (data as JurisdictionRow[]).map(mapJurisdiction);
+  const result = (data as JurisdictionRow[]).map(mapJurisdiction);
+  setCache('jurisdictions', result);
+  return result;
 }
 
 export async function getJurisdictionByCode(code: string): Promise<Jurisdiction | null> {
@@ -207,6 +231,9 @@ export interface EntityStats {
 }
 
 export async function getEntityStats(): Promise<EntityStats> {
+  const cached = getCached<EntityStats>('entityStats');
+  if (cached) return cached;
+
   const base = supabase.from('entities').select('id', { count: 'exact', head: true }).neq('is_garbage', true).neq('is_hidden', true).not('canonical_name', 'is', null);
 
   const [totalRes, cryptoRes, paymentsRes, bankingRes] = await Promise.all([
@@ -218,15 +245,20 @@ export async function getEntityStats(): Promise<EntityStats> {
 
   if (totalRes.error) throw new Error(`Failed to count entities: ${totalRes.error.message}`);
 
-  return {
+  const result = {
     total: totalRes.count ?? 0,
     crypto: cryptoRes.count ?? 0,
     payments: paymentsRes.count ?? 0,
     banking: bankingRes.count ?? 0,
   };
+  setCache('entityStats', result);
+  return result;
 }
 
 export async function getEntities(): Promise<Entity[]> {
+  const cached = getCached<Entity[]>('entities');
+  if (cached) return cached;
+
   // Use minimal columns for list view — ~80% less data than select('*')
   const all: EntityListRow[] = [];
   const PAGE = 1000;
@@ -247,7 +279,76 @@ export async function getEntities(): Promise<Entity[]> {
     if (rows.length < PAGE) done = true;
     else from += PAGE;
   }
-  return all.map(mapEntity);
+  const result = all.map(mapEntity);
+  setCache('entities', result);
+  return result;
+}
+
+/** Progressive entity loading — delivers first page instantly, then fills in the rest.
+ *  `onProgress` is called after each page with the cumulative entity list + progress info.
+ *  Returns the full array when complete. */
+export type EntityProgressCallback = (entities: Entity[], loaded: number, total: number) => void;
+
+export async function getEntitiesProgressive(
+  onProgress: EntityProgressCallback,
+  signal?: { cancelled: boolean },
+): Promise<Entity[]> {
+  // Cache hit = instant render
+  const cached = getCached<Entity[]>('entities');
+  if (cached) {
+    onProgress(cached, cached.length, cached.length);
+    return cached;
+  }
+
+  const all: EntityListRow[] = [];
+  const PAGE = 1000;
+
+  // First page: request exact count so we know total
+  const { data: firstData, error: firstErr, count } = await supabase
+    .from('entities')
+    .select(LIST_COLS, { count: 'exact' })
+    .not('canonical_name', 'is', null)
+    .neq('is_garbage', true)
+    .neq('is_hidden', true)
+    .order('canonical_name', { nullsFirst: false })
+    .range(0, PAGE - 1);
+
+  if (firstErr) throw new Error(`Failed to load entities: ${firstErr.message}`);
+  if (signal?.cancelled) return [];
+
+  const totalCount = count ?? 0;
+  const firstRows = firstData as unknown as EntityListRow[];
+  all.push(...firstRows);
+  onProgress(all.map(mapEntity), all.length, totalCount);
+
+  // Remaining pages
+  let from = PAGE;
+  while (firstRows.length === PAGE) {
+    if (signal?.cancelled) return [];
+
+    const { data, error } = await supabase
+      .from('entities')
+      .select(LIST_COLS)
+      .not('canonical_name', 'is', null)
+      .neq('is_garbage', true)
+      .neq('is_hidden', true)
+      .order('canonical_name', { nullsFirst: false })
+      .range(from, from + PAGE - 1);
+
+    if (error) throw new Error(`Failed to load entities: ${error.message}`);
+    if (signal?.cancelled) return [];
+
+    const rows = data as unknown as EntityListRow[];
+    all.push(...rows);
+    onProgress(all.map(mapEntity), all.length, totalCount);
+
+    if (rows.length < PAGE) break;
+    from += PAGE;
+  }
+
+  const result = all.map(mapEntity);
+  setCache('entities', result);
+  return result;
 }
 
 export async function getEntityById(id: string): Promise<Entity | null> {

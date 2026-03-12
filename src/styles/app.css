@@ -2295,6 +2295,38 @@ ul {
    Entity Stats Bar (stat chips above entity table)
    ========================================================================== */
 
+/* Progressive loading progress bar */
+.st-entity-progress {
+  position: relative;
+  height: 24px;
+  background: rgba(10, 37, 64, 0.04);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.st-entity-progress-bar {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10, 37, 64, 0.06) 0%, rgba(10, 37, 64, 0.1) 100%);
+  border-radius: 6px;
+  transition: width 300ms ease;
+}
+
+.st-entity-progress-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.75rem;
+  font-family: var(--font2);
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
 .st-entity-stats-bar {
   display: flex;
   flex-wrap: wrap;
@@ -5284,8 +5316,17 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-v2 .st-hero-buttons {
-  gap: 16px;
-  margin-bottom: 36px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1030px;
+  margin: 0 auto 36px;
+}
+
+.st-landing-v2 .st-hero-buttons .st-btn,
+.st-landing-v2 .st-hero-buttons .st-btn-outline {
+  width: 100%;
+  justify-content: center;
 }
 
 .st-landing-v2 .st-landing-cta-icon {
@@ -5868,16 +5909,15 @@ thead .st-pricing-col-highlight {
   }
 
   .st-landing-v2 .st-hero-buttons {
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 12px;
     margin-bottom: 24px;
   }
 
   .st-landing-v2 .st-hero-buttons .st-btn,
   .st-landing-v2 .st-hero-buttons .st-btn-outline {
-    width: 100%;
     max-width: 320px;
+    margin: 0 auto;
   }
 
   .st-landing-v2 .st-stats-section {

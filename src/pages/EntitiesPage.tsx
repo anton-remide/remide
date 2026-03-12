@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getEntities, getEntityStats, getStablecoins, getCbdcs, getJurisdictions, getStablecoinIssuers } from '../data/dataLoader';
+import { getEntityStats, getStablecoins, getCbdcs, getJurisdictions, getStablecoinIssuers } from '../data/dataLoader';
 import type { EntityStats } from '../data/dataLoader';
 import type { Entity, Stablecoin, Cbdc, Jurisdiction, StablecoinIssuer, EntitySector } from '../types';
 import { STATUS_COLORS, SECTOR_COLORS, STABLECOIN_TYPE_COLORS, CBDC_STATUS_COLORS } from '../theme';
@@ -8,6 +8,7 @@ import { useReveal } from '../hooks/useAnimations';
 import { useTableState } from '../hooks/useFilters';
 import { useColumnFilters } from '../hooks/useColumnFilters';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
+import { useProgressiveEntities } from '../hooks/useProgressiveEntities';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { countryCodeToFlag } from '../utils/countryFlags';
 import Badge from '../components/ui/Badge';
@@ -57,7 +58,7 @@ function StatChip({ value, label, active, onClick, compact }: { value: number | 
 /* ── VASPs Tab ── */
 function VaspsTab({ searchQuery, tabSwitcher, stats }: { searchQuery?: string; tabSwitcher: React.ReactNode; stats: EntityStats | null }) {
   const navigate = useNavigate();
-  const { data: allEntities, loading, error, refetch } = useSupabaseQuery(getEntities);
+  const { data: allEntities, loading, progress, error, refetch } = useProgressiveEntities();
   // Filter out garbage entities — they have bad data (dates as names, codes, etc.)
   const safeEntities = useMemo(() => (allEntities ?? []).filter((e) => !e.isGarbage), [allEntities]);
 
@@ -187,11 +188,19 @@ function VaspsTab({ searchQuery, tabSwitcher, stats }: { searchQuery?: string; t
     setRegionFilter((prev) => prev === region ? null : region);
   }, []);
 
-  if (loading) {
-    return <div style={{ textAlign: 'center', padding: 40 }}><div className="st-loading-pulse" /></div>;
+  // No data yet at all — show initial loading skeleton
+  if (!allEntities) {
+    return (
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <div className="st-loading-pulse" />
+        <p style={{ color: 'var(--text-muted)', marginTop: 12, fontSize: '0.8125rem' }}>
+          Loading entities...
+        </p>
+      </div>
+    );
   }
 
-  if (error) {
+  if (error && !allEntities) {
     return (
       <div style={{ textAlign: 'center', padding: 40 }}>
         <p style={{ color: 'var(--text-muted)' }}>{error}</p>
@@ -200,8 +209,20 @@ function VaspsTab({ searchQuery, tabSwitcher, stats }: { searchQuery?: string; t
     );
   }
 
+  const progressPct = progress.total > 0 ? Math.round((progress.loaded / progress.total) * 100) : 0;
+
   return (
     <>
+      {/* Progressive loading indicator — shown while still fetching pages */}
+      {loading && progress.total > 0 && (
+        <div className="st-entity-progress">
+          <div className="st-entity-progress-bar" style={{ width: `${progressPct}%` }} />
+          <span className="st-entity-progress-text">
+            Loading {progress.loaded.toLocaleString()} of ~{progress.total.toLocaleString()} entities...
+          </span>
+        </div>
+      )}
+
       {/* Sector chips */}
       <div className="st-entity-stats-bar">
         <StatChip value={stats?.total ?? null} label="All Entities" active={sectorFilter === null} onClick={() => handleSectorClick(null)} />

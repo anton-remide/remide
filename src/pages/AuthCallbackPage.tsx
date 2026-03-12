@@ -43,9 +43,9 @@ export default function AuthCallbackPage() {
           }
         }
 
-        // Redirect to welcome page (first-time) or home (returning)
+        // Redirect to welcome page (first-time) or product (returning)
         const welcomed = localStorage.getItem('remide_welcome_shown');
-        navigate(welcomed ? '/' : '/welcome', { replace: true });
+        navigate(welcomed ? '/jurisdictions' : '/welcome', { replace: true });
       } catch {
         setError('An unexpected error occurred during confirmation.');
       }

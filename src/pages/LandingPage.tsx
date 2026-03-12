@@ -6,6 +6,7 @@ import { getJurisdictions, getEntityCount, getStablecoins, getCbdcs } from '../d
 import { useReveal, useStaggerReveal, useCounter } from '../hooks/useAnimations';
 import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { usePaywall } from '../hooks/usePaywall';
 import { trackEvent } from '../utils/analytics';
 import HeroWorldMapCanvas from '../components/ui/HeroWorldMapCanvas';
 
@@ -54,6 +55,15 @@ export default function LandingPage() {
   }, []);
 
   const navigate = useNavigate();
+  const { isPaid, loading: paywallLoading } = usePaywall();
+
+  // Paid users skip marketing — straight to product
+  useEffect(() => {
+    if (!paywallLoading && isPaid) {
+      navigate('/jurisdictions', { replace: true });
+    }
+  }, [isPaid, paywallLoading, navigate]);
+
   const { data: jurisdictions, loading: jLoading, error, refetch } = useSupabaseQuery(getJurisdictions);
   const { data: entityCount, loading: eLoading } = useSupabaseQuery(getEntityCount);
   const { data: stablecoins, loading: sLoading } = useSupabaseQuery(getStablecoins);
@@ -240,32 +250,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Early Access Banner */}
-      <section className="st-landing-early-access">
-        <div className="st-landing-container">
-          <div className="st-landing-early-access-card clip-lg reveal">
-            <div className="st-landing-ea-content">
-              <div className="st-landing-ea-badge">
-                <Zap size={14} />
-                Beta Access Available
+      {/* Early Access Banner — hidden for paid users */}
+      {!isPaid && (
+        <section className="st-landing-early-access">
+          <div className="st-landing-container">
+            <div className="st-landing-early-access-card clip-lg reveal">
+              <div className="st-landing-ea-content">
+                <div className="st-landing-ea-badge">
+                  <Zap size={14} />
+                  Beta Access Available
+                </div>
+                <h2>Get full platform access at early-bird pricing</h2>
+                <p>
+                  Lock in founder pricing before public launch. One payment covers the entire beta period — including all future data sources and features.
+                </p>
+                <div className="st-landing-ea-price">
+                  <span className="st-landing-ea-old">€1,200/yr</span>
+                  <span className="st-landing-ea-current">€49</span>
+                  <span className="st-landing-ea-label">one-time</span>
+                </div>
+                <Link to="/pricing#pricing-card" className="st-btn" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
+                  View Pricing Details
+                  <ArrowRight size={16} />
+                </Link>
               </div>
-              <h2>Get full platform access at early-bird pricing</h2>
-              <p>
-                Lock in founder pricing before public launch. One payment covers the entire beta period — including all future data sources and features.
-              </p>
-              <div className="st-landing-ea-price">
-                <span className="st-landing-ea-old">€1,200/yr</span>
-                <span className="st-landing-ea-current">€49</span>
-                <span className="st-landing-ea-label">one-time</span>
-              </div>
-              <Link to="/pricing#pricing-card" className="st-btn" onClick={() => trackEvent('landing_cta_click', { cta: 'view_pricing' })}>
-                View Pricing Details
-                <ArrowRight size={16} />
-              </Link>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
 	      {/* Subscribe */}
 	      <section className="st-landing-subscribe-section">

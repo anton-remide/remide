@@ -110,21 +110,36 @@ export default function PricingPage() {
       {/* Hero */}
       <section className="st-pricing-hero reveal">
         <div className="st-pricing-container">
-          <h1 className="st-pricing-hero-title">
-            The Regulatory Intelligence<br />
-            Platform Built for Stablecoin<br />
-            Compliance Teams
-          </h1>
-          <p className="st-pricing-hero-desc">
-            Stop spending hundreds of hours manually tracking crypto regulations.
-            Get comprehensive, structured data on stablecoin licensing frameworks,
-            entity registries, and Travel Rule compliance — all in one place.
-          </p>
+          {isPaid ? (
+            <>
+              <h1 className="st-pricing-hero-title">
+                Your Stablecoin Intelligence<br />
+                Dashboard
+              </h1>
+              <p className="st-pricing-hero-desc">
+                You have full access to regulatory data across 206 jurisdictions,
+                14,000+ entities, and 70+ stablecoins. Explore the platform below.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="st-pricing-hero-title">
+                The Regulatory Intelligence<br />
+                Platform Built for Stablecoin<br />
+                Compliance Teams
+              </h1>
+              <p className="st-pricing-hero-desc">
+                Stop spending hundreds of hours manually tracking crypto regulations.
+                Get comprehensive, structured data on stablecoin licensing frameworks,
+                entity registries, and Travel Rule compliance — all in one place.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Who Is This For */}
-      <section className="st-audience-section st-audience-section--pricing">
+      {/* Who Is This For — hidden for paid users */}
+      {!isPaid && <section className="st-audience-section st-audience-section--pricing">
         <div className="st-pricing-container">
           <div className="st-audience-grid reveal">
             <div className="st-audience-card clip-lg">
@@ -165,97 +180,117 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
-      {/* Urgency Banner */}
-      <section className="st-pricing-card-section">
-        <div className="st-pricing-container">
-          <div className="st-pricing-urgency-banner">
-            <div className="st-urgency-inner">
-              <div className="st-urgency-label">
-                <Flame size={14} />
-                <span>Founder pricing ends in</span>
-              </div>
-              <div className="st-urgency-countdown">
-                <div className="st-urgency-unit">
-                  <span className="st-urgency-num">{String(countdown.days).padStart(2, '0')}</span>
-                  <span className="st-urgency-txt">days</span>
+      {/* Urgency Banner — hidden for paid users */}
+      {!isPaid && (
+        <section className="st-pricing-card-section">
+          <div className="st-pricing-container">
+            <div className="st-pricing-urgency-banner">
+              <div className="st-urgency-inner">
+                <div className="st-urgency-label">
+                  <Flame size={14} />
+                  <span>Founder pricing ends in</span>
                 </div>
-                <span className="st-urgency-sep">:</span>
-                <div className="st-urgency-unit">
-                  <span className="st-urgency-num">{String(countdown.hours).padStart(2, '0')}</span>
-                  <span className="st-urgency-txt">hrs</span>
-                </div>
-                <span className="st-urgency-sep">:</span>
-                <div className="st-urgency-unit">
-                  <span className="st-urgency-num">{String(countdown.minutes).padStart(2, '0')}</span>
-                  <span className="st-urgency-txt">min</span>
-                </div>
-                <span className="st-urgency-sep">:</span>
-                <div className="st-urgency-unit">
-                  <span className="st-urgency-num">{String(countdown.seconds).padStart(2, '0')}</span>
-                  <span className="st-urgency-txt">sec</span>
+                <div className="st-urgency-countdown">
+                  <div className="st-urgency-unit">
+                    <span className="st-urgency-num">{String(countdown.days).padStart(2, '0')}</span>
+                    <span className="st-urgency-txt">days</span>
+                  </div>
+                  <span className="st-urgency-sep">:</span>
+                  <div className="st-urgency-unit">
+                    <span className="st-urgency-num">{String(countdown.hours).padStart(2, '0')}</span>
+                    <span className="st-urgency-txt">hrs</span>
+                  </div>
+                  <span className="st-urgency-sep">:</span>
+                  <div className="st-urgency-unit">
+                    <span className="st-urgency-num">{String(countdown.minutes).padStart(2, '0')}</span>
+                    <span className="st-urgency-txt">min</span>
+                  </div>
+                  <span className="st-urgency-sep">:</span>
+                  <div className="st-urgency-unit">
+                    <span className="st-urgency-num">{String(countdown.seconds).padStart(2, '0')}</span>
+                    <span className="st-urgency-txt">sec</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Pricing Card */}
       <section id="pricing-card" className="st-pricing-card-section">
         <div className="st-pricing-container">
           <div className="st-pricing-card clip-lg reveal">
-            <div className="st-pricing-card-header">
-              <div className="st-pricing-card-badge">
-                <Flame size={14} />
-                Founder Pricing
-              </div>
-              <div className="st-pricing-card-price">
-                <span className="st-pricing-card-old-price">€1,200/yr</span>
-                <div className="st-pricing-card-current-price">
-                  <span className="st-pricing-price-amount">€49</span>
-                  <span className="st-pricing-price-label">one-time beta access</span>
+            {isPaid ? (
+              /* ── Paid user view: clean confirmation ── */
+              <>
+                <div className="st-pricing-card-header">
+                  <div className="st-pricing-card-badge" style={{ background: '#16a34a', color: '#fff' }}>
+                    <Check size={14} />
+                    Full Access Active
+                  </div>
+                  <p className="st-pricing-card-savings" style={{ marginTop: 12 }}>
+                    You have unrestricted access to the entire platform, including all future updates.
+                  </p>
                 </div>
-              </div>
-              <p className="st-pricing-card-savings">
-                That's <strong>96% off</strong> the planned annual subscription.
-                Early supporters lock in this rate permanently.
-              </p>
-            </div>
+                <div className="st-pricing-card-cta-wrap">
+                  <Link to="/jurisdictions" className="st-pricing-card-cta" style={{ background: '#16a34a', textDecoration: 'none' }}>
+                    <Check size={18} />
+                    Explore Regulatory Map
+                  </Link>
+                </div>
+              </>
+            ) : (
+              /* ── Free / anonymous user view: full pricing ── */
+              <>
+                <div className="st-pricing-card-header">
+                  <div className="st-pricing-card-badge">
+                    <Flame size={14} />
+                    Founder Pricing
+                  </div>
+                  <div className="st-pricing-card-price">
+                    <span className="st-pricing-card-old-price">€1,200/yr</span>
+                    <div className="st-pricing-card-current-price">
+                      <span className="st-pricing-price-amount">€49</span>
+                      <span className="st-pricing-price-label">one-time beta access</span>
+                    </div>
+                  </div>
+                  <p className="st-pricing-card-savings">
+                    That's <strong>96% off</strong> the planned annual subscription.
+                    Early supporters lock in this rate permanently.
+                  </p>
+                </div>
+                <div className="st-pricing-card-cta-wrap">
+                  {checkoutError && (
+                    <div style={{ color: '#dc2626', fontSize: '0.8125rem', marginBottom: 8, textAlign: 'center' }}>{checkoutError}</div>
+                  )}
+                  {user ? (
+                    <button
+                      className="st-pricing-card-cta"
+                      style={{ border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+                      onClick={handleCheckout}
+                      disabled={checkoutLoading}
+                    >
+                      {checkoutLoading ? 'Redirecting to checkout...' : 'Get Full Access — €49'}
+                      {!checkoutLoading && <ArrowRight size={18} />}
+                    </button>
+                  ) : (
+                    <Link to="/signup" className="st-pricing-card-cta" onClick={() => trackEvent('pricing_cta_click', { location: 'card' })}>
+                      Get Early Access Now
+                      <ArrowRight size={18} />
+                    </Link>
+                  )}
+                  <p className="st-pricing-card-guarantee">
+                    <Lock size={14} />
+                    14-day money-back guarantee — no questions asked
+                  </p>
+                </div>
+              </>
+            )}
 
-            <div className="st-pricing-card-cta-wrap">
-              {checkoutError && (
-                <div style={{ color: '#dc2626', fontSize: '0.8125rem', marginBottom: 8, textAlign: 'center' }}>{checkoutError}</div>
-              )}
-              {isPaid ? (
-                <span className="st-pricing-card-cta" style={{ background: '#16a34a', cursor: 'default' }}>
-                  <Check size={18} />
-                  Full Access Unlocked
-                </span>
-              ) : user ? (
-                <button
-                  className="st-pricing-card-cta"
-                  style={{ border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                >
-                  {checkoutLoading ? 'Redirecting to checkout...' : 'Get Full Access — €49'}
-                  {!checkoutLoading && <ArrowRight size={18} />}
-                </button>
-              ) : (
-                <Link to="/signup" className="st-pricing-card-cta" onClick={() => trackEvent('pricing_cta_click', { location: 'card' })}>
-                  Get Early Access Now
-                  <ArrowRight size={18} />
-                </Link>
-              )}
-              <p className="st-pricing-card-guarantee">
-                <Lock size={14} />
-                14-day money-back guarantee — no questions asked
-              </p>
-            </div>
-
-            {/* Stats row */}
+            {/* Stats row — always visible */}
             <div className="st-pricing-stats-row">
               <div className="st-pricing-stat">
                 <strong>206</strong>
@@ -278,8 +313,8 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Three-Tier Comparison */}
-      <section className="st-pricing-comparison">
+      {/* Three-Tier Comparison — hidden for paid users */}
+      {!isPaid && <section className="st-pricing-comparison">
         <div className="st-pricing-container">
           <h2 className="st-pricing-section-title reveal">Choose Your Access Level</h2>
           <p className="st-pricing-section-desc reveal">
@@ -361,59 +396,61 @@ export default function PricingPage() {
             )}
           </div>
         </div>
-      </section>
+      </section>}
 
-      {/* Early Founding Users */}
-      <section className="st-pricing-early-section">
-        <div className="st-pricing-container">
-          <div className="st-pricing-early-card clip-lg reveal">
-            <div className="st-pricing-early-icon">
-              <Gift size={24} />
-            </div>
-            <h2 className="st-pricing-section-title">Early Founding Users</h2>
-            <p className="st-pricing-section-desc" style={{ marginBottom: 24 }}>
-              Register now and get free access to all upcoming features as they launch:
-            </p>
-            <div className="st-pricing-early-grid">
-              {([
-                { icon: Bell, title: 'Regulatory Alerts', desc: 'Real-time notifications when regulations change in jurisdictions you follow' },
-                { icon: Zap, title: 'Entity & License Updates', desc: 'Instant alerts when new entities are licensed or existing ones change status' },
-                { icon: BarChart3, title: 'Market Statistics', desc: 'Stablecoin market analytics, issuance trends, and regulatory adoption data' },
-                { icon: TrendingUp, title: 'Personal Trends', desc: 'Custom watchlists, saved searches, and personalized compliance dashboards' },
-              ] as const).map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="st-pricing-early-item">
-                  <Icon size={20} className="st-pricing-early-item-icon" />
-                  <div>
-                    <strong>{title}</strong>
-                    <p>{desc}</p>
+      {/* Early Founding Users — hidden for paid users */}
+      {!isPaid && (
+        <section className="st-pricing-early-section">
+          <div className="st-pricing-container">
+            <div className="st-pricing-early-card clip-lg reveal">
+              <div className="st-pricing-early-icon">
+                <Gift size={24} />
+              </div>
+              <h2 className="st-pricing-section-title">Early Founding Users</h2>
+              <p className="st-pricing-section-desc" style={{ marginBottom: 24 }}>
+                Register now and get free access to all upcoming features as they launch:
+              </p>
+              <div className="st-pricing-early-grid">
+                {([
+                  { icon: Bell, title: 'Regulatory Alerts', desc: 'Real-time notifications when regulations change in jurisdictions you follow' },
+                  { icon: Zap, title: 'Entity & License Updates', desc: 'Instant alerts when new entities are licensed or existing ones change status' },
+                  { icon: BarChart3, title: 'Market Statistics', desc: 'Stablecoin market analytics, issuance trends, and regulatory adoption data' },
+                  { icon: TrendingUp, title: 'Personal Trends', desc: 'Custom watchlists, saved searches, and personalized compliance dashboards' },
+                ] as const).map(({ icon: Icon, title, desc }) => (
+                  <div key={title} className="st-pricing-early-item">
+                    <Icon size={20} className="st-pricing-early-item-icon" />
+                    <div>
+                      <strong>{title}</strong>
+                      <p>{desc}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              {user ? (
+                <span className="st-btn" style={{ marginTop: 24, background: 'var(--bg-light)', color: 'var(--text-muted)', cursor: 'default' }}>
+                  <Check size={14} /> You're an Early User
+                </span>
+              ) : (
+                <Link to="/signup" className="st-btn" style={{ marginTop: 24 }} onClick={() => trackEvent('pricing_cta_click', { location: 'early_users' })}>
+                  Register Now — It's Free
+                  <ArrowRight size={16} />
+                </Link>
+              )}
+              {user && (
+                <button
+                  className="st-btn"
+                  style={{ marginTop: 8, border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                >
+                  {checkoutLoading ? 'Redirecting...' : 'Upgrade to Full Access — €49'}
+                  <ArrowRight size={16} />
+                </button>
+              )}
             </div>
-            {user ? (
-              <span className="st-btn" style={{ marginTop: 24, background: 'var(--bg-light)', color: 'var(--text-muted)', cursor: 'default' }}>
-                <Check size={14} /> You're an Early User
-              </span>
-            ) : (
-              <Link to="/signup" className="st-btn" style={{ marginTop: 24 }} onClick={() => trackEvent('pricing_cta_click', { location: 'early_users' })}>
-                Register Now — It's Free
-                <ArrowRight size={16} />
-              </Link>
-            )}
-            {user && !isPaid && (
-              <button
-                className="st-btn"
-                style={{ marginTop: 8, border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
-                onClick={handleCheckout}
-                disabled={checkoutLoading}
-              >
-                {checkoutLoading ? 'Redirecting...' : 'Upgrade to Full Access — €49'}
-                <ArrowRight size={16} />
-              </button>
-            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="st-pricing-faq">
@@ -448,31 +485,42 @@ export default function PricingPage() {
       {/* Final CTA */}
       <section className="st-pricing-final-cta">
         <div className="st-pricing-container reveal">
-          <h2>Ready to get started?</h2>
-          <p>
-            Join during beta and lock in founder pricing.
-            Full platform access, all future updates, 14-day money-back guarantee.
-          </p>
           {isPaid ? (
-            <span className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto', background: '#16a34a', cursor: 'default' }}>
-              <Check size={18} />
-              Full Access Unlocked
-            </span>
-          ) : user ? (
-            <button
-              className="st-pricing-card-cta"
-              style={{ maxWidth: 360, margin: '0 auto', border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
-              onClick={handleCheckout}
-              disabled={checkoutLoading}
-            >
-              {checkoutLoading ? 'Redirecting to checkout...' : 'Get Full Access — €49'}
-              {!checkoutLoading && <ArrowRight size={18} />}
-            </button>
+            <>
+              <h2>You have full access</h2>
+              <p>
+                Thank you for being an early supporter.
+                All current features and future updates are included.
+              </p>
+              <Link to="/entities" className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto', background: '#16a34a', textDecoration: 'none' }}>
+                <Check size={18} />
+                Browse All Entities
+              </Link>
+            </>
           ) : (
-            <Link to="/signup" className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto' }} onClick={() => trackEvent('pricing_cta_click', { location: 'footer' })}>
-              Get Early Access — €49
-              <ArrowRight size={18} />
-            </Link>
+            <>
+              <h2>Ready to get started?</h2>
+              <p>
+                Join during beta and lock in founder pricing.
+                Full platform access, all future updates, 14-day money-back guarantee.
+              </p>
+              {user ? (
+                <button
+                  className="st-pricing-card-cta"
+                  style={{ maxWidth: 360, margin: '0 auto', border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer' }}
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                >
+                  {checkoutLoading ? 'Redirecting to checkout...' : 'Get Full Access — €49'}
+                  {!checkoutLoading && <ArrowRight size={18} />}
+                </button>
+              ) : (
+                <Link to="/signup" className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto' }} onClick={() => trackEvent('pricing_cta_click', { location: 'footer' })}>
+                  Get Early Access — €49
+                  <ArrowRight size={18} />
+                </Link>
+              )}
+            </>
           )}
         </div>
       </section>

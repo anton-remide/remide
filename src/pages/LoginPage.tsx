@@ -16,7 +16,7 @@ export default function LoginPage() {
   const location = useLocation();
   const revealRef = useReveal();
 
-  const from = (location.state as { from?: string })?.from || '/';
+  const from = (location.state as { from?: string })?.from;
 
   useEffect(() => {
     trackEvent('login_page_view');
@@ -25,9 +25,13 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      const welcomed = localStorage.getItem('remide_welcome_shown');
-      // First login ever → send to welcome page for conversion nudge
-      navigate(welcomed ? from : '/welcome', { replace: true });
+      if (from) {
+        // Return to the page they came from
+        navigate(from, { replace: true });
+      } else {
+        const welcomed = localStorage.getItem('remide_welcome_shown');
+        navigate(welcomed ? '/jurisdictions' : '/welcome', { replace: true });
+      }
     }
   }, [user, navigate, from]);
 
@@ -48,8 +52,12 @@ export default function LoginPage() {
       setError(err);
     } else {
       trackEvent('login_completed');
-      const welcomed = localStorage.getItem('remide_welcome_shown');
-      navigate(welcomed ? from : '/welcome', { replace: true });
+      if (from) {
+        navigate(from, { replace: true });
+      } else {
+        const welcomed = localStorage.getItem('remide_welcome_shown');
+        navigate(welcomed ? '/jurisdictions' : '/welcome', { replace: true });
+      }
     }
   };
 

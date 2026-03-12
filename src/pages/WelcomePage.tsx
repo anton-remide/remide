@@ -23,7 +23,7 @@ const paidTeaser = [
 
 export default function WelcomePage() {
   const { user } = useAuth();
-  const { isPaid } = usePaywall();
+  const { isPaid, loading: paywallLoading } = usePaywall();
   const navigate = useNavigate();
   const revealRef = useReveal();
 
@@ -39,16 +39,20 @@ export default function WelcomePage() {
       navigate('/signup', { replace: true });
       return;
     }
-    // If already paid, skip welcome and go to home
+    // Wait for paywall tier to resolve before deciding
+    if (paywallLoading) return;
+    // Paid users skip welcome — straight to product
     if (isPaid) {
-      navigate('/', { replace: true });
+      localStorage.setItem('remide_welcome_shown', '1');
+      navigate('/jurisdictions', { replace: true });
       return;
     }
     trackEvent('welcome_page_view');
     localStorage.setItem('remide_welcome_shown', '1');
-  }, [user, isPaid, navigate]);
+  }, [user, isPaid, paywallLoading, navigate]);
 
-  if (!user || isPaid) return null;
+  // Show nothing while loading tier or if redirecting
+  if (!user || paywallLoading || isPaid) return null;
 
   const firstName = user.user_metadata?.first_name || '';
 
