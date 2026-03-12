@@ -24,6 +24,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./favicon-192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.json" />
     <title>RemiDe — Stablecoin Intelligence Platform</title>
 
     <!-- GitHub Pages SPA redirect handler.
@@ -48,6 +49,14 @@
     <div id="root"></div>
     <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Service Worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('./sw.js').catch(function() {});
+        });
+      }
+    </script>
     <!-- Umami pixel fallback (no-JS tracking) -->
     <noscript><img referrerpolicy="no-referrer-when-downgrade" src="https://cloud.umami.is/p/SGFpyT9Tl" alt="" style="position:absolute;left:-9999px" /></noscript>
   </body>
