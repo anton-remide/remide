@@ -1,0 +1,48 @@
+---
+description: Requires unit tests for new business logic — hooks, data loaders, worker rules, paywall
+globs:
+  - "src/hooks/**"
+  - "src/data/**"
+  - "src/lib/**"
+  - "workers/**"
+  - "shared/**"
+alwaysApply: false
+---
+
+# Test With Business Logic
+
+## Rule
+
+Any new or modified **business logic** must ship with at least one unit test.
+
+## What counts as business logic
+
+- **Hooks:** `usePaywall`, `useSubscription`, `useProgressiveEntities`, `useColumnFilters`
+- **Data loaders:** any function in `src/data/dataLoader.ts` that queries Supabase
+- **Worker rules:** `workers/quality/rules.ts` — cleanName, detectGarbage, classifyCryptoStatus, calculateScore
+- **Shared utilities:** `shared/guards.ts`, `shared/config.ts`
+- **Stripe/payment logic:** `src/lib/stripe.ts`, Edge Functions
+- **Auth flows:** registration, login, password reset logic
+
+## What does NOT need a test
+
+- Pure UI components (visual-only, no logic)
+- CSS changes
+- Static page content
+- Config files (vite.config, tsconfig)
+
+## Test location
+
+- Frontend: `src/**/*.test.{ts,tsx}` (colocated with source)
+- Parsers: `parsers/__tests__/*.test.ts`
+- Workers: `workers/**/*.test.ts` (create if missing)
+
+## Test framework
+
+- Vitest + Testing Library (frontend)
+- Vitest (backend/workers)
+- Run: `npm test` (must pass before commit)
+
+## Current gap
+
+20 test files exist but haven't grown since initial scaffolding. Every new logic file should add tests.

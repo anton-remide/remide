@@ -33,6 +33,7 @@ export interface QualityInput {
 export interface QualityResult {
   id: string;
   canonical_name: string;
+  brand_name: string | null;
   is_garbage: boolean;
   garbage_reason: string | null;
   quality_score: number;
@@ -62,12 +63,31 @@ const LEGAL_SUFFIXES = [
   /\s*Sp(?:ó|o)łka\s+(?:komandytowa|jawna|partnerska|cywilna)\s*$/i,
   // German
   /\s*\b(GmbH\s*&?\s*Co\.?\s*KG|GmbH|e\.?G\.?|AG|UG|KG|OHG)\s*\.?\s*$/i,
-  // Generic legal forms
-  /\s*\b(S\.?L\.?|S\.?A\.?|S\.?R\.?L\.?|S\.?P\.?A\.?|N\.?V\.?|B\.?V\.?|SE|PLC|LTD\.?|LLC|INC\.?|CORP\.?|Co\.?\s*Ltd\.?|A\.?S\.?|AB|OY|OYJ|d\.?o\.?o\.?|ApS|EHIF|KFT|ZRT|UAB|SIA|SARL|EURL)\s*\.?\s*$/i,
+  // Compound suffixes (BEFORE generic LTD/LLC — these contain LLC/Ltd as substrings)
+  /\s*\bPvt\.?\s*Ltd\.?\s*$/i,          // Indian: Pvt. Ltd.
+  /\s*\bFZ-?LLC\s*$/i,                  // Emirati: FZ-LLC
+  /\s*\b(FZCO|FZE)\s*$/i,              // Emirati: FZCO, FZE
+  /\s*\bExempt\s+Limited\s+Partnership\s*$/i,  // Bermuda
+  /\s*\bPrivate\s+Limited\s+Company\s*$/i,
+  /\s*\bPty\.?\s+Ltd\.?\s*$/i,          // UK/AU/SG
+  /\s*\bCo\.?\s*Ltd\.?\s*$/i,           // "Co. Ltd."
+  // Generic legal forms (after compound patterns)
+  /\s*\b(S\.?L\.?|S\.?A\.?|S\.?R\.?L\.?|S\.?P\.?A\.?|N\.?V\.?|B\.?V\.?|SE|PLC|LTD\.?|LLC|INC\.?|CORP\.?|A\.?S\.?|AB|OY|OYJ|d\.?o\.?o\.?|ApS|EHIF|KFT|ZRT|UAB|SIA|SARL|EURL)\s*\.?\s*$/i,
   // CIS/Central Asian legal forms (Kazakhstan, Russia, etc.)
   /\s*\b(JSC|OJSC|PJSC|CJSC|Joint[- ]Stock\s+Company)\s*$/i,
-  // "Limited" / "Private Limited Company" / "Pty Ltd" etc. (common in UK, AU, SG, KZ, HK)
-  /\s*\bPrivate\s+Limited\s+Company\s*$/i,
+  // Russian: ООО, ЗАО, ОАО, ПАО
+  /\s*\b(ООО|ЗАО|ОАО|ПАО|АО|ИП)\s*$/,
+  // Turkish: A\.Ş\., Anonim Şirketi, Ltd\.Şti\.
+  /\s*\b(A\.?\s*Ş\.?|Anonim\s+Şirketi|Ltd\.?\s*Şti\.?)\s*$/i,
+  // Brazilian: S\/A, Ltda, EIRELI
+  /\s*\b(S\/A|Ltda\.?|EIRELI)\s*$/i,
+  // Japanese: 株式会社, K.K.
+  /\s*株式会社\s*$/,
+  /\s*\b(Kabushiki\s+Kaisha|K\.?K\.?)\s*$/i,
+  // Korean: 주식회사
+  /\s*주식회사\s*$/,
+  // Standalone fragments left after compound removal
+  /\s*\bPvt\.?\s*$/i,
   /\s*\bLimited\s*$/i,
   /\s*\bPty\.?\s*$/i,
   // Polish former name: "(d. Former Name Here)" — must be BEFORE generic parenthetical
@@ -394,6 +414,26 @@ export function detectGarbage(entity: QualityInput): { isGarbage: boolean; reaso
     return { isGarbage: true, reason: 'out_of_scope:credit_union' };
   }
 
+  // Duplicate/test markers
+  if (/\b(test|dummy|fake|placeholder|sample|demo)\b/i.test(name) && name.length < 30) {
+    return { isGarbage: true, reason: 'test_entry' };
+  }
+
+  // URL-as-name (data import artifacts)
+  if (/^https?:\/\//.test(name)) {
+    return { isGarbage: true, reason: 'url_as_name' };
+  }
+
+  // Email-as-name
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(name)) {
+    return { isGarbage: true, reason: 'email_as_name' };
+  }
+
+  // All-punctuation after stripping alphanumerics
+  if (name.replace(/[^a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF]/g, '').length < 2) {
+    return { isGarbage: true, reason: 'no_alpha_content' };
+  }
+
   return { isGarbage: false, reason: null };
 }
 
@@ -430,43 +470,113 @@ const PARSER_CRYPTO_MAP: Record<string, string> = {
   // Banking registries → traditional
   'us-fdic': 'traditional', 'gb-pra': 'traditional',
 
+  // Dedicated crypto registries (newer additions)
+  'jp-fsa': 'confirmed_crypto',   // FSA crypto-asset exchange registry
+  'gb-fca': 'unknown',            // FCA mixed registry — keyword analysis needed
+  'in-fiu': 'unknown',            // India FIU — mixed
+  'tr-spk': 'unknown',            // Turkey SPK — mixed
+  'kz-afsa': 'unknown',           // Kazakhstan AFSA — mixed (AIFC has fintech focus)
+  'bh-cbb': 'unknown',            // Bahrain CBB — mixed
+  'sa-sama': 'unknown',           // Saudi SAMA — mixed
+  'qa-qfcra': 'unknown',          // Qatar QFCRA — mixed
+  'co-sfc': 'unknown',            // Colombia SFC — mixed
+  'mx-cnbv': 'unknown',           // Mexico CNBV — mixed
+  'cl-cmf': 'unknown',            // Chile CMF — mixed
+
   // Mixed registries → unknown (need keyword analysis)
-  'au-austrac': 'unknown', 'ca-fintrac': 'unknown', 'jp-jfsa': 'unknown',
+  'au-austrac': 'unknown', 'ca-fintrac': 'unknown',
   'sg-mas': 'unknown', 'ch-finma': 'unknown', 'us-fincen': 'unknown',
-  'za-fsca': 'unknown', 'br-bcb': 'unknown', 'bm-bma': 'unknown',
+  'za-fsca': 'confirmed_crypto',  // FSCA CASP register is crypto-specific
+  'br-bcb': 'unknown', 'bm-bma': 'unknown',
 };
 
 /** Crypto-indicating keywords in entity names, activities, license types */
 const CRYPTO_KEYWORDS = [
+  // Core terms
   'crypto', 'bitcoin', 'btc', 'blockchain', 'digital asset', 'virtual asset',
   'vasp', 'casp', 'defi', 'nft', 'token', 'exchange', 'wallet', 'custody',
   'stablecoin', 'mining', 'web3', 'dao', 'dex', 'cefi', 'fintech',
-  'ethereum', 'eth', 'litecoin', 'ripple', 'binance', 'coinbase',
-  'kraken', 'okx', 'kucoin', 'huobi', 'bybit', 'bitfinex', 'gemini',
   'digital currency', 'virtual currency', 'cryptocurrency',
   'distributed ledger', 'dlt',
+  // Well-known company names (strong signal)
+  'binance', 'coinbase', 'kraken', 'okx', 'kucoin', 'huobi', 'bybit',
+  'bitfinex', 'gemini', 'bitpanda', 'bitstamp', 'bitso', 'luno',
+  'crypto.com', 'nexo', 'celsius', 'blockfi', 'ledger', 'trezor',
+  'chainalysis', 'fireblocks', 'circle', 'paxos', 'anchorage',
+  'bakkt', 'galaxy digital', 'grayscale', 'bitgo', 'prime trust',
+  'moonpay', 'simplex', 'wyre', 'ramp', 'transak', 'mercuryo',
+  'hashkey', 'amber group', 'matrixport', 'coinhako', 'independent reserve',
+  'valr', 'altcointrader', 'ice3x',
+  // Coin/protocol names (medium signal)
+  'ethereum', 'eth', 'litecoin', 'ripple', 'solana', 'cardano', 'polkadot',
+  'avalanche', 'polygon', 'tether', 'usdc', 'usdt', 'dogecoin',
+  // Activity keywords
+  'digital payment token', 'dpt service', 'crypto asset service',
+  'virtual asset service', 'digital token', 'crypto exchange',
+  'bitcoin atm', 'crypto atm', 'digital asset exchange',
+  'digital asset custody', 'digital asset broker',
+  // License types
+  'money service business', 'msb', 'money transmitter',
+  'payment institution', 'e-money',
 ];
 
 /** Keywords indicating traditional finance */
 const TRADFI_KEYWORDS = [
   'bank', 'banking', 'savings', 'credit union', 'mortgage', 'insurance',
   'pension', 'mutual fund', 'brokerage', 'securities', 'bonds',
-  'thrift', 'savings association',
+  'thrift', 'savings association', 'building society',
+  'cooperative bank', 'agricultural bank', 'development bank',
+  'trust company', 'asset management', 'wealth management',
+  'leasing', 'factoring', 'microfinance',
+];
+
+/** Website domain fragments that indicate crypto businesses */
+const CRYPTO_DOMAINS = [
+  'bit', 'coin', 'crypto', 'chain', 'block', 'token', 'swap',
+  'dex', 'defi', 'nft', 'web3', 'dao', 'wallet', 'ledger',
+  'mining', 'hash', 'satoshi', 'btc', 'eth',
+];
+
+/** License type patterns that definitively classify */
+const CRYPTO_LICENSE_PATTERNS = [
+  /virtual\s*(?:asset|currency)/i,
+  /crypto\s*(?:asset|currency)/i,
+  /digital\s*(?:asset|currency|payment\s*token)/i,
+  /dpt\s*service/i,
+  /casp|vasp/i,
+  /money\s*transmit/i,
+  /msb\s*registration/i,
+];
+
+const TRADFI_LICENSE_PATTERNS = [
+  /^bank(?:ing)?\s*(?:license|charter)/i,
+  /credit\s*union/i,
+  /insurance\s*(?:license|broker)/i,
+  /pension\s*fund/i,
+  /building\s*society/i,
 ];
 
 export function classifyCryptoStatus(entity: QualityInput): string {
   const parserId = entity.parser_id;
 
-  // 1. Check parser mapping
+  // 1. Check parser mapping (definitive classification)
   if (parserId) {
-    // EBA parsers → traditional
     if (parserId.startsWith('eba-')) return 'traditional';
 
     const mapped = PARSER_CRYPTO_MAP[parserId];
     if (mapped && mapped !== 'unknown') return mapped;
   }
 
-  // 2. Keyword analysis for "unknown" parsers
+  // 2. License type patterns (strong signal)
+  const lt = entity.license_type ?? '';
+  if (CRYPTO_LICENSE_PATTERNS.some(p => p.test(lt))) {
+    return 'confirmed_crypto';
+  }
+  if (TRADFI_LICENSE_PATTERNS.some(p => p.test(lt))) {
+    return 'traditional';
+  }
+
+  // 3. Keyword analysis across all text fields
   const searchText = [
     entity.name,
     entity.license_type,
@@ -481,6 +591,12 @@ export function classifyCryptoStatus(entity: QualityInput): string {
   if (hasCryptoKeyword && !hasTradfiKeyword) return 'confirmed_crypto';
   if (hasCryptoKeyword && hasTradfiKeyword) return 'crypto_adjacent';
   if (hasTradfiKeyword && !hasCryptoKeyword) return 'traditional';
+
+  // 4. Website domain heuristic (weak signal, tiebreaker for 'unknown')
+  const website = (entity.website ?? '').toLowerCase();
+  if (website && CRYPTO_DOMAINS.some(d => website.includes(d))) {
+    return 'crypto_adjacent';
+  }
 
   return 'unknown';
 }
@@ -552,6 +668,51 @@ export function calculateScore(entity: QualityInput): ScoreBreakdown {
 }
 
 /* ═══════════════════════════════════════════
+   5. BRAND NAME — Extract trading/commercial name from entity_types
+   ═══════════════════════════════════════════ */
+
+const BRAND_NOISE = [
+  /^trading\s+as\s*/i,
+  /^t\/a\s*/i,
+  /^dba\s*/i,
+  /^d\.b\.a\.\s*/i,
+  /^formerly\s*/i,
+  /^also\s+known\s+as\s*/i,
+  /^aka\s*/i,
+];
+
+/**
+ * Extract a brand/trading name from entity_types array.
+ * Registries often store "Trading As: BrandName" or DBA names here.
+ * Returns null if no meaningful brand name found.
+ */
+function extractBrandName(entityTypes: string[], canonicalName: string): string | null {
+  if (!entityTypes || entityTypes.length === 0) return null;
+
+  for (const et of entityTypes) {
+    let candidate = et.trim();
+    if (!candidate || candidate.length < 2) continue;
+
+    // Strip "Trading as:", "t/a", "DBA" prefixes
+    for (const re of BRAND_NOISE) {
+      candidate = candidate.replace(re, '').trim();
+    }
+
+    // Skip if it matches the canonical name (no new info)
+    if (candidate.toLowerCase() === canonicalName.toLowerCase()) continue;
+
+    // Skip if it looks like a license type rather than a name
+    if (/^(VASP|CASP|EMI|PI|PSP|MSB|MTO|DAX|DABA|Class\s)/i.test(candidate)) continue;
+
+    if (candidate.length >= 2 && candidate.length <= 120) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+/* ═══════════════════════════════════════════
    MAIN: Process a single entity
    ═══════════════════════════════════════════ */
 
@@ -578,13 +739,20 @@ export function processEntity(entity: QualityInput): QualityResult {
     rules.push(`classify:${entity.crypto_status ?? 'unknown'}->${cryptoStatus}`);
   }
 
-  // 4. Scoring
+  // 4. Brand name extraction from entity_types
+  const brandName = extractBrandName(entity.entity_types, canonical);
+  if (brandName) {
+    rules.push('brand:from_entity_types');
+  }
+
+  // 5. Scoring
   const score = calculateScore(entity);
   rules.push(`score:${score.total}(${score.tier})`);
 
   return {
     id: entity.id,
     canonical_name: canonical,
+    brand_name: brandName,
     is_garbage: isGarbage,
     garbage_reason: garbageReason,
     quality_score: score.total,

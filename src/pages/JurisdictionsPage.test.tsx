@@ -17,13 +17,25 @@ vi.mock('../components/map/WorldMap', () => ({
   default: () => <div data-testid="world-map">WorldMap</div>,
 }));
 
-// Mock dataLoader
+// Mock dataLoader — component uses getJurisdictions AND getCbdcs
 const mockGetJurisdictions = vi.fn();
+const mockGetCbdcs = vi.fn();
 vi.mock('../data/dataLoader', () => ({
   getJurisdictions: (...args: unknown[]) => mockGetJurisdictions(...args),
+  getCbdcs: (...args: unknown[]) => mockGetCbdcs(...args),
+  expandRegionalCode: (code: string) => [code],
+}));
+
+// Mock regionCodes (imported by component)
+vi.mock('../data/regionCodes', () => ({
+  expandRegionalCode: (code: string) => [code],
 }));
 
 describe('JurisdictionsPage', () => {
+  beforeEach(() => {
+    mockGetCbdcs.mockResolvedValue([]);
+  });
+
   it('shows loading state initially', () => {
     mockGetJurisdictions.mockReturnValue(new Promise(() => {}));
     renderWithProviders(<JurisdictionsPage />);
@@ -42,9 +54,7 @@ describe('JurisdictionsPage', () => {
     // Map
     expect(screen.getByTestId('world-map')).toBeInTheDocument();
 
-    // Search is now in the header, not on the page itself
-
-    // Column headers with filters (regime, travel rule, regulator are filterable)
+    // Column headers
     const table = document.querySelector('table')!;
     const headers = Array.from(table.querySelectorAll('th')).map((h) => h.textContent?.trim());
     expect(headers).toContain('Regime');
@@ -64,7 +74,6 @@ describe('JurisdictionsPage', () => {
       expect(document.querySelector('.st-loading-pulse')).not.toBeInTheDocument();
     });
 
-    // Column headers inside <th> elements
     const table = document.querySelector('table')!;
     const headers = Array.from(table.querySelectorAll('th')).map((h) => h.textContent?.trim());
 

@@ -23,6 +23,16 @@ import { logger } from '../core/logger.js';
 const SOURCE_URL =
   'https://www.sc.com.my/regulation/guidelines/recognizedmarkets/list-of-registered-digital-asset-exchanges';
 
+/** Known registered DAX operators (fallback when fetch fails or page structure changes) */
+const KNOWN_MY_DAX: { name: string; status: string }[] = [
+  { name: 'HATA Digital Sdn Bhd', status: 'Registered' },
+  { name: 'Luno Malaysia Sdn. Bhd.', status: 'Registered' },
+  { name: 'MX Global Sdn Bhd', status: 'Registered' },
+  { name: 'SINEGY DAX Sdn Bhd', status: 'Registered' },
+  { name: 'Kinetic DAX Sdn Bhd', status: 'Registered' },
+  { name: 'Tokenize Technology (M) Sdn Bhd', status: 'Registered' },
+];
+
 /** Sections with their expected status */
 const SECTIONS = [
   { id: 'A', status: 'Registered', label: 'Currently Registered DAX' },
@@ -49,30 +59,42 @@ export class MyScParser implements RegistryParser {
     const startTime = Date.now();
     const warnings: string[] = [];
     const errors: string[] = [];
+    let entities: ParsedEntity[] = [];
 
     logger.info(this.config.id, `Fetching SC Malaysia DAX register from ${SOURCE_URL}`);
 
-    let html: string;
     try {
-      html = await fetchWithRetry(SOURCE_URL, {
+      const html = await fetchWithRetry(SOURCE_URL, {
         registryId: this.config.id,
         rateLimit: this.config.rateLimit,
         headers: {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          Referer: 'https://www.sc.com.my/',
         },
       });
+      entities = this.parsePage(html, warnings);
     } catch (err) {
-      throw new Error(
-        `Failed to fetch SC Malaysia register: ${err instanceof Error ? err.message : String(err)}`
-      );
+      const msg = err instanceof Error ? err.message : String(err);
+      warnings.push(`SC Malaysia page fetch failed: ${msg}. Using known entities fallback.`);
+      logger.warn(this.config.id, `Fetch error: ${msg}`);
     }
-
-    const entities = this.parsePage(html, warnings);
-    logger.info(this.config.id, `Parsed ${entities.length} entities`);
 
     if (entities.length === 0) {
-      warnings.push('No entities found — page structure may have changed');
+      logger.info(this.config.id, 'Using known Malaysia DAX list as fallback');
+      for (const known of KNOWN_MY_DAX) {
+        entities.push(this.createEntity(known.name, known.status));
+      }
+      if (entities.length > 0) {
+        warnings.push(
+          `Used known entities fallback (${entities.length} entities). SC Malaysia fetch failed or page structure changed.`
+        );
+      } else {
+        warnings.push('No entities found — page structure may have changed');
+      }
     }
+
+    logger.info(this.config.id, `Parsed ${entities.length} entities`);
 
     return {
       registryId: this.config.id,

@@ -48,16 +48,20 @@ function makeFetchMock(opts: {
 }
 
 /** Helper: set the `pdf-parse` mock to return the given text string. */
-function setPdfText(text: string, numpages = 1) {
-  pdfParseFn.mockResolvedValue({ text, numpages });
+function setPdfText(text: string, total = 1) {
+  pdfTextFn.mockResolvedValue({ text, total });
 }
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const pdfParseFn = vi.fn();
+const pdfTextFn = vi.fn<() => Promise<{ text: string; total: number }>>();
+
+class MockPDFParse {
+  getText() { return pdfTextFn(); }
+}
 
 vi.mock('pdf-parse', () => ({
-  default: pdfParseFn,
+  PDFParse: MockPDFParse,
 }));
 
 // Silence logger output during tests
@@ -82,7 +86,7 @@ describe('ZaFscaParser', () => {
 
   beforeEach(() => {
     parser = new ZaFscaParser();
-    pdfParseFn.mockReset();
+    pdfTextFn.mockReset();
     globalThis.fetch = makeFetchMock();
   });
 
@@ -109,15 +113,13 @@ describe('ZaFscaParser', () => {
     });
   });
 
-  // ── Pattern 1: Numbered rows with inline FSP numbers ─────────────────────
+  // ── Pattern 1: Numbered rows (Dec 2025 format: NO FSP NAME CAT) ─────────
 
   describe('Pattern 1 — numbered rows with FSP numbers', () => {
     const tableText = [
-      'Published list of Authorized CASPs',
-      'No.  Name of CASP  FSP Number  Category',
-      '1. Luno South Africa (Pty) Ltd FSP 53567 Category I',
-      '2. VALR (Pty) Ltd FSP 53180 Category II',
-      '3. AltCoinTrader SA (Pty) Ltd CASP 10023 Category I',
+      '1 53567 Luno South Africa (Pty) Ltd CAT I',
+      '2 53180 VALR (Pty) Ltd CAT II',
+      '3 10023 AltCoinTrader SA (Pty) Ltd CAT I',
     ].join('\n');
 
     beforeEach(() => setPdfText(tableText, 2));
@@ -136,17 +138,17 @@ describe('ZaFscaParser', () => {
       expect(names).toContain('AltCoinTrader SA (Pty) Ltd');
     });
 
-    it('captures FSP / CASP license numbers', async () => {
+    it('captures FSP license numbers', async () => {
       const result = await parser.parse();
       expect(result.entities[0].licenseNumber).toBe('FSP 53567');
       expect(result.entities[1].licenseNumber).toBe('FSP 53180');
-      expect(result.entities[2].licenseNumber).toBe('CASP 10023');
+      expect(result.entities[2].licenseNumber).toBe('FSP 10023');
     });
 
     it('captures license category when present', async () => {
       const result = await parser.parse();
-      expect(result.entities[0].licenseType).toBe('Category I');
-      expect(result.entities[1].licenseType).toBe('Category II');
+      expect(result.entities[0].licenseType).toBe('CAT I');
+      expect(result.entities[1].licenseType).toBe('CAT II');
     });
 
     it('sets common fields for all entities', async () => {
@@ -163,19 +165,16 @@ describe('ZaFscaParser', () => {
 
   // ── Pattern 2: Name on one line, FSP on the next ─────────────────────────
 
-  describe('Pattern 2 — name and FSP on separate lines', () => {
+  describe('Pattern 2 — name wraps to next line', () => {
     const tableText = [
-      'List of Licensed CASPs',
-      'Name  License Number',
-      '1. Luno South Africa',
-      'FSP 53567',
-      '2. VALR',
-      'FSP 53180',
+      '1 53567 Luno South Africa',
+      '(Pty) Ltd CAT I',
+      '2 53180 VALR (Pty) Ltd CAT II',
     ].join('\n');
 
     beforeEach(() => setPdfText(tableText));
 
-    it('extracts entities using look-ahead FSP parsing', async () => {
+    it('extracts entities using continuation-line parsing', async () => {
       const result = await parser.parse();
       expect(result.entities).toHaveLength(2);
     });
@@ -191,23 +190,24 @@ describe('ZaFscaParser', () => {
 
   // ── Pattern 3: Tab-separated columns ─────────────────────────────────────
 
-  describe('Pattern 3 — tab/space-separated columns', () => {
+  describe('Pattern 3 — section transitions', () => {
     const tableText = [
-      'FSCA CASP Register',
-      'Name\tFSP Number\tStatus',
-      'Luno South Africa (Pty) Ltd\tFSP 53567\tActive',
-      'VALR Holdings (Pty) Ltd\t53180\tActive',
+      '1 53567 Luno South Africa (Pty) Ltd CAT I',
+      'B. CASPs WITH PRODUCT CATEGORIES REMOVED',
+      '2 53180 VALR (Pty) Ltd CAT II',
+      'C. LICENCES THAT HAVE LAPSED',
+      '3 10023 AltCoinTrader SA (Pty) Ltd CAT I',
     ].join('\n');
 
     beforeEach(() => setPdfText(tableText));
 
-    it('extracts entities from tab-separated rows', async () => {
+    it('tracks section transitions for entity status', async () => {
       const result = await parser.parse();
-      expect(result.entities.length).toBeGreaterThanOrEqual(2);
+      expect(result.entities).toHaveLength(3);
 
-      const names = result.entities.map((e) => e.name);
-      expect(names).toContain('Luno South Africa (Pty) Ltd');
-      expect(names).toContain('VALR Holdings (Pty) Ltd');
+      expect(result.entities[0].status).toBe('Authorized');
+      expect(result.entities[1].status).toBe('Removed');
+      expect(result.entities[2].status).toBe('Lapsed');
     });
   });
 
@@ -232,15 +232,14 @@ describe('ZaFscaParser', () => {
 
   describe('skips non-data lines inside the table', () => {
     const tableText = [
-      'Name  FSP Number',
-      'page 2',
-      'Published list continued',
-      '1. Luno South Africa (Pty) Ltd FSP 53567 Category I',
+      'list of authorized CASPs',
+      '1 of 5',
+      '1 53567 Luno South Africa (Pty) Ltd CAT I',
     ].join('\n');
 
     beforeEach(() => setPdfText(tableText));
 
-    it('skips lines containing "page" or "published"', async () => {
+    it('skips header and pagination lines', async () => {
       const result = await parser.parse();
       expect(result.entities).toHaveLength(1);
       expect(result.entities[0].name).toBe('Luno South Africa (Pty) Ltd');
@@ -252,7 +251,7 @@ describe('ZaFscaParser', () => {
   describe('PDF download fallback', () => {
     it('succeeds when the first URL fails but the second works', async () => {
       globalThis.fetch = makeFetchMock({ succeedIndices: [1] });
-      setPdfText('Name  FSP Number\n1. Luno FSP 53567 CASP');
+      setPdfText('1 53567 Luno CAT I');
 
       const result = await parser.parse();
       expect(result.entities.length).toBeGreaterThanOrEqual(1);
@@ -301,7 +300,7 @@ describe('ZaFscaParser', () => {
         throw new Error(`Unexpected fetch: ${urlStr}`);
       });
 
-      setPdfText('Name  FSP Number\n1. TestCASP FSP 99999 Category I');
+      setPdfText('1 99999 TestCASP CAT I');
 
       const result = await parser.parse();
       expect(result.entities).toHaveLength(1);
@@ -313,7 +312,7 @@ describe('ZaFscaParser', () => {
 
   describe('ParseResult metadata', () => {
     beforeEach(() => {
-      setPdfText('Name  FSP Number\n1. SomeEntity FSP 11111 Category I');
+      setPdfText('1 11111 SomeEntity CAT I');
     });
 
     it('returns correct registryId and countryCode', async () => {
@@ -338,9 +337,8 @@ describe('ZaFscaParser', () => {
 
   describe('bare numeric license numbers', () => {
     const tableText = [
-      'Name  License Number  Category',
-      '1. CryptoExchange ZA 12345 Category I',
-      '2. BlockchainPay SA 67890 Category II',
+      '1 12345 CryptoExchange ZA CAT I',
+      '2 67890 BlockchainPay SA CAT II',
     ].join('\n');
 
     beforeEach(() => setPdfText(tableText));
@@ -348,8 +346,8 @@ describe('ZaFscaParser', () => {
     it('matches bare 5+ digit numbers as license numbers', async () => {
       const result = await parser.parse();
       expect(result.entities).toHaveLength(2);
-      expect(result.entities[0].licenseNumber).toBe('12345');
-      expect(result.entities[1].licenseNumber).toBe('67890');
+      expect(result.entities[0].licenseNumber).toBe('FSP 12345');
+      expect(result.entities[1].licenseNumber).toBe('FSP 67890');
     });
   });
 });

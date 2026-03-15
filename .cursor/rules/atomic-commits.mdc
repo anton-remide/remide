@@ -1,0 +1,41 @@
+---
+description: Enforces small, focused commits — one logical change per commit, max 15 files
+globs:
+alwaysApply: true
+---
+
+# Atomic Commits
+
+## Principle
+
+One commit = one logical change. A reviewer should understand the full intent from the diff alone.
+
+## Hard limit
+
+**≤ 15 files per commit.** If a feature touches more, split into sequential commits:
+
+1. **Data layer** — types, interfaces, DDL, data loaders
+2. **Backend** — workers, parsers, shared utilities, Edge Functions
+3. **Frontend structure** — new routes, page skeletons, data bindings
+4. **Frontend UI** — styles, layout, responsive, animations
+
+## When to split
+
+- Adding a parser AND updating frontend display → 2 commits
+- DDL migration AND worker that uses new columns → 2 commits
+- Stripe integration AND paywall UI AND pricing page → 3 commits
+- Multiple unrelated bug fixes → 1 commit per fix
+
+## When one commit is OK
+
+- Parser + its test file (same logical unit)
+- Component + its CSS changes (same visual unit)
+- Type change + all files that consume that type (mechanical refactor)
+
+## Rationale
+
+Giant commits (30-74 files) make it impossible to:
+- Review changes
+- Bisect bugs
+- Revert a single feature
+- Understand project history

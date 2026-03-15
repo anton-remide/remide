@@ -176,3 +176,29 @@
 8. **ENTITY-SIMILAR:** Entity Detail — "Similar Companies" block below profile
 9. **ENTITY-OFFER:** Entity table blurred section — offer overlay on top of gradient (not just blur)
 10. **STRIPE-CHECKOUT:** Stripe integration with product `prod_U6qNlT7koH0SlO` ($49 one-time)
+
+---
+
+## PROC-005: Hard Work Framework — Parallel Subagent Debate Protocol
+- **Category:** Process
+- **Date:** 2026-03-14
+- **Context:** A/B/C/D Adversarial Debate (PROC-002) had fundamental flaw: one AI playing 4 roles sequentially creates echo chamber — Critic sees Defender's framing, Arbiter sees both, producing false consensus. No alignment phase (Discovery), no multi-cycle iteration, no user input between rounds.
+- **Alternatives:**
+  - A) Keep A/B/C/D as-is (rejected: echo chamber, no alignment, sequential contamination)
+  - B) Layer Hard Work on top of A/B/C/D (rejected: conflicting protocols, added complexity)
+  - C) Full replace with Hard Work Framework + parallel subagents (chosen)
+- **Decision:** Replace A/B/C/D with Hard Work Framework. Key innovation: roles run as parallel Cursor subagents (Task tool, readonly) — each is an independent AI instance that never sees others' output. Parent agent = Arbiter. Interactive Role Casting: 2-3 candidates per position, user selects. Compact mode (Tier 2: 2 subagents) and Full mode (Tier 3: 3 subagents + Lateral from outside domain).
+- **Impact:** CLAUDE.md updated (A/B/C/D section replaced). New files: `.cursor/rules/hard-work.mdc` (router), `docs/hard-work-framework.md` (full spec). `project-decisions.md` updated. Notion KB entry created.
+
+## PROC-004: Engineering Standards — 6 Cursor Rules from Git/Notion Audit
+- **Category:** Process
+- **Date:** 2026-03-14
+- **Context:** Full audit of git history (91 commits), Notion KB, and codebase. Found: 15 commits without prefix, avg 8 files/commit (max 74), CLAUDE.md with 4 stale facts, Workers Registry missing 3 workers, Current State 8 days stale, 0 new tests in 80+ feature commits.
+- **Decision:** Introduced 6 `.cursor/rules/*.mdc` files:
+  1. `commit-convention.mdc` — conventional commits, English, ≤72 chars
+  2. `atomic-commits.mdc` — ≤15 files per commit, split by layer
+  3. `test-with-logic.mdc` — unit tests mandatory for business logic
+  4. `notion-sync.mdc` — session-end checklist for all Notion databases
+  5. `version-guard.mdc` — auto-check CLAUDE.md when infra files change
+  6. `project-structure.mdc` — import boundaries, naming, ownership
+- **Impact:** .cursor/rules/ created, CLAUDE.md updated, all future sessions auto-load these rules.

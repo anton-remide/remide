@@ -24,8 +24,8 @@ import { logger, sendTelegramAlert } from '../../shared/logger.js';
 import { SYSTEM_LIMITS, enforceBatchLimit, acquireLock, releaseLock, setRuntimeTimeout, withRetry } from '../../shared/guards.js';
 
 const SCOPE = 'enrichment';
-const DEFAULT_LIMIT = 50;
-const RATE_LIMIT_MS = 3_000; // 3s between Firecrawl calls (respectful)
+const DEFAULT_LIMIT = 5_000;
+const RATE_LIMIT_MS = 1_500; // 1.5s between Firecrawl calls
 
 /* ── Types ── */
 
@@ -44,6 +44,10 @@ interface EnrichmentResult {
   description: string | null;
   linkedinUrl: string | null;
   twitterUrl: string | null;
+  brandName: string | null;
+  logoUrl: string | null;
+  contactEmail: string | null;
+  keywords: string[];
   success: boolean;
   error?: string;
 }
@@ -108,44 +112,174 @@ function normalizeUrl(url: string): string {
 
 /** Extract LinkedIn URL from page content or metadata */
 function extractLinkedIn(markdown: string, metadata: Record<string, unknown>): string | null {
-  // Check metadata first (og:see_also, social links)
-  const metaStr = JSON.stringify(metadata).toLowerCase();
-  const linkedinMatch = metaStr.match(/https?:\/\/(?:www\.)?linkedin\.com\/(?:company|in)\/[a-zA-Z0-9_-]+/i);
-  if (linkedinMatch) return linkedinMatch[0];
+  const linkedinRe = /https?:\/\/(?:www\.)?linkedin\.com\/(?:company|in)\/[a-zA-Z0-9_-]+/i;
 
-  // Search in markdown content
-  const contentMatch = markdown.match(/https?:\/\/(?:www\.)?linkedin\.com\/(?:company|in)\/[a-zA-Z0-9_-]+/i);
-  if (contentMatch) return contentMatch[0];
+  // Priority 1: metadata (og:see_also, social links, JSON-LD)
+  const metaStr = JSON.stringify(metadata).toLowerCase();
+  const metaMatch = metaStr.match(linkedinRe);
+  if (metaMatch) return normalizeLinkedIn(metaMatch[0]);
+
+  // Priority 2: markdown content
+  const contentMatch = markdown.match(linkedinRe);
+  if (contentMatch) return normalizeLinkedIn(contentMatch[0]);
+
+  // Priority 3: look for linkedin.com/company/ specifically (prefer company pages over personal)
+  const companyRe = /https?:\/\/(?:www\.)?linkedin\.com\/company\/[a-zA-Z0-9_-]+/i;
+  const companyMatch = (metaStr + markdown).match(companyRe);
+  if (companyMatch) return normalizeLinkedIn(companyMatch[0]);
 
   return null;
+}
+
+/** Normalize LinkedIn URLs: strip trailing slashes, tracking params, ensure https */
+function normalizeLinkedIn(url: string): string {
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    u.protocol = 'https:';
+    u.search = '';
+    u.hash = '';
+    return u.toString().replace(/\/+$/, '');
+  } catch {
+    return url;
+  }
 }
 
 /** Extract Twitter/X URL from page content or metadata */
 function extractTwitter(markdown: string, metadata: Record<string, unknown>): string | null {
-  const metaStr = JSON.stringify(metadata).toLowerCase();
-  const twitterMatch = metaStr.match(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+/i);
-  if (twitterMatch) return twitterMatch[0];
+  const twitterRe = /https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+/i;
+  const skipHandles = new Set(['share', 'intent', 'home', 'search', 'explore', 'settings', 'login', 'signup', 'i', 'hashtag']);
 
-  const contentMatch = markdown.match(/https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/[a-zA-Z0-9_]+/i);
-  if (contentMatch) return contentMatch[0];
+  function isValidHandle(url: string): boolean {
+    try {
+      const handle = new URL(url).pathname.split('/')[1]?.toLowerCase();
+      return !!handle && !skipHandles.has(handle) && handle.length >= 2;
+    } catch { return false; }
+  }
+
+  // Priority 1: twitter:site or twitter:creator meta tags
+  const twitterSite = metadata?.['twitter:site'] ?? metadata?.twitterSite;
+  if (twitterSite && typeof twitterSite === 'string') {
+    const handle = twitterSite.replace(/^@/, '');
+    if (handle.length >= 2) return `https://x.com/${handle}`;
+  }
+
+  // Priority 2: metadata (og:see_also, social links)
+  const metaStr = JSON.stringify(metadata).toLowerCase();
+  const metaMatch = metaStr.match(twitterRe);
+  if (metaMatch && isValidHandle(metaMatch[0])) return normalizeTwitter(metaMatch[0]);
+
+  // Priority 3: markdown content
+  const contentMatch = markdown.match(twitterRe);
+  if (contentMatch && isValidHandle(contentMatch[0])) return normalizeTwitter(contentMatch[0]);
 
   return null;
 }
 
-/** Junk description patterns — maintenance pages, generic boilerplate */
+function normalizeTwitter(url: string): string {
+  try {
+    const u = new URL(url);
+    const handle = u.pathname.split('/')[1];
+    return `https://x.com/${handle}`;
+  } catch {
+    return url;
+  }
+}
+
+/** Error page indicators — don't extract brand from these */
+const ERROR_PAGE_INDICATORS = [
+  /invalid ssl/i, /certificate/i, /403|404|500|502|503/,
+  /not found/i, /forbidden/i, /error/i, /cloudflare/i,
+  /parked/i, /expired/i, /maintenance/i,
+];
+
+function isErrorPage(metadata: Record<string, unknown>): boolean {
+  const statusCode = metadata?.statusCode;
+  if (typeof statusCode === 'number' && statusCode >= 400) return true;
+  const title = String(metadata?.title ?? '');
+  return ERROR_PAGE_INDICATORS.some(p => p.test(title));
+}
+
+/** Clean brand name: strip trailing separators, common noise */
+function cleanBrand(raw: string): string | null {
+  let b = raw
+    .replace(/\s*[|·–—:]\s*$/, '')         // trailing separator
+    .replace(/\s*[|·–—:]\s*\d{3,}.*$/, '') // separator + error codes
+    .replace(/^\s*(Welcome\s+to|About)\s+/i, '')
+    .trim();
+  // If brand has a pipe/dash separator, take the shorter meaningful part
+  const parts = b.split(/\s*[|·]\s*/);
+  if (parts.length > 1) {
+    const best = parts.find(p => p.trim().length >= 2 && p.trim().length <= 40) ?? parts[0];
+    b = best.trim();
+  }
+  if (b.length < 2 || b.length > 80) return null;
+  if (/^(home|page|index|untitled|error|not found|403|404|500)/i.test(b)) return null;
+  if (/invalid ssl|certificate|cloudflare|forbidden|parked/i.test(b)) return null;
+  return b;
+}
+
+/** Extract brand/commercial name from website metadata */
+function extractBrandName(metadata: Record<string, unknown>): string | null {
+  if (isErrorPage(metadata)) return null;
+
+  // Priority 1: og:site_name (most reliable brand signal)
+  const siteName = metadata?.['og:site_name'] ?? metadata?.ogSiteName;
+  if (siteName && typeof siteName === 'string') {
+    const brand = cleanBrand(siteName);
+    if (brand) return brand;
+  }
+
+  // Priority 2: application-name
+  const appName = metadata?.['application-name'] ?? metadata?.applicationName;
+  if (appName && typeof appName === 'string') {
+    const brand = cleanBrand(appName);
+    if (brand) return brand;
+  }
+
+  // Priority 3: cleaned <title> tag
+  const title = metadata?.title ?? metadata?.ogTitle;
+  if (title && typeof title === 'string') {
+    const cleaned = title
+      .replace(/\s*[-–—|·:]\s*(Home|Homepage|Official|Website|Main|Welcome|About|Login|Sign\s*[Uu]p|Dashboard|Portal|Register).*$/i, '')
+      .replace(/\s*[-–—|·:]\s*(Crypto|Exchange|Platform|Trading|Buy|Sell).*$/i, '')
+      .replace(/\s*[-–—|·:]\s*$/g, '')
+      .replace(/^\s*(Welcome\s+to|About|Startseite|Accueil|Inicio|Главная|Strona\s+główna|Anasayfa)\s+/i, '')
+      .replace(/\s*[-–—|·:]\s*(Die\s+\w+genossenschaft|Your\s+\w+\s+Partner).*$/i, '')
+      .trim();
+    return cleanBrand(cleaned);
+  }
+
+  return null;
+}
+
+/** Junk description patterns — maintenance pages, generic boilerplate, error pages */
 const JUNK_PATTERNS = [
-  /scheduled maintenance/i,
-  /check back in a minute/i,
-  /under construction/i,
-  /coming soon/i,
-  /403 forbidden/i,
-  /404 not found/i,
-  /access denied/i,
-  /page not found/i,
-  /enable javascript/i,
+  // Error pages
+  /403 forbidden/i, /404 not found/i, /access denied/i, /page not found/i,
+  /502 bad gateway/i, /503 service/i, /500 internal/i,
+  /invalid ssl certificate/i, /ssl.*certificate/i, /ERR_SSL/i,
+  /this site can't be reached/i, /connection.*timed?\s*out/i,
+  /dns.*not.*resolv/i, /err_name_not_resolved/i,
+  // Maintenance/placeholder
+  /scheduled maintenance/i, /under construction/i, /coming soon/i,
+  /check back in a minute/i, /site under maintenance/i,
+  /website.*temporarily unavailable/i, /we're currently performing/i,
+  /service unavailable/i,
+  // Bot protection
+  /cloudflare/i, /just a moment/i, /challenge-platform/i,
+  /attention required/i, /are you a human/i, /verify you are human/i,
+  /captcha/i, /please wait while/i, /enable javascript/i,
   /please enable cookies/i,
-  /cloudflare/i,
-  /just a moment/i,
+  // Parking/expired
+  /domain.*(?:for sale|expired|parked)/i, /buy this domain/i,
+  /this domain is registered/i,
+  // Navigation/UI fragments (not real descriptions)
+  /^skip to (?:content|main|nav)/i, /^menu$/i, /^toggle navigation$/i,
+  /loading\.\.\./i,
+  // URL-as-description (badges, image refs)
+  /^https?:\/\//i,
+  // Cookie banners
+  /^(?:we use cookies|this website uses cookies|cookie policy|accept all cookies)/i,
 ];
 
 /** Check if a description looks like junk/boilerplate */
@@ -155,25 +289,44 @@ function isJunkDescription(text: string): boolean {
 
 /** Build a clean description from Firecrawl result */
 function extractDescription(markdown: string, metadata: Record<string, unknown>): string | null {
-  // Priority 1: OG description / meta description
+  // Priority 1: OG description / meta description (most reliable)
   const ogDesc = metadata?.ogDescription ?? metadata?.description ?? metadata?.['og:description'];
-  if (ogDesc && typeof ogDesc === 'string' && ogDesc.trim().length > 20) {
+  if (ogDesc && typeof ogDesc === 'string') {
     const cleaned = cleanDescription(ogDesc.trim());
-    if (!isJunkDescription(cleaned)) return cleaned;
+    if (cleaned.length > 20 && !isJunkDescription(cleaned) && !looksLikeUrl(cleaned)) return cleaned;
   }
 
-  // Priority 2: First meaningful paragraph from markdown
-  // Split by double newline, find first paragraph with 30+ chars
+  // Priority 2: twitter:description (often a good fallback)
+  const twDesc = metadata?.['twitter:description'] ?? metadata?.twitterDescription;
+  if (twDesc && typeof twDesc === 'string') {
+    const cleaned = cleanDescription(twDesc.trim());
+    if (cleaned.length > 20 && !isJunkDescription(cleaned) && !looksLikeUrl(cleaned)) return cleaned;
+  }
+
+  // Priority 3: First meaningful paragraph from markdown
   const paragraphs = markdown.split(/\n{2,}/);
   for (const p of paragraphs) {
-    const clean = p.replace(/[#*_\[\]()!]/g, '').trim();
-    // Skip nav items, short lines, headers, junk
-    if (clean.length >= 30 && !clean.includes('|') && !clean.startsWith('Cookie') && !clean.startsWith('Accept') && !isJunkDescription(clean)) {
+    const clean = p
+      .replace(/[#*_\[\]()!]/g, '')
+      .replace(/https?:\/\/\S+/g, '')  // strip inline URLs
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (
+      clean.length >= 40 &&
+      !clean.includes('|') &&         // table rows
+      !/^\s*(cookie|accept|skip|menu|toggle|sign\s*in|log\s*in|register)/i.test(clean) &&
+      !isJunkDescription(clean) &&
+      !looksLikeUrl(clean)
+    ) {
       return cleanDescription(clean);
     }
   }
 
   return null;
+}
+
+function looksLikeUrl(text: string): boolean {
+  return /^https?:\/\//.test(text.trim());
 }
 
 /** Sanitize description text */
@@ -183,6 +336,50 @@ function cleanDescription(text: string): string {
     .replace(/^\s*[-–—]\s*/, '')    // Strip leading dashes
     .trim()
     .slice(0, 500);                 // Cap at 500 chars
+}
+
+/** Extract logo/OG image URL */
+function extractLogo(metadata: Record<string, unknown>, baseUrl: string): string | null {
+  if (isErrorPage(metadata)) return null;
+  const ogImage = metadata?.ogImage ?? metadata?.['og:image'];
+  let url: string | null = null;
+  if (typeof ogImage === 'string') url = ogImage;
+  else if (ogImage && typeof ogImage === 'object' && 'url' in (ogImage as Record<string, unknown>)) {
+    url = (ogImage as { url: string }).url;
+  }
+  if (url && typeof url === 'string' && url.startsWith('http') && !url.includes('localhost')) return url;
+  const icon = metadata?.favicon;
+  if (icon && typeof icon === 'string') {
+    if (icon.startsWith('http')) return icon;
+    try { return new URL(icon, baseUrl).toString(); } catch {}
+  }
+  return null;
+}
+
+/** Extract contact email from metadata/content */
+function extractEmail(markdown: string, metadata: Record<string, unknown>): string | null {
+  const re = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const skip = /example\.com|sentry\.|noreply|no-reply|unsubscribe|@\d/i;
+  const metaStr = JSON.stringify(metadata);
+  const m1 = metaStr.match(re);
+  if (m1 && !skip.test(m1[0])) return m1[0].toLowerCase();
+  const lines = markdown.split('\n');
+  for (const line of lines) {
+    if (/contact|email|mailto|support|info/i.test(line)) {
+      const m = line.match(re);
+      if (m && !skip.test(m[0])) return m[0].toLowerCase();
+    }
+  }
+  return null;
+}
+
+/** Extract keywords/services from meta tags */
+function extractKeywords(metadata: Record<string, unknown>): string[] {
+  const kw = metadata?.keywords ?? metadata?.['keywords'];
+  if (kw && typeof kw === 'string') {
+    return kw.split(',').map(s => s.trim()).filter(s => s.length > 1 && s.length < 60).slice(0, 15);
+  }
+  return [];
 }
 
 /** Quick DNS check — returns false if hostname doesn't resolve (saves Firecrawl credits) */
@@ -213,6 +410,10 @@ async function scrapeEntity(
         description: null,
         linkedinUrl: null,
         twitterUrl: null,
+        brandName: null,
+        logoUrl: null,
+        contactEmail: null,
+        keywords: [],
         success: false,
         error: `DNS dead: ${hostname}`,
       };
@@ -228,10 +429,13 @@ async function scrapeEntity(
     const markdown = doc.markdown ?? '';
     const metadata = (doc.metadata ?? {}) as DocumentMetadata & Record<string, unknown>;
 
-    // Extract data — only if the entity is missing that field
     const description = entity.description?.trim() ? null : extractDescription(markdown, metadata);
     const linkedinUrl = entity.linkedin_url?.trim() ? null : extractLinkedIn(markdown, metadata);
     const twitterUrl = extractTwitter(markdown, metadata);
+    const brandName = extractBrandName(metadata);
+    const logoUrl = extractLogo(metadata, url);
+    const contactEmail = extractEmail(markdown, metadata);
+    const keywords = extractKeywords(metadata);
 
     return {
       entityId: entity.id,
@@ -239,6 +443,10 @@ async function scrapeEntity(
       description,
       linkedinUrl,
       twitterUrl,
+      brandName,
+      logoUrl,
+      contactEmail,
+      keywords,
       success: true,
     };
   } catch (err) {
@@ -249,6 +457,10 @@ async function scrapeEntity(
       description: null,
       linkedinUrl: null,
       twitterUrl: null,
+      brandName: null,
+      logoUrl: null,
+      contactEmail: null,
+      keywords: [],
       success: false,
       error: `Scrape failed for ${url}: ${msg}`,
     };
@@ -262,6 +474,8 @@ interface SchemaInfo {
   hasLinkedinUrl: boolean;
   hasRegistryUrl: boolean;
   hasEnrichedAt: boolean;
+  hasTwitterUrl: boolean;
+  hasBrandName: boolean;
 }
 
 /** Detect which enrichment columns exist in the entities table */
@@ -272,6 +486,8 @@ async function detectSchema(): Promise<SchemaInfo> {
     hasLinkedinUrl: false,
     hasRegistryUrl: false,
     hasEnrichedAt: false,
+    hasTwitterUrl: false,
+    hasBrandName: false,
   };
 
   const check = async (col: string): Promise<boolean> => {
@@ -280,12 +496,14 @@ async function detectSchema(): Promise<SchemaInfo> {
     return true;
   };
 
-  [schema.hasDescription, schema.hasLinkedinUrl, schema.hasRegistryUrl, schema.hasEnrichedAt] =
+  [schema.hasDescription, schema.hasLinkedinUrl, schema.hasRegistryUrl, schema.hasEnrichedAt, schema.hasTwitterUrl, schema.hasBrandName] =
     await Promise.all([
       check('description'),
       check('linkedin_url'),
       check('registry_url'),
       check('enriched_at'),
+      check('twitter_url'),
+      check('brand_name'),
     ]);
 
   return schema;
@@ -333,7 +551,14 @@ async function fetchEntitiesToEnrich(
   }
   // If neither column exists, we'll just grab entities with websites (all need enrichment)
 
-  query = query.order('country_code').limit(limit);
+  // Prioritize: confirmed_crypto first, then crypto_adjacent, then rest.
+  // Skip entities with dead DNS to save Firecrawl credits.
+  query = query
+    .neq('dns_status', 'dead')
+    .neq('dns_status', 'no_website')
+    .order('crypto_status', { ascending: true })
+    .order('quality_score', { ascending: true, nullsFirst: true })
+    .limit(limit);
 
   if (country) {
     query = query.eq('country_code', country);
@@ -364,87 +589,62 @@ async function fetchEntitiesToEnrich(
     }));
 }
 
-/** Write enrichment results back to Supabase */
-async function writeEnrichmentResults(
-  results: EnrichmentResult[],
+/** Write ONE enrichment result immediately after scraping (incremental) */
+async function writeOneEnrichmentResult(
+  r: EnrichmentResult,
   schema: SchemaInfo,
-): Promise<{ written: number; errors: string[] }> {
+): Promise<{ ok: boolean; error?: string }> {
   const sb = getSupabase();
-  const dryRun = config.flags.dryRun;
-  let written = 0;
-  const errors: string[] = [];
+  if (config.flags.dryRun) {
+    logger.info(SCOPE, `[DRY-RUN] Would update ${r.entityName}`);
+    return { ok: true };
+  }
 
-  for (const r of results) {
-    if (!r.success) continue;
-    if (!r.description && !r.linkedinUrl) continue; // Nothing new to write
+  const updates: Record<string, unknown> = {};
+  if (r.description && schema.hasDescription) updates.description = r.description;
+  if (r.linkedinUrl && schema.hasLinkedinUrl) updates.linkedin_url = r.linkedinUrl;
+  if (r.twitterUrl && schema.hasTwitterUrl) updates.twitter_url = r.twitterUrl;
+  if (r.brandName && schema.hasBrandName) updates.brand_name = r.brandName;
+  if (schema.hasEnrichedAt) updates.enriched_at = new Date().toISOString();
 
-    const updates: Record<string, unknown> = {};
-    // Only write to columns that exist
-    if (r.description && schema.hasDescription) updates.description = r.description;
-    if (r.linkedinUrl && schema.hasLinkedinUrl) updates.linkedin_url = r.linkedinUrl;
-    if (schema.hasEnrichedAt) updates.enriched_at = new Date().toISOString();
+  // New fields go into raw_data alongside any existing data
+  const extraData: Record<string, unknown> = {};
+  if (r.logoUrl) extraData.logo_url = r.logoUrl;
+  if (r.contactEmail) extraData.contact_email = r.contactEmail;
+  if (r.keywords.length > 0) extraData.keywords = r.keywords;
 
-    // If no columns available to write, store enrichment data in raw_data as fallback
-    if (Object.keys(updates).length === 0) {
-      // Fallback: stash enrichment results in raw_data JSONB
-      const enrichmentData: Record<string, string> = {};
-      if (r.description) enrichmentData.enrichment_description = r.description;
-      if (r.linkedinUrl) enrichmentData.enrichment_linkedin_url = r.linkedinUrl;
-      if (r.twitterUrl) enrichmentData.enrichment_twitter_url = r.twitterUrl;
-
-      if (Object.keys(enrichmentData).length === 0) continue;
-
-      if (dryRun) {
-        logger.info(SCOPE, `[DRY-RUN] Would stash in raw_data for ${r.entityName}: ${JSON.stringify(enrichmentData)}`);
-        written++;
-        continue;
-      }
-
-      // Read existing raw_data, merge enrichment fields
-      const { data: existing } = await sb
-        .from('entities')
-        .select('raw_data')
-        .eq('id', r.entityId)
-        .single();
-
-      const rawData = { ...(existing?.raw_data as Record<string, unknown> ?? {}), ...enrichmentData };
-
-      const { error } = await sb
-        .from('entities')
-        .update({ raw_data: rawData })
-        .eq('id', r.entityId);
-
-      if (error) {
-        errors.push(`${r.entityName} (raw_data fallback): ${error.message}`);
-        logger.warn(SCOPE, `Failed to stash raw_data for ${r.entityName}: ${error.message}`);
-      } else {
-        written++;
-        logger.debug(SCOPE, `Stashed enrichment in raw_data for ${r.entityName}`);
-      }
-      continue;
-    }
-
-    if (dryRun) {
-      logger.info(SCOPE, `[DRY-RUN] Would update ${r.entityName}: ${JSON.stringify(updates)}`);
-      written++;
-      continue;
-    }
-
-    const { error } = await sb
-      .from('entities')
-      .update(updates)
-      .eq('id', r.entityId);
-
+  // If dedicated columns exist, do a direct update
+  if (Object.keys(updates).length > 0) {
+    const { error } = await sb.from('entities').update(updates).eq('id', r.entityId);
     if (error) {
-      errors.push(`${r.entityName}: ${error.message}`);
       logger.warn(SCOPE, `Failed to update ${r.entityName}: ${error.message}`);
-    } else {
-      written++;
-      logger.debug(SCOPE, `Updated ${r.entityName}: ${Object.keys(updates).join(', ')}`);
+      return { ok: false, error: `${r.entityName}: ${error.message}` };
     }
   }
 
-  return { written, errors };
+  // Stash extra enrichment data in raw_data JSONB
+  if (Object.keys(extraData).length > 0 || Object.keys(updates).length === 0) {
+    // Also stash main fields as fallback if dedicated columns are missing
+    if (!schema.hasDescription && r.description) extraData.enrichment_description = r.description;
+    if (!schema.hasLinkedinUrl && r.linkedinUrl) extraData.enrichment_linkedin_url = r.linkedinUrl;
+    if (!schema.hasTwitterUrl && r.twitterUrl) extraData.enrichment_twitter_url = r.twitterUrl;
+    if (!schema.hasBrandName && r.brandName) extraData.enrichment_brand_name = r.brandName;
+
+    if (Object.keys(extraData).length > 0) {
+      const { data: existing } = await sb.from('entities').select('raw_data').eq('id', r.entityId).single();
+      const rawData = { ...(existing?.raw_data as Record<string, unknown> ?? {}), ...extraData };
+      await sb.from('entities').update({ raw_data: rawData }).eq('id', r.entityId);
+    }
+  }
+
+  return { ok: true };
+}
+
+/** Mark an entity as enriched (timestamp only, no data) — prevents re-scraping */
+async function markEnriched(entityId: string, schema: SchemaInfo): Promise<void> {
+  if (config.flags.dryRun || !schema.hasEnrichedAt) return;
+  const sb = getSupabase();
+  await sb.from('entities').update({ enriched_at: new Date().toISOString() }).eq('id', entityId);
 }
 
 /** Log enrichment run to scrape_runs table */
@@ -497,7 +697,7 @@ async function main() {
   // 0. Detect available schema columns
   logger.info(SCOPE, 'Detecting schema...');
   const schema = await detectSchema();
-  logger.info(SCOPE, `Schema: description=${schema.hasDescription}, linkedin_url=${schema.hasLinkedinUrl}, registry_url=${schema.hasRegistryUrl}, enriched_at=${schema.hasEnrichedAt}`);
+  logger.info(SCOPE, `Schema: description=${schema.hasDescription}, linkedin_url=${schema.hasLinkedinUrl}, twitter_url=${schema.hasTwitterUrl}, brand_name=${schema.hasBrandName}, enriched_at=${schema.hasEnrichedAt}`);
 
   if (!schema.hasDescription && !schema.hasLinkedinUrl) {
     logger.warn(SCOPE, 'Enrichment columns not found. Results will be stored in raw_data JSONB as fallback.');
@@ -528,8 +728,7 @@ async function main() {
   // 2. Initialize Firecrawl
   const firecrawl = initFirecrawl();
 
-  // 3. Process entities
-  const results: EnrichmentResult[] = [];
+  // 3. Process entities with INCREMENTAL writes (write after each scrape)
   const stats: RunStats = {
     total: entities.length,
     enriched: 0,
@@ -540,6 +739,8 @@ async function main() {
     linkedinsAdded: 0,
     durationMs: 0,
   };
+  let written = 0;
+  const errors: string[] = [];
 
   for (let i = 0; i < entities.length; i++) {
     const entity = entities[i];
@@ -548,21 +749,33 @@ async function main() {
     logger.info(SCOPE, `${progress} Scraping ${entity.name} (${entity.country_code}) — ${entity.website}`);
 
     const result = await scrapeEntity(firecrawl, entity);
-    results.push(result);
 
     if (result.success) {
       const found: string[] = [];
       if (result.description) found.push('description');
       if (result.linkedinUrl) found.push('linkedin');
       if (result.twitterUrl) found.push('twitter');
+      if (result.brandName) found.push('brand');
+      if (result.logoUrl) found.push('logo');
+      if (result.contactEmail) found.push('email');
+      if (result.keywords.length) found.push('keywords');
 
       if (found.length > 0) {
         logger.info(SCOPE, `${progress} Found: ${found.join(', ')}`);
         stats.enriched++;
         if (result.description) stats.descriptionsAdded++;
         if (result.linkedinUrl) stats.linkedinsAdded++;
+
+        // INCREMENTAL WRITE — save immediately so progress isn't lost on timeout
+        const writeResult = await writeOneEnrichmentResult(result, schema);
+        if (writeResult.ok) {
+          written++;
+        } else if (writeResult.error) {
+          errors.push(writeResult.error);
+        }
       } else {
-        logger.info(SCOPE, `${progress} No new data found`);
+        // Mark as enriched even if no new data, so we don't re-scrape
+        await markEnriched(result.entityId, schema);
         stats.skipped++;
       }
     } else {
@@ -574,10 +787,12 @@ async function main() {
       } else if (isCreditsExhausted) {
         logger.error(SCOPE, `${progress} Firecrawl credits exhausted! Stopping batch.`);
         stats.failed++;
-        break; // Stop processing — no point wasting time
+        break;
       } else {
         logger.warn(SCOPE, `${progress} Failed: ${result.error}`);
       }
+      // Mark failed entities as enriched too (with just the timestamp) so we don't retry dead sites immediately
+      await markEnriched(result.entityId, schema);
       stats.failed++;
     }
 
@@ -588,10 +803,6 @@ async function main() {
     }
   }
 
-  // 4. Write results to Supabase
-  logger.info(SCOPE, '');
-  logger.info(SCOPE, 'Writing enrichment results...');
-  const { written, errors } = await writeEnrichmentResults(results, schema);
   logger.info(SCOPE, `Written: ${written} entities updated`);
 
   // 5. Log run

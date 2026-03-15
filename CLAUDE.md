@@ -1,25 +1,18 @@
 # RemiDe — Stablecoin Intelligence Platform
 
-## 🚀 CURRENT MODE: PRE-LAUNCH FINALIZATION
+## 🚀 CURRENT MODE: POST-LAUNCH — GROWTH & DATA QUALITY
 
-**All work must drive towards launch readiness. No new features unless they're on the pre-launch checklist.**
+**Site is LIVE. Stripe is LIVE. Focus: data coverage, enrichment, product features that drive conversion.**
 
-### Pre-Launch Task Tracking (MANDATORY)
-- **All pre-launch tasks are in Notion KB** with `Release Name: Pre-Launch`, `Version: 2`
-- **When completing ANY task:** immediately update Notion KB Status → Done + set Completed Date
-- **Task prefixes in Notion:**
-  - `LAUNCH:` — Business logic tasks (Claude Code + Anton)
-  - `UI/SASHA:` — Visual/layout tasks (delegated to Sasha)
-- **Priority order:**
-  1. Stripe integration + payment flow
-  2. Paywall tiers (2-tier overlay, blurred content logic)
-  3. Remove demo access, real auth only
-  4. Conversion flow (free → paid)
-  5. Quick fixes (text, spacing, Enterprise removal)
+### Post-Launch Priorities
+1. Data quality & parser coverage (80 parsers, 14K+ entities — expand and clean)
+2. Enrichment pipeline (descriptions, LinkedIn, websites via Firecrawl + AI)
+3. Product features that drive monetization (reports, alerts, exports)
+4. UI polish (remaining UI/SASHA backlog items)
 
-### Work Split for Pre-Launch
-- **Anton + Claude Code:** Business logic, Stripe, paywall tiers, auth flow, data loading perf
-- **Sasha:** All UI/SASHA tasks — spacing, icons, layout, responsive, visual polish, mobile
+### Work Split
+- **Anton + Claude Code:** Backend, parsers, workers, data pipeline, new features, Notion logging
+- **Sasha:** Frontend visuals, responsive, animations — `UI/SASHA:` prefixed tasks in Notion
 - **Rule:** Claude Code does NOT touch UI/SASHA tasks. If a UI issue is found, log it in Notion with `UI/SASHA:` prefix and move on.
 
 ## What This Project Is
@@ -70,13 +63,15 @@ A public regulatory intelligence platform that tracks stablecoin regulations, li
 - `/vasp-tracker-claude-analyze-crypto-registries-CD5TT/` — Old abandoned codebase. Only data files carried over. Do not modify.
 
 ## Tech Stack
-- React 19 + TypeScript + Vite 6
+- React 19 + TypeScript + Vite 7
 - Bootstrap 5.3 (CSS only, no JS), GSAP + ScrollTrigger
 - MapLibre GL JS (world map), Recharts (charts), Lucide React (icons)
-- Google Fonts: Inter (body) + Doto (display/numbers)
-- Deploy: GitHub Pages with HashRouter
-- Backend: Supabase (auth, DB, Edge Functions)
-- Parsers: GitHub Actions (cron), TypeScript, shared toolkit
+- Google Fonts: DM Sans (body) + Doto (display/numbers)
+- Deploy: GitHub Pages with BrowserRouter (SEO-optimized, 404.html fallback)
+- Backend: Supabase (auth, DB, Edge Functions, Stripe webhooks)
+- Payments: Stripe ($49 one-time via Edge Functions)
+- Parsers: 80 registry parsers, GitHub Actions (cron), TypeScript, shared toolkit
+- Workers: 3 active (quality, enrichment, verify), 2 planned (intelligence, exports)
 
 ## Key Constraints
 - **NO:** MUI, Lenis (causes scroll lag), Tailwind, jQuery, react-simple-maps
@@ -86,6 +81,22 @@ A public regulatory intelligence platform that tracks stablecoin regulations, li
 - **Language:** Speak Russian to the user. Do maximum work autonomously.
 - **Process:** Discuss specs/UX before building. Log all decisions.
 - **Stride data: CONFIDENTIAL.** Never mention Stride as data source in public code, comments, commits, or docs. Present all stablecoin/issuer data as RemiDe's own research.
+
+## Engineering Standards (`.cursor/rules/`)
+
+These rules are auto-loaded by Cursor and enforced in every session. Source: `.cursor/rules/*.mdc`.
+
+| Rule file | Scope | Summary |
+|-----------|-------|---------|
+| `commit-convention.mdc` | Always | Conventional commits: `type(scope): summary`. English only, ≤72 chars, no lists in title |
+| `atomic-commits.mdc` | Always | One logical change per commit, ≤15 files. Split by layer: data → backend → frontend |
+| `test-with-logic.mdc` | hooks, data, workers, shared | New business logic must ship with unit tests |
+| `notion-sync.mdc` | Always | Session-end checklist: Workers Registry, KB, Current State, CLAUDE.md |
+| `version-guard.mdc` | package.json, vite.config, App.tsx, app.css | When infra files change → verify CLAUDE.md Tech Stack accuracy |
+| `project-structure.mdc` | src, parsers, workers, shared | Import boundaries, file naming, ownership |
+| `hard-work.mdc` | On demand (description match) | Hard Work Framework router — parallel subagent debate for Tier 2–3 decisions |
+
+**Rules 1–6 introduced 2026-03-14 (git/Notion/codebase audit). Rule 7 introduced 2026-03-14 (replaces A/B/C/D protocol, PROC-005).**
 
 ## Development Priorities (PERMANENT)
 
@@ -168,47 +179,35 @@ Architecture/infra work is done ONLY when it unblocks features, never as busywor
 ### Feature Lifecycle
 1. **LOG** — Любая идея/задача → сразу в Notion KB (Backlog)
 2. **TIER** — Определить Tier (1/2/3) по сложности и impact
-3. **DEBATE** — A/B/C/D framework (Tier 2-3 only, см. ниже)
+3. **DEBATE** — Hard Work Framework (Tier 2-3 only, см. ниже)
 4. **REVIEW** — Антон утверждает (или просит изменения)
 5. **IMPLEMENT** — Только после confirmation
 6. **LOG DECISIONS** — Каждое решение → Notion KB (Type: Decision) + project-decisions.md как кеш
 
-### Adversarial Debate Protocol (A/B/C/D)
+### Hard Work Framework (Parallel Subagent Debate)
 
-**Когда запускать (Tiers):**
-- **Tier 1** (баг-фиксы, правки < 30 мин): Пропустить. Просто сделать.
-- **Tier 2** (фичи, 30 мин — 1 день): 1 раунд. Agents A + B + C.
-- **Tier 3** (архитектура, multi-session, breaking changes): 2 раунда. Все 4 агента.
+**Full spec:** `docs/hard-work-framework.md` | **Router rule:** `.cursor/rules/hard-work.mdc`
 
-**Роли:**
-- **Agent A — Защитник:** Построй решение. Дай допущения. Предложи план.
-  Включи user/business perspective в свои аргументы.
-- **Agent B — Критик:** Найди все реальные риски (мин. 3, макс. 10).
-  Предложи альтернативы. Укажи что нужно уточнить.
-  Evidence recommended: ссылки на файлы/код/данные усиливают аргумент.
-- **Agent C — Арбитр:** Для каждого спорного пункта:
-  "тезис → за → против → решение → уверенность (%)".
-  Выбери лучший вариант. Дай итоговый ответ + чек-лист.
-- **Agent D — Пользователь/Бизнес:** (Только Tier 3) Как это повлияет на пользователя?
-  Что увидит? Monetization impact? UX concerns? SEO effect?
+**Tiers:**
+- **Tier 1** (баг-фиксы, < 30 мин): Пропустить. Просто сделать.
+- **Tier 2** (фичи, планы): **Compact** — 5 вопросов, 2 субагента (Lead + Critic), 1–2 цикла
+- **Tier 3** (архитектура, стратегия): **Full** — 10 вопросов, 3 субагента (Lead + Critic + Lateral), 3 цикла
 
-**Процедура:**
-- **Tier 2:** A → B → C (1 раунд)
-- **Tier 3:** Раунд 1: A → B → D → C. Раунд 2: A отвечает → B проверяет → C финал.
-  Round 2 conditional: если C confidence > 90% по всем пунктам — Round 2 skip.
+**Ключевое отличие от A/B/C/D:** роли запускаются как **параллельные субагенты** (Task tool, readonly). Каждый — отдельный AI-инстанс. Они не видят друг друга → нет echo chamber.
+
+**5 фаз:**
+0. **Task Scan** — загрузить контекст (CLAUDE.md, код, Notion)
+1. **Discovery** — стратегические вопросы, минимум 2 challenge assumptions
+2. **Role Casting** — по 2–3 кандидата на позицию, пользователь выбирает состав
+3. **Execution Cycles** — субагенты работают параллельно, parent = Арбитр
+4. **Finalization** — решение + Notion KB (Type: Decision) + project-decisions.md
+
+**Триггеры:** "давай подумаем", "hard work", "deep work", "architecture decision", "стратегия", "design decision"
 
 **Confidence Thresholds:**
 - **> 80%:** Go. Реализуем.
-- **60–80%:** Уточнить у Anton / добавить data / Round 2.
-- **< 60%:** Stop. Нужен больше research или альтернативный подход.
-
-**Output Format (Agent C):**
-
-| # | Тезис | За | Против | Решение | Уверенность |
-|---|-------|-----|--------|---------|-------------|
-| 1 | ...   | ... | ...    | ...     | XX%         |
-
-+ Итоговый чек-лист перед реализацией.
+- **60–80%:** Уточнить / добавить данные / ещё цикл.
+- **< 60%:** Stop. Нужен research или альтернативный подход.
 
 ### Sprint Protocol
 Каждый спринт начинается с:
@@ -236,7 +235,7 @@ npx tsx parsers/run.ts --list                    # List all parsers
 npx tsx parsers/registries/esma-unified.ts       # ESMA all EU countries
 npx tsx workers/quality/run.ts                   # Quality pipeline (MANDATORY after parser)
 npx tsx workers/quality/run.ts --country KZ      # Quality for specific country
-npx tsx workers/enrichment/run.ts --limit 200    # Enrichment worker
+npx tsx workers/enrichment/run.ts --limit 5000   # Enrichment worker (full run)
 npx tsx scripts/generate-sitemap.ts              # Rebuild sitemap
 ```
 

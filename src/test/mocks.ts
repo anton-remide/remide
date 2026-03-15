@@ -16,6 +16,20 @@ export const mockJurisdictionRow = {
   sources: JSON.stringify([{ name: 'FinCEN', url: 'https://fincen.gov' }]),
   notes: 'Federal and state-level licensing',
   description: '',
+  stablecoin_stage: null,
+  is_stablecoin_specific: null,
+  yield_allowed: null,
+  fiat_backed: null,
+  fiat_alert: null,
+  crypto_backed: null,
+  crypto_alert: null,
+  commodity_backed: null,
+  commodity_alert: null,
+  algorithm_backed: null,
+  algorithm_alert: null,
+  stablecoin_description: null,
+  regulator_description: null,
+  currency: null,
 };
 
 export const mockJurisdiction: Jurisdiction = {
@@ -29,11 +43,26 @@ export const mockJurisdiction: Jurisdiction = {
   sources: [{ name: 'FinCEN', url: 'https://fincen.gov' }],
   notes: 'Federal and state-level licensing',
   description: '',
+  stablecoinStage: null,
+  isStablecoinSpecific: null,
+  yieldAllowed: null,
+  fiatBacked: null,
+  fiatAlert: '',
+  cryptoBacked: null,
+  cryptoAlert: '',
+  commodityBacked: null,
+  commodityAlert: '',
+  algorithmBacked: null,
+  algorithmAlert: '',
+  stablecoinDescription: '',
+  regulatorDescription: '',
+  currency: '',
 };
 
 export const mockEntityRow = {
   id: 'us-coinbase',
   name: 'Coinbase',
+  canonical_name: null,
   country_code: 'US',
   country: 'United States',
   license_number: 'MSB-31000180780458',
@@ -46,11 +75,22 @@ export const mockEntityRow = {
   description: '',
   registry_url: '',
   linkedin_url: '',
+  brand_name: null,
+  twitter_url: null,
+  raw_data: null,
+  sector: null,
+  crypto_related: null,
+  quality_score: null,
+  quality_flags: null,
+  dns_status: null,
+  crypto_status: null,
+  is_garbage: false,
 };
 
 export const mockEntity: Entity = {
   id: 'us-coinbase',
   name: 'Coinbase',
+  brandName: null,
   countryCode: 'US',
   country: 'United States',
   licenseNumber: 'MSB-31000180780458',
@@ -63,7 +103,32 @@ export const mockEntity: Entity = {
   description: '',
   registryUrl: '',
   linkedinUrl: '',
+  twitterUrl: '',
+  sector: 'Crypto',
+  cryptoRelated: true,
+  qualityScore: null,
+  qualityTier: null,
+  dnsStatus: 'unknown',
+  cryptoStatus: 'unknown',
+  isGarbage: false,
 };
+
+const stablecoinDefaults = {
+  stablecoinStage: null,
+  isStablecoinSpecific: null,
+  yieldAllowed: null,
+  fiatBacked: null,
+  fiatAlert: '',
+  cryptoBacked: null,
+  cryptoAlert: '',
+  commodityBacked: null,
+  commodityAlert: '',
+  algorithmBacked: null,
+  algorithmAlert: '',
+  stablecoinDescription: '',
+  regulatorDescription: '',
+  currency: '',
+} as const;
 
 export const mockJurisdictions: Jurisdiction[] = [
   mockJurisdiction,
@@ -78,6 +143,7 @@ export const mockJurisdictions: Jurisdiction[] = [
     sources: [{ name: 'MAS', url: 'https://mas.gov.sg' }],
     notes: 'Comprehensive licensing regime',
     description: '',
+    ...stablecoinDefaults,
   },
   {
     code: 'JP',
@@ -90,8 +156,21 @@ export const mockJurisdictions: Jurisdiction[] = [
     sources: [{ name: 'JFSA', url: 'https://fsa.go.jp' }],
     notes: 'Registration-based system',
     description: '',
+    ...stablecoinDefaults,
   },
 ];
+
+const entityDefaults = {
+  brandName: null,
+  twitterUrl: '',
+  sector: 'Crypto' as const,
+  cryptoRelated: true,
+  qualityScore: null,
+  qualityTier: null,
+  dnsStatus: 'unknown' as const,
+  cryptoStatus: 'unknown' as const,
+  isGarbage: false,
+};
 
 export const mockEntities: Entity[] = [
   mockEntity,
@@ -110,6 +189,7 @@ export const mockEntities: Entity[] = [
     description: '',
     registryUrl: '',
     linkedinUrl: '',
+    ...entityDefaults,
   },
   {
     id: 'us-kraken',
@@ -126,6 +206,7 @@ export const mockEntities: Entity[] = [
     description: '',
     registryUrl: '',
     linkedinUrl: '',
+    ...entityDefaults,
   },
 ];
 

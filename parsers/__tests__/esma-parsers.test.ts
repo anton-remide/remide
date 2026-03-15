@@ -150,7 +150,7 @@ describe('fetchEsmaCaspEntities (esma-casp shared helper)', () => {
     const { entities, warnings } = await fetchEsmaCaspEntities('XX', 'test-xx');
 
     expect(entities).toHaveLength(0);
-    expect(warnings).toContain('No entities found for country XX in ESMA register');
+    expect(warnings).toContain('No CASP entities found for country XX in ESMA register');
   });
 
   it('throws when all ESMA CSV URLs fail', async () => {

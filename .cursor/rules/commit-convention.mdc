@@ -1,0 +1,56 @@
+---
+description: Enforces conventional commit messages with correct prefix, scope, language, and length
+globs:
+alwaysApply: true
+---
+
+# Commit Message Convention
+
+## Format
+
+```
+<type>(<scope>): <summary>
+```
+
+## Types (mandatory prefix)
+
+- `feat` — new feature or capability
+- `fix` — bug fix
+- `chore` — deps, config, tooling, cleanup
+- `perf` — performance improvement
+- `refactor` — code restructuring without behavior change
+- `docs` — documentation only
+- `style` — CSS/UI visual changes (no logic)
+- `test` — adding or updating tests
+- `a11y` — accessibility improvement
+
+## Scopes (use when applicable)
+
+`parsers`, `workers`, `ui`, `data`, `auth`, `stripe`, `map`, `seo`, `mobile`, `db`, `stablecoins`, `notion`
+
+## Rules
+
+1. **Language:** English only. No Russian, no mixed language.
+2. **Title length:** ≤ 72 characters. No exceptions.
+3. **Title format:** lowercase after colon. No period at end.
+4. **Body:** use body (after blank line) for details if needed — never cram a list into the title.
+5. **One logical change per commit.** If you need "and" in the title, it's probably two commits.
+
+## Anti-patterns (NEVER do these)
+
+- `куча всего на главной` — Russian, no prefix, vague
+- `stats sction small fix` — typo, no prefix, unclear
+- `Jurisdictions Entities` — no verb, no prefix, meaningless
+- `1. Did X 2. Did Y 3. Did Z` — numbered list in title (use body)
+- `feat: v1.9+ — SEO, UI redesign, paywall, pricing, header overhaul` — multiple unrelated features in one commit
+
+## Good examples
+
+```
+feat(parsers): add Wave 4 parsers — US FDIC, GB PRA (+5176 entities)
+fix(db): scope entity delete by parser_id to prevent data loss
+perf(ui): route-level code splitting with React.lazy
+style(mobile): pricing table responsive at 375px viewport
+test(workers): add quality rules unit tests
+chore: update Vite 6 → 7, regenerate lock file
+```

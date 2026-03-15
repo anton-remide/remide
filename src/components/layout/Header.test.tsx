@@ -33,8 +33,8 @@ describe('Header', () => {
     const signInLinks = screen.getAllByRole('link', { name: /sign in/i });
     expect(signInLinks.length).toBeGreaterThanOrEqual(1);
 
-    const signUpLinks = screen.getAllByRole('link', { name: /sign up/i });
-    expect(signUpLinks.length).toBeGreaterThanOrEqual(1);
+    const registerLinks = screen.getAllByRole('link', { name: /register/i });
+    expect(registerLinks.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows user avatar and sign out when authenticated', async () => {

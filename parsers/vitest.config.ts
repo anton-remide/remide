@@ -4,7 +4,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['parsers/__tests__/**/*.test.ts'],
+    include: [
+      'parsers/__tests__/**/*.test.ts',
+      'workers/**/__tests__/**/*.test.ts',
+    ],
     testTimeout: 10_000,
   },
 });

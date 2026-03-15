@@ -1,0 +1,52 @@
+---
+description: Enforces import boundaries and ownership rules between frontend, parsers, workers, and shared
+globs:
+  - "src/**"
+  - "parsers/**"
+  - "workers/**"
+  - "shared/**"
+alwaysApply: false
+---
+
+# Project Structure & Import Boundaries
+
+## Directory Ownership
+
+| Directory | Owner | Purpose |
+|---|---|---|
+| `src/` | Anton (data/structure) + Sasha (visuals) | Frontend React SPA |
+| `src/data/`, `src/types.ts` | Anton | Data loaders, TypeScript interfaces |
+| `src/components/`, `src/styles/`, `src/hooks/` | Sasha | UI components, CSS, UI hooks |
+| `parsers/` | Anton | Registry scrapers (80 parsers) |
+| `workers/` | Anton | Background workers (quality, enrichment, verify) |
+| `shared/` | Anton | Backend utilities (config, supabase, logger, types, guards) |
+
+## Import Rules (HARD)
+
+```
+src/        → NEVER imports from parsers/, workers/, shared/
+parsers/    → imports from parsers/core/ and shared/
+workers/    → imports from shared/
+shared/     → imports from npm packages only (no internal cross-imports)
+```
+
+Violation of these boundaries breaks the build and creates circular dependencies.
+
+## File Naming
+
+- Pages: `src/pages/XxxPage.tsx` (PascalCase + "Page" suffix)
+- Components: `src/components/<category>/Xxx.tsx` (PascalCase)
+- Hooks: `src/hooks/useXxx.ts` (camelCase, "use" prefix)
+- Tests: colocated `*.test.{ts,tsx}`
+- Parsers: `parsers/registries/<cc>-<regulator>.ts` (lowercase country code + regulator abbreviation)
+- Workers: `workers/<name>/run.ts` (lowercase, run.ts as entry)
+
+## Key Constraints
+
+- NO: MUI, Tailwind, Lenis, jQuery, react-simple-maps
+- CSS: Bootstrap 5.3 + custom `.st-*` classes + GSAP
+- Cards: always `.clip-lg` class
+- Icons: Lucide React only
+- Map: MapLibre GL JS only
+- Charts: Recharts only
+- Stride data source: CONFIDENTIAL — never mention in public code/docs/commits

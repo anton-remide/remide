@@ -1,0 +1,57 @@
+---
+description: Activates Hard Work Framework for complex decisions — architecture, strategy, plans, design. Uses parallel subagents for adversarial debate. Triggers on keywords like hard work, deep work, architecture decision, strategic, plan design, давай подумаем, стратегия.
+globs:
+alwaysApply: false
+---
+
+# Hard Work Framework (Router)
+
+**Full spec:** `docs/hard-work-framework.md` — read it and follow step by step.
+
+## When to Activate
+
+Trigger when the task involves:
+- Architecture decisions, system design, strategic planning
+- Multi-component features with significant trade-offs
+- Irreversible decisions or decisions affecting multiple systems
+- User says: "давай подумаем", "глубокая работа", "hard work", "deep work", "design decision"
+
+## Tier Routing
+
+- **Tier 1** (< 30 min, bug fix): Skip framework. Just do it.
+- **Tier 2** (feature, plan): **Compact** — 5 questions, 2 subagents (Lead + Critic), 1–2 cycles
+- **Tier 3** (architecture, strategy): **Full** — 10 questions, 3 subagents (Lead + Critic + Lateral), 3 cycles
+
+## Protocol Summary (5 Phases)
+
+0. **Task Scan** — read CLAUDE.md, source files, Notion context. Map current vs desired state.
+1. **Discovery** — ask strategic→tactical questions. At least 2 must challenge assumptions.
+2. **Role Casting** — propose 2–3 candidates per position. User selects lineup via AskQuestion.
+3. **Execution Cycles** — launch subagents in parallel via Task tool. Parent = Arbiter.
+4. **Finalization** — deliverable + decision log (Notion KB + project-decisions.md) + killed alternatives.
+
+## Subagent Execution Pattern
+
+Each cycle launches parallel `Task` calls:
+
+```
+Task(subagent_type: "generalPurpose", readonly: true, prompt: [context + role re-statement + instructions])
+```
+
+- Compact: 2 subagents (Lead + Critic)
+- Full: 3 subagents (Lead + Critic + Lateral)
+- Subagents NEVER see each other's output — this eliminates echo chamber
+- Parent agent synthesizes all outputs as Arbiter
+
+## Anti-Echo-Chamber Rules
+
+1. Subagents run in parallel — zero context contamination
+2. Critic MUST find ≥3 fundamental flaws (not polish suggestions)
+3. Lateral (Full mode) is always from a different industry
+4. Between cycles: user feedback = verbatim hard constraints
+
+## Confidence Thresholds
+
+- **> 80%:** Go. Implement.
+- **60–80%:** Clarify with user / add data / extra cycle.
+- **< 60%:** Stop. More research or alternative framing needed.

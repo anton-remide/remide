@@ -1,12 +1,11 @@
 /**
  * Poland KNF — MiCAR Crypto-Asset Service Providers
  *
- * Source: ESMA MiCAR CASP Register (CSV), filtered by PL
+ * DEPRECATED: Covered by esma-unified parser. This parser is kept for backwards
+ * compatibility but returns empty results to avoid redundant HTTP calls.
  */
 
 import type { RegistryParser, ParserConfig, ParseResult } from '../core/types.js';
-import { fetchEsmaCaspEntities } from '../core/esma-casp.js';
-import { logger } from '../core/logger.js';
 
 export class PlKnfParser implements RegistryParser {
   config: ParserConfig = {
@@ -23,15 +22,16 @@ export class PlKnfParser implements RegistryParser {
   };
 
   async parse(): Promise<ParseResult> {
-    const startTime = Date.now();
-    logger.info(this.config.id, 'Fetching ESMA CASP register for PL...');
-    const { entities, warnings } = await fetchEsmaCaspEntities('PL', this.config.id);
-    for (const entity of entities) entity.regulator = 'KNF';
-    logger.info(this.config.id, `Parsed ${entities.length} entities from ESMA register`);
+    console.log(`[${this.config.id}] DEPRECATED: Covered by esma-unified parser. Skipping.`);
     return {
-      registryId: this.config.id, countryCode: 'PL', entities,
-      totalFound: entities.length, durationMs: Date.now() - startTime,
-      warnings, errors: [], timestamp: new Date().toISOString(),
+      registryId: this.config.id,
+      countryCode: this.config.countryCode,
+      entities: [],
+      totalFound: 0,
+      durationMs: 0,
+      warnings: ['Deprecated: use esma-unified instead'],
+      errors: [],
+      timestamp: new Date().toISOString(),
     };
   }
 }

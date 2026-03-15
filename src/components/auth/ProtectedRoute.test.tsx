@@ -41,10 +41,10 @@ describe('ProtectedRoute', () => {
     expect(document.querySelector('.st-auth-blur')).toBeInTheDocument();
     expect(document.querySelector('.st-auth-overlay')).toBeInTheDocument();
 
-    // Popup has CTA
-    expect(screen.getByText('Sign up for free access')).toBeInTheDocument();
-    expect(screen.getByText('Create Free Account')).toBeInTheDocument();
-    expect(screen.getByText('Sign in')).toBeInTheDocument();
+    // Paywall overlay has CTA
+    expect(screen.getByText(/unlock the full/i)).toBeInTheDocument();
+    expect(screen.getByText(/get early access/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign in/i)).toBeInTheDocument();
   });
 
   it('renders children when authenticated', () => {

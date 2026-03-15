@@ -171,7 +171,7 @@ async function writeResults(
     const batch = results.slice(i, i + BATCH_SIZE);
 
     for (const r of batch) {
-      const updates = {
+      const updates: Record<string, unknown> = {
         canonical_name: r.canonical_name,
         is_garbage: r.is_garbage,
         quality_score: r.quality_score,
@@ -179,6 +179,9 @@ async function writeResults(
         crypto_status: r.crypto_status,
         last_quality_at: now,
       };
+      if (r.brand_name) {
+        updates.brand_name = r.brand_name;
+      }
 
       if (dryRun) {
         logger.debug(SCOPE, `[DRY-RUN] Would update ${r.id}: score=${r.quality_score}, crypto=${r.crypto_status}${r.is_garbage ? ' [GARBAGE]' : ''}`);

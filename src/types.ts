@@ -7,6 +7,7 @@ export type QualityTier = 'T1' | 'T2' | 'T3' | 'T4';
 export interface Entity {
   id: string;
   name: string;
+  brandName: string | null;
   countryCode: string;
   country: string;
   licenseNumber: string;

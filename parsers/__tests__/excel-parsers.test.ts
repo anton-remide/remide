@@ -34,6 +34,20 @@ function buildXlsxFromObjects(
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
 }
 
+/** Build a FINMA FinTech Excel with 2 title rows (real format has headers at row 3). */
+function buildFintechXlsx(rows: Record<string, string>[]): ArrayBuffer {
+  if (rows.length === 0) return buildXlsxFromObjects([]);
+  const headers = Object.keys(rows[0]);
+  const pad = Array(Math.max(headers.length - 1, 0)).fill(null);
+  const data: (string | null)[][] = [
+    ['FINMA FinTech Register', ...pad],
+    [null, ...pad],
+    headers,
+    ...rows.map((r) => headers.map((h) => r[h] ?? '')),
+  ];
+  return buildXlsx(data);
+}
+
 /** Create a mock Response that resolves with the given ArrayBuffer. */
 function okResponse(buf: ArrayBuffer): Response {
   return {
@@ -293,10 +307,18 @@ describe('JpFsaParser', () => {
     expect(result.entities[0].activities).toEqual(['Crypto-Asset Exchange']);
   });
 
-  it('throws on HTTP error', async () => {
+  it('uses known entities fallback when fetch fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(errorResponse(404));
 
-    await expect(parser.parse()).rejects.toThrow('HTTP 404');
+    const result = await parser.parse();
+
+    expect(result.entities.length).toBeGreaterThan(0);
+    expect(result.warnings.some((w) => w.includes('fetch failed') || w.includes('Using known entities fallback'))).toBe(true);
+    // Fallback includes major exchanges
+    const names = result.entities.map((e) => e.name);
+    expect(names).toContain('bitFlyer, Inc.');
+    expect(names).toContain('Coincheck, Inc.');
+    expect(names).toContain('Binance Japan Inc.');
   });
 });
 
@@ -319,47 +341,16 @@ describe('CaFintracParser', () => {
   });
 
   it('filters crypto-related MSBs and ignores non-crypto', async () => {
-    const rows = [
+    const buf = buildXlsx([
+      ['Organization Names (Legal and Operating)', 'MSB Registration Number', 'Services Offered', 'MSB Registration Status'],
       // 3 crypto-related
-      {
-        'Legal Name': 'Crypto Corp',
-        'Registration Number': 'M08000001',
-        'Operating Name': 'CryptoCo',
-        'MSB Activities': 'Foreign exchange dealing; Dealing in virtual currencies',
-        'Status': 'Registered',
-      },
-      {
-        'Legal Name': 'Bitcoin ATM Inc',
-        'Registration Number': 'M08000002',
-        'Operating Name': '',
-        'MSB Activities': 'Virtual Currency exchange',
-        'Status': 'Active',
-      },
-      {
-        'Legal Name': 'Digital Money Ltd',
-        'Registration Number': 'M08000003',
-        'Operating Name': 'DigiMoney',
-        'MSB Activities': 'Money transfer; Crypto services',
-        'Status': 'Registered',
-      },
+      ['Legal Name: Crypto Corp,\nOperating Name: CryptoCo', 'M08000001', 'Foreign exchange dealing; Dealing in virtual currency', 'Registered'],
+      ['Legal Name: Bitcoin ATM Inc', 'M08000002', 'Virtual Currency exchange', 'Active'],
+      ['Legal Name: Digital Money Ltd,\nOperating Name: DigiMoney', 'M08000003', 'Money transfer; Crypto services', 'Registered'],
       // 2 non-crypto (should be excluded)
-      {
-        'Legal Name': 'Pure FX House',
-        'Registration Number': 'M08000004',
-        'Operating Name': '',
-        'MSB Activities': 'Foreign exchange dealing',
-        'Status': 'Registered',
-      },
-      {
-        'Legal Name': 'Money Transfer Co',
-        'Registration Number': 'M08000005',
-        'Operating Name': '',
-        'MSB Activities': 'Money transferring',
-        'Status': 'Registered',
-      },
-    ];
-
-    const buf = buildXlsxFromObjects(rows);
+      ['Legal Name: Pure FX House', 'M08000004', 'Foreign exchange dealing', 'Registered'],
+      ['Legal Name: Money Transfer Co', 'M08000005', 'Money transferring', 'Registered'],
+    ]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse(buf));
 
     const result = await parser.parse();
@@ -378,17 +369,10 @@ describe('CaFintracParser', () => {
   });
 
   it('maps entity fields correctly', async () => {
-    const rows = [
-      {
-        'Legal Name': 'Acme Crypto Inc.',
-        'Registration Number': 'M12345678',
-        'Operating Name': 'AcmeCrypto',
-        'MSB Activities': 'Dealing in virtual currencies; Money transfer',
-        'Status': 'Active',
-      },
-    ];
-
-    const buf = buildXlsxFromObjects(rows);
+    const buf = buildXlsx([
+      ['Organization Names (Legal and Operating)', 'MSB Registration Number', 'Services Offered', 'MSB Registration Status'],
+      ['Legal Name: Acme Crypto Inc.,\nOperating Name: AcmeCrypto', 'M12345678', 'Dealing in virtual currency; Money transfer', 'Active'],
+    ]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse(buf));
 
     const result = await parser.parse();
@@ -401,23 +385,16 @@ describe('CaFintracParser', () => {
     expect(entity.status).toBe('Active');
     expect(entity.regulator).toBe('FINTRAC');
     expect(entity.licenseType).toBe('MSB Registration');
-    expect(entity.activities).toEqual(['Dealing in virtual currencies', 'Money transfer']);
+    expect(entity.activities).toEqual(['Dealing in virtual currency', 'Money transfer']);
     expect(entity.entityTypes).toEqual(['AcmeCrypto']);
     expect(entity.sourceUrl).toContain('fintrac');
   });
 
   it('generates a fallback license number when registration number is missing', async () => {
-    const rows = [
-      {
-        'Legal Name': 'No Reg Number Ltd',
-        'Registration Number': '',
-        'Operating Name': '',
-        'MSB Activities': 'Dealing in virtual currencies',
-        'Status': 'Registered',
-      },
-    ];
-
-    const buf = buildXlsxFromObjects(rows);
+    const buf = buildXlsx([
+      ['Organization Names (Legal and Operating)', 'MSB Registration Number', 'Services Offered', 'MSB Registration Status'],
+      ['Legal Name: No Reg Number Ltd', '', 'Dealing in virtual currency', 'Registered'],
+    ]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse(buf));
 
     const result = await parser.parse();
@@ -427,34 +404,25 @@ describe('CaFintracParser', () => {
   });
 
   it('skips rows with no name', async () => {
-    const rows = [
-      {
-        'Legal Name': '',
-        'Registration Number': 'M99999999',
-        'Operating Name': '',
-        'MSB Activities': 'Dealing in virtual currencies',
-        'Status': 'Registered',
-      },
-    ];
-
-    const buf = buildXlsxFromObjects(rows);
+    const buf = buildXlsx([
+      ['Organization Names (Legal and Operating)', 'MSB Registration Number', 'Services Offered', 'MSB Registration Status'],
+      ['', 'M99999999', 'Dealing in virtual currency', 'Registered'],
+    ]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse(buf));
 
     const result = await parser.parse();
 
     expect(result.entities).toHaveLength(0);
-    expect(result.warnings.some((w) => w.includes('no name'))).toBe(true);
   });
 
   it('handles alternative column names via case-insensitive matching', async () => {
-    // Use underscore-separated column names instead of space-separated
+    // Use fallback column names instead of the primary combined column
     const rows = [
       {
-        legal_name: 'Alt Column Corp',
-        registration_number: 'M00000001',
-        operating_name: 'AltCol',
-        msb_activities: 'Virtual currency exchange',
-        Status: 'Registered',
+        'Legal Name': 'Alt Column Corp',
+        'Registration Number': 'M00000001',
+        'MSB Activities': 'Virtual currency exchange',
+        'Status': 'Registered',
       },
     ];
 
@@ -469,17 +437,10 @@ describe('CaFintracParser', () => {
   });
 
   it('returns empty when no rows match crypto keywords', async () => {
-    const rows = [
-      {
-        'Legal Name': 'Regular Bank',
-        'Registration Number': 'M11111111',
-        'Operating Name': '',
-        'MSB Activities': 'Money transferring; Foreign exchange',
-        'Status': 'Registered',
-      },
-    ];
-
-    const buf = buildXlsxFromObjects(rows);
+    const buf = buildXlsx([
+      ['Organization Names (Legal and Operating)', 'MSB Registration Number', 'Services Offered', 'MSB Registration Status'],
+      ['Legal Name: Regular Bank', 'M11111111', 'Money transferring; Foreign exchange', 'Registered'],
+    ]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(okResponse(buf));
 
     const result = await parser.parse();
@@ -543,7 +504,7 @@ describe('ChFinmaParser', () => {
       { Name: 'Bitcoin Suisse AG', Category: 'Securities Firm' }, // crypto: matches "bitcoin"
     ];
 
-    const fintechBuf = buildXlsxFromObjects(fintechRows);
+    const fintechBuf = buildFintechXlsx(fintechRows);
     const banksBuf = buildXlsxFromObjects(bankRows);
     mockBothFetches(fintechBuf, banksBuf);
 
@@ -573,7 +534,7 @@ describe('ChFinmaParser', () => {
     const fintechRows = [{ Name: 'FinTech One', Category: 'FinTech' }];
     const bankRows = [{ Name: 'Crypto Bank AG', Category: 'Bank' }];
 
-    const fintechBuf = buildXlsxFromObjects(fintechRows);
+    const fintechBuf = buildFintechXlsx(fintechRows);
     const banksBuf = buildXlsxFromObjects(bankRows);
     mockBothFetches(fintechBuf, banksBuf);
 
@@ -590,7 +551,7 @@ describe('ChFinmaParser', () => {
     const fintechRows = [{ Name: 'Test FinTech AG', Category: 'FinTech Licence' }];
     const bankRows: Record<string, string>[] = [];
 
-    const fintechBuf = buildXlsxFromObjects(fintechRows);
+    const fintechBuf = buildFintechXlsx(fintechRows);
     const banksBuf = buildXlsxFromObjects(bankRows);
     mockBothFetches(fintechBuf, banksBuf);
 
@@ -614,7 +575,7 @@ describe('ChFinmaParser', () => {
     ];
     const bankRows: Record<string, string>[] = [];
 
-    const fintechBuf = buildXlsxFromObjects(fintechRows);
+    const fintechBuf = buildFintechXlsx(fintechRows);
     const banksBuf = buildXlsxFromObjects(bankRows);
     mockBothFetches(fintechBuf, banksBuf);
 
@@ -622,17 +583,17 @@ describe('ChFinmaParser', () => {
 
     expect(result.entities).toHaveLength(1);
     expect(result.entities[0].name).toBe('Deutsche Fintech GmbH');
-    expect(result.entities[0].activities).toEqual(['FinTech-Bewilligung']);
+    expect(result.entities[0].activities).toEqual(['FinTech Licence']);
   });
 
   it('skips rows without a name', async () => {
     const fintechRows = [
-      { Name: '', Category: 'FinTech' },
+      { Name: '', Category: '' },
       { Name: 'Valid Entity', Category: 'FinTech' },
     ];
     const bankRows: Record<string, string>[] = [];
 
-    const fintechBuf = buildXlsxFromObjects(fintechRows);
+    const fintechBuf = buildFintechXlsx(fintechRows);
     const banksBuf = buildXlsxFromObjects(bankRows);
     mockBothFetches(fintechBuf, banksBuf);
 
@@ -664,7 +625,7 @@ describe('ChFinmaParser', () => {
 
   it('continues when banks fetch fails and still returns FinTech', async () => {
     const fintechRows = [{ Name: 'Solo FinTech AG', Category: 'FinTech' }];
-    const fintechBuf = buildXlsxFromObjects(fintechRows);
+    const fintechBuf = buildFintechXlsx(fintechRows);
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input.toString();

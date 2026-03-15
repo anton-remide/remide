@@ -1,55 +1,79 @@
 # RemiDe — Backlog
 
-## Data Pipeline: Entity & Jurisdiction Enrichment
+> **Source of truth:** Notion Knowledge Base (`collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f`).
+> This file is a quick-reference cache. Last synced: 2026-03-14.
 
-### Context
-Entity detail pages now support `description`, `registryUrl`, `linkedinUrl` fields. Jurisdiction detail pages support `description`. All are empty and need to be populated from external sources.
+---
 
-### P0: Web Scraper / Parser
+## Completed (Post-Launch baseline)
 
-**Goal:** Compile descriptions, registry URLs, and LinkedIn URLs for all 608 entities and 206 jurisdictions.
+- ✅ 80 registry parsers (14K+ entities across 206 jurisdictions)
+- ✅ Quality Worker (canonical_name, garbage detection, crypto classification, scoring)
+- ✅ Enrichment Worker (Firecrawl — descriptions, LinkedIn, websites)
+- ✅ Verify Worker (DNS + HTTP liveness)
+- ✅ Stripe $49 one-time payment (Edge Functions)
+- ✅ 3-tier paywall (Anonymous → Registered → Paid)
+- ✅ Progressive entity loading
+- ✅ Stride stablecoin data integration (issuers, laws, events, licenses)
+- ✅ Stablecoin/CBDC/Issuer detail pages
+- ✅ SEO (BrowserRouter, meta tags, sitemap, JSON-LD)
 
-**Entity fields to populate:**
-- `description` — 2-3 sentence summary of what the company does (from their website / about page)
-- `registry_url` — direct link to the regulator's license registry entry (e.g., FinCEN MSB search, MAS registry)
-- `linkedin_url` — company LinkedIn page URL
+---
 
-**Jurisdiction fields to populate:**
-- `description` — 2-3 sentence market overview: regulatory stance, recent developments, key requirements
+## In Progress
 
-**Approach options:**
-1. **LLM-assisted scraping** — For each entity: fetch website → extract about/description → summarize with LLM. For registries: find the regulator's search page → construct direct link.
-2. **Manual curation** — Google Sheets → Supabase import. Most accurate but slow.
-3. **Hybrid** — LLM generates draft → human reviews & approves.
+| Task | Sprint | Owner |
+|------|--------|-------|
+| S2.14: Multi-Registry Coverage Spec | S2 | Both |
+| S1.20: Parser documentation in Notion | S1 | Both |
 
-**Registry URL patterns (known):**
-- US/FinCEN: `https://www.fincen.gov/msb-registrant-search` (search by name)
-- Singapore/MAS: `https://eservices.mas.gov.sg/fid/institution` (search by name)
-- Japan/FSA: `https://www.fsa.go.jp/menkyo/menkyo.html`
-- EU/ESMA: varies by member state
-- UK/FCA: `https://register.fca.org.uk/s/search`
+---
 
-### P1: Auto-Update Worker
+## Backlog — by priority
 
-**Goal:** Keep entity status and license data fresh via periodic checks.
+### Core / Standard — Data Pipeline
 
-**Requirements:**
-- Cron job (daily or weekly) that checks registry URLs for status changes
-- Detect: license revoked, new license granted, status change
-- Update Supabase records automatically
-- Send notification/log on changes
+- **S2.17:** us-nmls parser (45+ states)
+- **S2.8:** Fix us-fincen parser (browser automation)
+- **S2.9:** Fix gb-fca parser (API key)
+- **S2.10:** Build India parser (FIU-IND)
+- **S2.12:** Build parsers for 175 remaining countries
+- **S1.W2b:** Medium parsers — 12 countries (HK, PH, NZ, GE, NG, BM, SV, VG, MX, BH, IL, GR)
+- **S1.W3:** Hard strategic parsers (TR, BR, IN, KE, GH)
+- **S3.12:** Market cap live feed (CoinGecko/CoinMarketCap daily)
+- **S3.4:** Stablecoins intelligence — $50M+ mcap, issuer cross-reference
 
-**Architecture:**
-- Supabase Edge Function or external worker (e.g., Cloudflare Worker)
-- Uses `registry_url` field to know where to check
-- Stores `last_checked_at` and `last_changed_at` timestamps
-- Diff detection: compare scraped status vs stored status
+### Core / Standard — Enrichment & Quality
 
-### P2: New Data Sources
+- **S4.6:** Entity enrichment — LinkedIn/websites/Clay
+- **S4.8:** Parallel.ai dataset API — entity gap detection
+- **S4.7:** Jurisdiction enrichment — AI descriptions
+- **S4.10:** Verification worker — license status cross-check
+- **S4.11:** Supabase-Notion sync for data QA
 
-- **Sanctions lists** — Cross-reference entities against OFAC, EU sanctions
-- **Compliance scores** — Aggregate rating based on license type, travel rule status, regulatory regime
-- **News feed** — Recent regulatory news per jurisdiction (RSS or news API)
+### Standard — Monetization & Product
+
+- **S6.3:** Access tiers spec — Free/Registered/Paid/Export
+- **S6.4:** Content gating spec
+- **S6.5:** Monetization strategy spec
+- **S7.5:** Research reports section — gated content hub
+
+### Post-Launch Polish (UI/SASHA)
+
+- Map tooltip should show tab-relevant data
+- Landing page hero — clear CTA for compliance users
+- Entities page layout spacing
+- Pricing CTA 'Special Offer' badge
+- Search results — truncate regulator names
+- Teal background text formatting
+- Signup page tagline
+
+### Future (S7/S8)
+
+- Dark mode + responsive design polish
+- Entity detail page — enriched profile + license history
+- Mobile full adaptation (S8)
+- API (v3.0)
 
 ---
 
@@ -58,5 +82,5 @@ Entity detail pages now support `description`, `registryUrl`, `linkedinUrl` fiel
 - [ ] Mobile-responsive mini-map on JurisdictionDetailPage
 - [ ] Entity comparison view (side-by-side)
 - [ ] Export to CSV/PDF from tables
-- [ ] Saved filters / bookmarks (requires user preferences in Supabase)
+- [ ] Saved filters / bookmarks
 - [ ] Dark mode toggle

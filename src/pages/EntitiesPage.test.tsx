@@ -12,40 +12,61 @@ vi.mock('../hooks/useAnimations', () => ({
   useCounter: vi.fn(),
 }));
 
-// Mock dataLoader
-const mockGetEntities = vi.fn();
-vi.mock('../data/dataLoader', () => ({
-  getEntities: (...args: unknown[]) => mockGetEntities(...args),
+// Mock paywall (used indirectly by child hooks)
+vi.mock('../hooks/usePaywall', () => ({
+  usePaywall: () => ({ isPaid: false, loading: false, tier: 'registered', isAnonymous: false, isRegistered: true, hasAccess: true, hasFullAccess: false, refresh: vi.fn() }),
 }));
 
-describe('EntitiesPage', () => {
-  it('shows loading state initially', () => {
-    mockGetEntities.mockReturnValue(new Promise(() => {}));
-    renderWithProviders(<EntitiesPage />);
+// Mock dataLoader — component uses getEntitiesProgressive, getEntityStats, getJurisdictions, etc.
+const mockGetEntityStats = vi.fn();
+const mockGetJurisdictions = vi.fn();
+const mockGetStablecoins = vi.fn();
+const mockGetCbdcs = vi.fn();
+const mockGetStablecoinIssuers = vi.fn();
 
-    expect(document.querySelector('.st-loading-pulse')).toBeInTheDocument();
+vi.mock('../data/dataLoader', () => ({
+  getEntitiesProgressive: (onProgress: (entities: unknown[], loaded: number, total: number) => void) => {
+    const data = mockEntitiesForProgressive;
+    onProgress(data, data.length, data.length);
+    return Promise.resolve(data);
+  },
+  clearEntityCache: vi.fn(),
+  getEntityStats: (...args: unknown[]) => mockGetEntityStats(...args),
+  getJurisdictions: (...args: unknown[]) => mockGetJurisdictions(...args),
+  getStablecoins: (...args: unknown[]) => mockGetStablecoins(...args),
+  getCbdcs: (...args: unknown[]) => mockGetCbdcs(...args),
+  getStablecoinIssuers: (...args: unknown[]) => mockGetStablecoinIssuers(...args),
+}));
+
+// Reference to mockEntities — set before each test via beforeEach or directly
+let mockEntitiesForProgressive = mockEntities;
+
+describe('EntitiesPage', () => {
+  beforeEach(() => {
+    mockEntitiesForProgressive = mockEntities;
+    mockGetEntityStats.mockResolvedValue({ total: 3, crypto: 3, payments: 0, banking: 0 });
+    mockGetJurisdictions.mockResolvedValue([]);
+    mockGetStablecoins.mockResolvedValue([]);
+    mockGetCbdcs.mockResolvedValue([]);
+    mockGetStablecoinIssuers.mockResolvedValue([]);
   });
 
-  it('renders heading, search, filters, and table after loading', async () => {
-    mockGetEntities.mockResolvedValue(mockEntities);
+  it('renders without crashing and shows page title', async () => {
     renderWithProviders(<EntitiesPage />);
 
     await waitFor(() => {
       expect(document.querySelector('.st-loading-pulse')).not.toBeInTheDocument();
     });
 
-    // Heading
-    expect(screen.getByText('Entity Directory')).toBeInTheDocument();
-    expect(screen.getByText(/3 licensed entities/i)).toBeInTheDocument();
+    expect(screen.getByText(/browse 10k\+ entities/i)).toBeInTheDocument();
+  });
 
-    // Search is now in the header, not on the page itself
+  it('renders table with entity data after loading', async () => {
+    renderWithProviders(<EntitiesPage />);
 
-    // Column headers with filters (country, status, licenseType, regulator are filterable)
-    const table = document.querySelector('table')!;
-    const headers = Array.from(table.querySelectorAll('th')).map((h) => h.textContent?.trim());
-    expect(headers).toContain('Country');
-    expect(headers).toContain('Status');
-    expect(headers).toContain('Regulator');
+    await waitFor(() => {
+      expect(document.querySelector('.st-loading-pulse')).not.toBeInTheDocument();
+    });
 
     // Table data
     expect(screen.getByText('Coinbase')).toBeInTheDocument();
@@ -54,17 +75,19 @@ describe('EntitiesPage', () => {
   });
 
   it('displays correct column headers', async () => {
-    mockGetEntities.mockResolvedValue(mockEntities);
     renderWithProviders(<EntitiesPage />);
 
     await waitFor(() => {
       expect(document.querySelector('.st-loading-pulse')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('Name')).toBeInTheDocument();
-    // 'Country' appears in both column header and filter — check table header
-    expect(screen.getByText('Status')).toBeInTheDocument();
-    expect(screen.getByText('License Type')).toBeInTheDocument();
-    expect(screen.getByText('Regulator')).toBeInTheDocument();
+    const table = document.querySelector('table');
+    expect(table).toBeTruthy();
+    const headers = Array.from(table!.querySelectorAll('th')).map((h) => h.textContent?.trim());
+    expect(headers).toContain('Name');
+    expect(headers).toContain('Country');
+    expect(headers).toContain('Status');
+    expect(headers).toContain('License Type');
+    expect(headers).toContain('Regulator');
   });
 });

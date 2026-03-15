@@ -25,6 +25,11 @@ export function clearEntityCache(): void {
   cache.delete('entities');
 }
 
+/** Clear all caches — used by tests */
+export function clearAllCache(): void {
+  cache.clear();
+}
+
 // ── Inline name cleanup fallback (last resort when canonical_name is NULL) ──
 function cleanNameFallback(raw: string): string {
   let s = raw;
@@ -90,11 +95,13 @@ interface EntityRow {
   description: string;
   registry_url: string;
   linkedin_url: string;
+  brand_name: string | null;
+  twitter_url: string | null;
   raw_data: EntityRawData | null;
   sector: string | null;
   crypto_related: boolean | null;
   quality_score: number | null;
-  quality_tier: string | null;
+  quality_flags: { tier?: string; rules?: string[]; garbage_reason?: string | null } | null;
   dns_status: string | null;
   crypto_status: string | null;
   is_garbage: boolean | null;
@@ -132,17 +139,16 @@ function mapJurisdiction(row: JurisdictionRow): Jurisdiction {
 
 /** Map a DB row → Entity. Handles both full rows (select('*')) and partial rows (LIST_COLS). */
 function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'country_code' | 'country'>): Entity {
-  // Enrichment data: prefer dedicated columns, fallback to raw_data JSONB
   const rd = row.raw_data;
   const description = row.description || rd?.enrichment_description || '';
   const linkedinUrl = row.linkedin_url || rd?.enrichment_linkedin_url || '';
-  const twitterUrl = rd?.enrichment_twitter_url || '';
+  const twitterUrl = row.twitter_url || rd?.enrichment_twitter_url || '';
   const registryUrl = row.registry_url || '';
 
   return {
     id: row.id,
-    // Prefer canonical_name (cleaned by Quality Worker); fallback cleans raw name
     name: row.canonical_name || cleanNameFallback(row.name),
+    brandName: row.brand_name || null,
     countryCode: row.country_code,
     country: row.country,
     licenseNumber: row.license_number ?? '',
@@ -158,9 +164,8 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
     twitterUrl,
     sector: (row.sector as Entity['sector']) ?? 'Crypto',
     cryptoRelated: row.crypto_related ?? true,
-    /* Quality pipeline */
     qualityScore: row.quality_score ?? null,
-    qualityTier: (row.quality_tier as Entity['qualityTier']) ?? null,
+    qualityTier: (row.quality_flags?.tier as Entity['qualityTier']) ?? null,
     dnsStatus: (row.dns_status as Entity['dnsStatus']) ?? 'unknown',
     cryptoStatus: (row.crypto_status as Entity['cryptoStatus']) ?? 'unknown',
     isGarbage: row.is_garbage ?? false,

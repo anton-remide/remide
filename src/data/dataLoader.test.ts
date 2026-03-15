@@ -18,6 +18,7 @@ const {
   getEntities,
   getEntityById,
   getEntitiesByCountry,
+  clearAllCache,
 } = await import('./dataLoader');
 
 // ── Helper: chain builder ──
@@ -25,7 +26,7 @@ const {
 function chain(data: unknown, error: unknown = null) {
   const result = { data, error };
   const obj: Record<string, (...args: unknown[]) => unknown> = {};
-  for (const m of ['select', 'eq', 'order', 'single']) {
+  for (const m of ['select', 'eq', 'neq', 'not', 'in', 'order', 'single', 'range', 'limit', 'or']) {
     obj[m] = () => ({ ...obj, then: (fn: (v: unknown) => void) => fn(result) });
   }
   return obj;
@@ -34,6 +35,7 @@ function chain(data: unknown, error: unknown = null) {
 describe('dataLoader', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearAllCache();
   });
 
   // ── getJurisdictions ──
@@ -46,7 +48,7 @@ describe('dataLoader', () => {
 
       expect(mockFrom).toHaveBeenCalledWith('jurisdictions');
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
+      expect(result[0]).toMatchObject({
         code: 'US',
         name: 'United States',
         regime: 'Licensing',
@@ -113,9 +115,10 @@ describe('dataLoader', () => {
 
       expect(mockFrom).toHaveBeenCalledWith('entities');
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
+      expect(result[0]).toMatchObject({
         id: 'us-coinbase',
         name: 'Coinbase',
+        brandName: null,
         countryCode: 'US',
         country: 'United States',
         licenseNumber: 'MSB-31000180780458',
@@ -128,6 +131,14 @@ describe('dataLoader', () => {
         description: '',
         registryUrl: '',
         linkedinUrl: '',
+        twitterUrl: '',
+        sector: 'Crypto',
+        cryptoRelated: true,
+        qualityScore: null,
+        qualityTier: null,
+        dnsStatus: 'unknown',
+        cryptoStatus: 'unknown',
+        isGarbage: false,
       });
     });
 

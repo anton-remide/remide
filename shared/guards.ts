@@ -21,8 +21,8 @@ const LOCK_DIR = join(process.cwd(), '.locks');
 /* ── System Limits (CLAUDE.md documented) ── */
 
 export const SYSTEM_LIMITS = {
-  /** Max entities per enrichment batch (prevents context overflow + Firecrawl credit burn) */
-  ENRICHMENT_MAX_BATCH: 200,
+  /** Max entities per enrichment batch */
+  ENRICHMENT_MAX_BATCH: 10_000,
   /** Max entities per quality worker batch */
   QUALITY_MAX_BATCH: 10_000,
   /** Max entities per verify worker batch */
@@ -33,10 +33,10 @@ export const SYSTEM_LIMITS = {
   MAX_RETRIES: 3,
   /** Base delay for exponential backoff (ms) */
   RETRY_BASE_DELAY_MS: 1_000,
-  /** Max worker runtime before forced exit (ms) — 30 minutes */
-  MAX_WORKER_RUNTIME_MS: 30 * 60 * 1_000,
-  /** Lock stale threshold — locks older than this are considered dead (ms) — 1 hour */
-  LOCK_STALE_MS: 60 * 60 * 1_000,
+  /** Max worker runtime before forced exit (ms) — 6 hours */
+  MAX_WORKER_RUNTIME_MS: 6 * 60 * 60 * 1_000,
+  /** Lock stale threshold — locks older than this are considered dead (ms) — 7 hours */
+  LOCK_STALE_MS: 7 * 60 * 60 * 1_000,
 } as const;
 
 /* ── Batch Limit Enforcement ── */

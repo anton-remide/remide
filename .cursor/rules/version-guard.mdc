@@ -1,0 +1,42 @@
+---
+description: Auto-check CLAUDE.md accuracy when infrastructure files change
+globs:
+  - "package.json"
+  - "vite.config.*"
+  - "src/App.tsx"
+  - "src/main.tsx"
+  - "src/styles/app.css"
+  - "index.html"
+  - "tsconfig*.json"
+alwaysApply: false
+---
+
+# CLAUDE.md Version Guard
+
+## Trigger
+
+When ANY of these files change, verify CLAUDE.md Tech Stack section is still accurate:
+
+| File changed | Check in CLAUDE.md |
+|---|---|
+| `package.json` | Vite version, React version, new major deps |
+| `vite.config.*` | `base` path, build config, plugins |
+| `src/App.tsx` | Router type (BrowserRouter vs HashRouter), route list |
+| `src/main.tsx` | Provider tree, CSS imports |
+| `src/styles/app.css` | Font imports (`@import url(...)` → font names) |
+| `index.html` | CDN links, meta tags, base href |
+| `tsconfig*.json` | Target, module resolution |
+
+## What to update
+
+In `CLAUDE.md` under `## Tech Stack`:
+- Framework + version (React X + TypeScript X + Vite X)
+- CSS approach (Bootstrap version, animation lib)
+- Fonts (check actual `@import` in app.css, not assumptions)
+- Router type (check actual component in App.tsx)
+- Deploy target (check vite.config `base` + deploy workflow)
+
+## Why this exists
+
+CLAUDE.md is loaded at every AI session start. Stale info = wrong assumptions = wrong code.
+Historical drift found during audit: Vite 6→7, Inter→DM Sans, HashRouter→BrowserRouter — all wrong in CLAUDE.md while code had moved on.

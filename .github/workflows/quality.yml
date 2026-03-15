@@ -1,0 +1,59 @@
+name: Quality Worker
+
+on:
+  schedule:
+    # Mon at 07:30 UTC — runs after parsers (06:00) complete
+    - cron: '30 7 * * 1'
+    # Daily at 05:00 UTC — process any new entities from enrichment (04:00)
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+    inputs:
+      country:
+        description: 'Country code (e.g. DE, CA, or leave empty for all)'
+        required: false
+        default: ''
+      limit:
+        description: 'Max entities to process'
+        required: false
+        default: '10000'
+      force:
+        description: 'Re-process all entities (ignore last_quality_at)'
+        type: boolean
+        default: false
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run quality worker
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.country }}" ]; then
+            ARGS="$ARGS --country ${{ inputs.country }}"
+          fi
+          ARGS="$ARGS --limit ${{ inputs.limit || '10000' }}"
+          if [ "${{ inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          echo "Running quality worker: $ARGS"
+          npx tsx workers/quality/run.ts $ARGS
+
+      - name: Summary
+        if: always()
+        run: echo "Quality run completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

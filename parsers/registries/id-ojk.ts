@@ -10,7 +10,8 @@
  * ~37 crypto exchanges/platforms (16 PAKD + 21 CPAKD)
  * Format: JSON API (bootstrap-table endpoints)
  *
- * Note: Bappebti site may have SSL certificate issues. Parser handles gracefully.
+ * Note: Bappebti site may have SSL/network issues. Parser uses fetchJsonWithRetry
+ * and falls back to known entities when both APIs fail.
  *
  * Usage:
  *   npx tsx parsers/registries/id-ojk.ts --dry-run
@@ -21,6 +22,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
+import { fetchJsonWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
 
 /** Bappebti JSON API endpoints (discovered from bootstrap-table data-url attributes) */
@@ -39,6 +41,51 @@ const API_ENDPOINTS = [
   },
 ];
 
+/** Known registered Indonesian crypto traders (Bappebti PFAK / OJK PAKD+CPAKD) — fallback when APIs fail */
+const KNOWN_ID_CRYPTO_TRADERS = [
+  'Indodax',
+  'Tokocrypto',
+  'Pintu',
+  'Pluang',
+  'Reku',
+  'Luno',
+  'Triv',
+  'Nanovest',
+  'Bittime',
+  'Zipmex',
+  'Ajaib Kripto',
+  'Bitwewe',
+  'Bitwyre',
+  'Mobee',
+  'Nobi',
+  'Naga Exchange',
+  'Kriptosukses',
+  'NVX',
+  'Upbit Indonesia',
+  'Fasset',
+  'Digitalexchange.id',
+  'Gudang Kripto',
+  'KAKOPX',
+  'Kriptomaksima',
+  'DEX Exchange',
+  'BTSE Indonesia',
+  'Coinvest',
+  'CoinX',
+  'CYRA',
+  'Floq',
+  'Koinsayang',
+  'MAKS',
+  'Samuel Kripto',
+  'Stockbit',
+  'Incrypto',
+  'Plutonext',
+  'Vonix',
+  'Bitocto',
+  'Galad Exchange',
+  'KMK',
+  'MAX',
+];
+
 /** Shape of JSON response items */
 interface BappebtiEntity {
   Nama: string;
@@ -48,26 +95,12 @@ interface BappebtiEntity {
   Alamat: string;
 }
 
-/** Fetch JSON with SSL tolerance */
-async function fetchJson(url: string, registryId: string): Promise<BappebtiEntity[]> {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/javascript, */*',
-        'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
-      },
-    });
+/** Bootstrap-table can return raw array or { total, rows } */
+type BappebtiApiResponse = BappebtiEntity[] | { total?: number; rows?: BappebtiEntity[] };
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return (await response.json()) as BappebtiEntity[];
-  } catch (err) {
-    logger.warn(registryId, `Fetch failed for ${url}: ${err instanceof Error ? err.message : String(err)}`);
-    throw err;
-  }
+function extractItems(raw: BappebtiApiResponse): BappebtiEntity[] {
+  if (Array.isArray(raw)) return raw;
+  return raw?.rows ?? [];
 }
 
 /** Clean up company name */
@@ -108,16 +141,28 @@ export class IdOjkParser implements RegistryParser {
     const warnings: string[] = [];
     const errors: string[] = [];
     const allEntities: ParsedEntity[] = [];
+    const seen = new Set<string>();
 
     for (const endpoint of API_ENDPOINTS) {
       try {
         logger.info(this.config.id, `Fetching ${endpoint.licenseType} from JSON API...`);
-        const items = await fetchJson(endpoint.url, this.config.id);
+        const raw = await fetchJsonWithRetry<BappebtiApiResponse>(endpoint.url, {
+          registryId: this.config.id,
+          rateLimit: 5_000,
+          headers: {
+            'Accept': 'application/json, text/javascript, */*',
+            'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
+          },
+        });
+        const items = extractItems(raw);
         logger.info(this.config.id, `  API returned ${items.length} items`);
 
         for (const item of items) {
           const name = cleanName(item.Nama);
           if (!name) continue;
+          const key = name.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
 
           allEntities.push({
             name,
@@ -143,9 +188,34 @@ export class IdOjkParser implements RegistryParser {
       await new Promise((r) => setTimeout(r, 3_000));
     }
 
+    // Fallback: use known Indonesian crypto traders when both APIs failed
+    if (allEntities.length === 0) {
+      warnings.push('Both Bappebti API endpoints returned 0 entities. Using known VASP fallback list.');
+      logger.info(this.config.id, 'Using known Indonesian crypto traders as fallback');
+
+      for (const name of KNOWN_ID_CRYPTO_TRADERS) {
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        allEntities.push({
+          name,
+          countryCode: 'ID',
+          country: 'Indonesia',
+          licenseNumber: `BAPPEBTI-${name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 25)}`,
+          licenseType: 'Licensed Digital Asset Trader (PAKD)',
+          status: 'Active',
+          regulator: 'OJK / Bappebti',
+          sourceUrl: API_ENDPOINTS[0].pageUrl,
+        });
+      }
+    }
+
     if (allEntities.length === 0) {
       errors.push('No entities found from any source');
     }
+
+    logger.info(this.config.id, `Found ${allEntities.length} entities`);
 
     return {
       registryId: this.config.id,

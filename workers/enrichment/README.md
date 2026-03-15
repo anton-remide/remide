@@ -35,7 +35,7 @@ All loaded via `shared/config.ts`:
 cd remide
 npx tsx workers/enrichment/run.ts
 npx tsx workers/enrichment/run.ts --country ZA  # Single country
-npx tsx workers/enrichment/run.ts --limit 50    # Batch size
+npx tsx workers/enrichment/run.ts --limit 5000   # Full run (all entities)
 DRY_RUN=true npx tsx workers/enrichment/run.ts  # Dry run
 ```
 
@@ -45,7 +45,7 @@ DRY_RUN=true npx tsx workers/enrichment/run.ts  # Dry run
 name: Enrichment Worker
 on:
   schedule:
-    - cron: '0 4 * * 1'  # Weekly Monday 4am UTC
+    - cron: '0 4 * * *'  # Daily 4am UTC
   workflow_dispatch:
 
 jobs:

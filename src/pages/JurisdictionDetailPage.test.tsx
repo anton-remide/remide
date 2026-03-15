@@ -23,13 +23,37 @@ vi.mock('../utils/countryFlags', () => ({
   countryCodeToFlag: (code: string) => `[${code}]`,
 }));
 
-// Mock dataLoader
+// Mock paywall — provide registered-tier access for detail page tests
+vi.mock('../hooks/usePaywall', () => ({
+  usePaywall: () => ({ isPaid: false, loading: false, tier: 'registered', isAnonymous: false, isRegistered: true, hasAccess: true, hasFullAccess: false, refresh: vi.fn() }),
+}));
+
+// Mock FloatingPaywallCTA (uses paywall context)
+vi.mock('../components/ui/FloatingPaywallCTA', () => ({
+  default: () => null,
+}));
+
+// Mock dataLoader — provide all functions the component imports
 const mockGetJurisdictionByCode = vi.fn();
 const mockGetEntitiesByCountry = vi.fn();
 
 vi.mock('../data/dataLoader', () => ({
   getJurisdictionByCode: (...args: unknown[]) => mockGetJurisdictionByCode(...args),
   getEntitiesByCountry: (...args: unknown[]) => mockGetEntitiesByCountry(...args),
+  getEntitiesByRegion: vi.fn().mockResolvedValue([]),
+  getJurisdictionsByRegion: vi.fn().mockResolvedValue([]),
+  getStablecoinsByCountry: vi.fn().mockResolvedValue([]),
+  getCbdcsByCountry: vi.fn().mockResolvedValue([]),
+  getStablecoinLawsByCountry: vi.fn().mockResolvedValue([]),
+  getStablecoinEventsByCountry: vi.fn().mockResolvedValue([]),
+  getLicensesByCountry: vi.fn().mockResolvedValue([]),
+  getJurisdictions: vi.fn().mockResolvedValue([]),
+  getCbdcs: vi.fn().mockResolvedValue([]),
+}));
+
+// Mock regionCodes (imported by component)
+vi.mock('../data/regionCodes', () => ({
+  expandRegionalCode: (code: string) => [code],
 }));
 
 const detailRoutes = (
@@ -76,16 +100,15 @@ describe('JurisdictionDetailPage', () => {
       user: createMockUser(),
     });
 
-    // "United States" appears in heading, breadcrumb, and entity rows — use heading role
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('United States');
     });
 
-    // Badges
-    expect(screen.getByText('Licensing')).toBeInTheDocument();
-    expect(screen.getByText('Enforced')).toBeInTheDocument();
+    // Badges — use getAllByText since they may appear in multiple places
+    expect(screen.getAllByText('Licensing').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Enforced').length).toBeGreaterThanOrEqual(1);
 
-    // Info card ("FinCEN" also appears in Sources section)
+    // Info card
     expect(screen.getAllByText('FinCEN').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Bank Secrecy Act')).toBeInTheDocument();
 

@@ -7,11 +7,15 @@ import { renderWithProviders } from '../test/helpers';
 // Mock supabase
 const mockGetSession = vi.fn();
 const mockUpdate = vi.fn();
+const mockUnsubscribe = vi.fn();
 
 vi.mock('../lib/supabase', () => ({
   supabase: {
     auth: {
       getSession: () => mockGetSession(),
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe: mockUnsubscribe } },
+      }),
     },
     from: () => ({
       update: (...args: unknown[]) => ({
@@ -26,6 +30,8 @@ const callbackRoutes = (
     <Route path="/auth/callback" element={<AuthCallbackPage />} />
     <Route path="/" element={<div>Home page</div>} />
     <Route path="/login" element={<div>Login page</div>} />
+    <Route path="/welcome" element={<div>Welcome page</div>} />
+    <Route path="/jurisdictions" element={<div>Jurisdictions page</div>} />
   </Routes>
 );
 
@@ -82,7 +88,7 @@ describe('AuthCallbackPage', () => {
     renderWithProviders(callbackRoutes, { route: '/auth/callback' });
 
     await waitFor(() => {
-      expect(screen.getByText('Home page')).toBeInTheDocument();
+      expect(screen.getByText('Welcome page')).toBeInTheDocument();
     });
   });
 });

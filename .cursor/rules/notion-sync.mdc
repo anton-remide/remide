@@ -1,0 +1,56 @@
+---
+description: Enforces Notion synchronization at session boundaries — workers, parsers, decisions, Current State
+globs:
+alwaysApply: true
+---
+
+# Notion Sync Checkpoint
+
+## Principle
+
+Notion is the source of truth. Code without Notion entries is undocumented. Documentation without code is a lie.
+
+## Session End Checklist (MANDATORY)
+
+Before ending any work session, verify:
+
+### 1. Workers Registry (`collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720`)
+- [ ] Every new parser → entry with Type, Status, Countries, Approach, Notes
+- [ ] Every new worker → entry with Type (Enricher/Cleaner/Verifier), Status, Notes
+- [ ] Status updated for any modified parser/worker
+
+### 2. Knowledge Base (`collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f`)
+- [ ] Every completed task → Status: Done + Completed Date
+- [ ] Every new decision → Type: Decision with Category, Context, Alternatives, Impact
+- [ ] Every discovered bug/task → Status: Backlog with full Notes
+- [ ] Every blocked item → Status: Blocked with Blocker description
+
+### 3. Current State Page (`3182ac10-63c8-811c-8cfe-fd40919d8e20`)
+Update if ANY of these changed during session:
+- Version numbers or release status
+- Parser/entity/worker counts
+- Tech stack (deps, router, fonts)
+- Active blockers
+- Infrastructure changes
+
+### 4. CLAUDE.md
+Update if ANY of these changed:
+- Tech stack versions (check package.json)
+- Router type (check App.tsx)
+- Font family (check app.css)
+- Current mode / priorities
+- Team/role changes
+
+## Documentation Gap Recovery
+
+If you discover undocumented parsers, workers, or decisions at any point:
+1. STOP current work
+2. Backfill all missing Notion entries
+3. Resume only after gaps are filled
+
+## Anti-patterns from history
+
+- Building 3 workers without logging any of them
+- Current State page 8+ days stale
+- CLAUDE.md claiming Vite 6 when package.json has Vite 7
+- MEMORY.md never created despite being in the protocol

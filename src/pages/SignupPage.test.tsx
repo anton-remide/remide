@@ -23,15 +23,14 @@ describe('SignupPage', () => {
   it('renders all form fields', () => {
     renderWithProviders(signupRoutes, { route: '/signup' });
 
-    expect(screen.getByRole('heading', { name: /create account/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /create/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/business email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/role title/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create free account/i })).toBeInTheDocument();
   });
 
   it('has a link to sign in page', () => {
@@ -47,15 +46,14 @@ describe('SignupPage', () => {
 
     await user.type(screen.getByLabelText(/first name/i), 'Jane');
     await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/^email$/i), 'jane@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/business email/i), 'jane@company.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/phone/i), '+1234567890');
-    await user.type(screen.getByLabelText(/role title/i), 'Compliance Officer');
+    await user.type(screen.getByLabelText(/^role$/i), 'Compliance Officer');
 
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.click(screen.getByRole('button', { name: /create free account/i }));
 
-    expect(authValue.signUp).toHaveBeenCalledWith('jane@test.com', 'password123', {
+    expect(authValue.signUp).toHaveBeenCalledWith('jane@company.com', 'password123', {
       first_name: 'Jane',
       last_name: 'Doe',
       business_email: 'jane@company.com',
@@ -70,16 +68,15 @@ describe('SignupPage', () => {
 
     await user.type(screen.getByLabelText(/first name/i), 'Jane');
     await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/^email$/i), 'jane@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/business email/i), 'jane@company.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/phone/i), '+1234567890');
-    await user.type(screen.getByLabelText(/role title/i), 'Officer');
+    await user.type(screen.getByLabelText(/^role$/i), 'Officer');
 
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.click(screen.getByRole('button', { name: /create free account/i }));
 
     expect(await screen.findByText(/check your email/i)).toBeInTheDocument();
-    expect(screen.getByText('jane@test.com')).toBeInTheDocument();
+    expect(screen.getByText('jane@company.com')).toBeInTheDocument();
   });
 
   it('shows error on failed signup', async () => {
@@ -90,13 +87,12 @@ describe('SignupPage', () => {
 
     await user.type(screen.getByLabelText(/first name/i), 'Jane');
     await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/^email$/i), 'jane@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/business email/i), 'jane@company.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/phone/i), '+1234567890');
-    await user.type(screen.getByLabelText(/role title/i), 'Officer');
+    await user.type(screen.getByLabelText(/^role$/i), 'Officer');
 
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.click(screen.getByRole('button', { name: /create free account/i }));
 
     expect(await screen.findByText('Email already registered')).toBeInTheDocument();
   });
@@ -109,13 +105,12 @@ describe('SignupPage', () => {
 
     await user.type(screen.getByLabelText(/first name/i), 'Jane');
     await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/^email$/i), 'jane@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/business email/i), 'jane@company.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/phone/i), '+1234567890');
-    await user.type(screen.getByLabelText(/role title/i), 'Officer');
+    await user.type(screen.getByLabelText(/^role$/i), 'Officer');
 
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.click(screen.getByRole('button', { name: /create free account/i }));
 
     expect(screen.getByRole('button', { name: /creating account/i })).toBeDisabled();
   });
@@ -126,15 +121,13 @@ describe('SignupPage', () => {
 
     await user.type(screen.getByLabelText(/first name/i), 'Jane');
     await user.type(screen.getByLabelText(/last name/i), 'Doe');
-    await user.type(screen.getByLabelText(/^email$/i), 'jane@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/business email/i), 'jane@company.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
     await user.type(screen.getByLabelText(/phone/i), '+1234567890');
-    await user.type(screen.getByLabelText(/role title/i), 'Officer');
+    await user.type(screen.getByLabelText(/^role$/i), 'Officer');
 
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.click(screen.getByRole('button', { name: /create free account/i }));
 
-    // Check that metadata was persisted in localStorage (our mock supports getItem)
     const stored = localStorage.getItem('remide_signup_meta');
     expect(stored).toBeTruthy();
     expect(stored).toContain('"first_name":"Jane"');

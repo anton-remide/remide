@@ -1,0 +1,42 @@
+name: DNS Verify (Entity Website Liveness)
+
+on:
+  schedule:
+    # Daily at 03:00 UTC (before enrichment at 04:00)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max entities to check per run'
+        required: false
+        default: '2000'
+
+jobs:
+  dns-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run DNS verify worker
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          LIMIT="${{ inputs.limit || '2000' }}"
+          echo "Running DNS verify: limit=$LIMIT"
+          npx tsx workers/verify/run.ts --limit "$LIMIT"
+
+      - name: Summary
+        if: always()
+        run: echo "DNS verify completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
