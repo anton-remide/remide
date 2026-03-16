@@ -1,6 +1,6 @@
 # Enrichment Worker
 
-Scrapes entity websites via Firecrawl to extract structured metadata (description, social links, team size, founding date, etc.) and writes enriched data back to Supabase entities table.
+Scrapes entity websites via Firecrawl to extract structured metadata and market intelligence (English summary, social links, logo/favicon, audience/region hints, fiat on-ramp, app platform, trading pairs, time-on-market) and writes enriched data back to Supabase entities table.
 
 ## How it works
 
@@ -35,6 +35,7 @@ All loaded via `shared/config.ts`:
 cd remide
 npx tsx workers/enrichment/run.ts
 npx tsx workers/enrichment/run.ts --country ZA  # Single country
+npx tsx workers/enrichment/run.ts --crypto-only # Only confirmed/adjacent crypto entities
 npx tsx workers/enrichment/run.ts --limit 5000   # Full run (all entities)
 DRY_RUN=true npx tsx workers/enrichment/run.ts  # Dry run
 ```

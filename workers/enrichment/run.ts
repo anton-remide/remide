@@ -45,6 +45,14 @@ interface EnrichmentResult {
   descriptionOriginal: string | null;
   descriptionLanguage: string | null;
   siteLanguages: string[];
+  targetRegions: string[];
+  targetAudience: string[];
+  fiatOnRamp: boolean | null;
+  appPlatforms: string[];
+  tradingPairs: number | null;
+  foundedYear: number | null;
+  yearsOnMarket: number | null;
+  businessSummary: string | null;
   linkedinUrl: string | null;
   twitterUrl: string | null;
   brandName: string | null;
@@ -68,10 +76,11 @@ interface RunStats {
 
 /* ── CLI args ── */
 
-function parseArgs(): { country: string | null; limit: number } {
+function parseArgs(): { country: string | null; limit: number; cryptoOnly: boolean } {
   const args = process.argv.slice(2);
   let country: string | null = null;
   let limit = DEFAULT_LIMIT;
+  const cryptoOnly = args.includes('--crypto-only');
 
   const countryIdx = args.indexOf('--country');
   if (countryIdx !== -1 && args[countryIdx + 1]) {
@@ -84,7 +93,7 @@ function parseArgs(): { country: string | null; limit: number } {
     if (isNaN(limit) || limit <= 0) limit = DEFAULT_LIMIT;
   }
 
-  return { country, limit };
+  return { country, limit, cryptoOnly };
 }
 
 /* ── Firecrawl scraping ── */
@@ -408,6 +417,61 @@ function cleanDescription(text: string): string {
     .slice(0, 500);                 // Cap at 500 chars
 }
 
+/** Build concise English summary from long text */
+function summarizeEnglishText(text: string): string {
+  const cleaned = cleanDescription(text);
+  if (!cleaned) return '';
+  const sentences = cleaned.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const picked: string[] = [];
+  let len = 0;
+  for (const s of sentences) {
+    if (picked.length >= 2) break;
+    if (len + s.length > 360) break;
+    picked.push(s);
+    len += s.length + 1;
+  }
+  if (picked.length > 0) return picked.join(' ').slice(0, 360);
+  return cleaned.slice(0, 360);
+}
+
+/** Translate arbitrary text to English using public Google endpoint */
+async function translateToEnglish(text: string): Promise<string | null> {
+  const input = cleanDescription(text);
+  if (!input || input.length < 8) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${encodeURIComponent(input.slice(0, 1200))}`;
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) return null;
+    const json = (await res.json()) as unknown;
+    if (!Array.isArray(json) || !Array.isArray(json[0])) return null;
+    const chunks = (json[0] as unknown[])
+      .filter((r): r is unknown[] => Array.isArray(r) && typeof r[0] === 'string')
+      .map((r) => String(r[0]));
+    const translated = chunks.join(' ').trim();
+    return translated ? cleanDescription(translated) : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/** Always return an English summary (translate first when needed) */
+async function toEnglishSummary(text: string): Promise<string | null> {
+  const cleaned = cleanDescription(text);
+  if (!cleaned) return null;
+  if (isLikelyEnglish(cleaned)) {
+    return summarizeEnglishText(cleaned);
+  }
+  const translated = await translateToEnglish(cleaned);
+  if (translated) return summarizeEnglishText(translated);
+  // Fallback if translation API fails: keep concise source text rather than empty.
+  return summarizeEnglishText(cleaned);
+}
+
 /** Extract logo/OG image URL */
 function extractLogo(metadata: Record<string, unknown>, baseUrl: string): string | null {
   if (isErrorPage(metadata)) return null;
@@ -452,6 +516,94 @@ function extractKeywords(metadata: Record<string, unknown>): string[] {
   return [];
 }
 
+function inferTargetAudience(text: string): string[] {
+  const t = text.toLowerCase();
+  const consumerHits = ['retail', 'personal', 'individual', 'beginner', 'invest from', 'app store', 'google play']
+    .filter((k) => t.includes(k)).length;
+  const businessHits = ['institutional', 'enterprise', 'api', 'merchant', 'otc desk', 'b2b', 'prime brokerage']
+    .filter((k) => t.includes(k)).length;
+  const out: string[] = [];
+  if (consumerHits > 0) out.push('consumer');
+  if (businessHits > 0) out.push('business');
+  if (out.length === 0) out.push('unknown');
+  return out;
+}
+
+function inferTargetRegions(text: string, siteLanguages: string[]): string[] {
+  const t = text.toLowerCase();
+  const regions: string[] = [];
+  if (/global|worldwide|international/.test(t)) regions.push('global');
+  if (/united states|usa|us users/.test(t)) regions.push('US');
+  if (/europe|eu|eea/.test(t)) regions.push('EU');
+  if (/united kingdom|uk/.test(t)) regions.push('UK');
+  if (/singapore|indonesia|malaysia|thailand|philippines|asia/.test(t)) regions.push('APAC');
+  if (/uae|middle east|mena/.test(t)) regions.push('MENA');
+  if (regions.length === 0 && siteLanguages.length === 1) {
+    regions.push(siteLanguages[0]);
+  }
+  return Array.from(new Set(regions)).slice(0, 4);
+}
+
+function inferFiatOnRamp(text: string): boolean | null {
+  const t = text.toLowerCase();
+  const positive = ['fiat', 'bank transfer', 'bank card', 'credit card', 'debit card', 'visa', 'mastercard', 'deposit idr', 'deposit usd']
+    .some((k) => t.includes(k));
+  const negative = ['crypto only', 'only crypto deposits', 'no fiat']
+    .some((k) => t.includes(k));
+  if (positive && !negative) return true;
+  if (negative && !positive) return false;
+  return null;
+}
+
+function inferAppPlatforms(text: string): string[] {
+  const t = text.toLowerCase();
+  const platforms: string[] = ['web'];
+  if (t.includes('app store') || t.includes('google play') || t.includes('android') || t.includes('ios')) {
+    platforms.push('mobile');
+  }
+  if (t.includes('windows') || t.includes('macos') || t.includes('desktop app')) {
+    platforms.push('desktop');
+  }
+  return Array.from(new Set(platforms));
+}
+
+function inferTradingPairs(text: string): number | null {
+  const t = text.toLowerCase();
+  const matches = [...t.matchAll(/(\d{2,5})\+?\s*(trading pairs|pairs|markets)/g)];
+  const values = matches.map((m) => Number.parseInt(m[1], 10)).filter((n) => Number.isFinite(n) && n > 1);
+  if (values.length === 0) return null;
+  return Math.max(...values);
+}
+
+function inferFoundedYear(text: string): number | null {
+  const now = new Date().getFullYear();
+  const matches = [...text.matchAll(/\b(20[0-2]\d|19[8-9]\d)\b/g)].map((m) => Number.parseInt(m[1], 10));
+  const plausible = matches.filter((y) => y >= 2008 && y <= now);
+  if (plausible.length === 0) return null;
+  return Math.min(...plausible);
+}
+
+function buildBusinessSummary(description: string | null, profile: {
+  targetRegions: string[];
+  targetAudience: string[];
+  fiatOnRamp: boolean | null;
+  appPlatforms: string[];
+  tradingPairs: number | null;
+  yearsOnMarket: number | null;
+}): string | null {
+  if (!description) return null;
+  const p1 = description;
+  const bits: string[] = [];
+  if (profile.targetRegions.length > 0) bits.push(`Target regions: ${profile.targetRegions.join(', ')}`);
+  if (profile.targetAudience.length > 0) bits.push(`Audience: ${profile.targetAudience.join(', ')}`);
+  if (profile.fiatOnRamp !== null) bits.push(`Fiat on-ramp: ${profile.fiatOnRamp ? 'yes' : 'no'}`);
+  if (profile.appPlatforms.length > 0) bits.push(`Platforms: ${profile.appPlatforms.join(', ')}`);
+  if (profile.tradingPairs) bits.push(`Trading pairs: ~${profile.tradingPairs}`);
+  if (profile.yearsOnMarket !== null) bits.push(`Time on market: ~${profile.yearsOnMarket} years`);
+  if (bits.length === 0) return p1;
+  return `${p1}\n\n${bits.join('. ')}.`;
+}
+
 /** Quick DNS check — returns false if hostname doesn't resolve (saves Firecrawl credits) */
 async function isDomainAlive(hostname: string): Promise<boolean> {
   try {
@@ -481,6 +633,14 @@ async function scrapeEntity(
         descriptionOriginal: null,
         descriptionLanguage: null,
         siteLanguages: [],
+        targetRegions: [],
+        targetAudience: ['unknown'],
+        fiatOnRamp: null,
+        appPlatforms: [],
+        tradingPairs: null,
+        foundedYear: null,
+        yearsOnMarket: null,
+        businessSummary: null,
         linkedinUrl: null,
         twitterUrl: null,
         brandName: null,
@@ -502,11 +662,27 @@ async function scrapeEntity(
     const markdown = doc.markdown ?? '';
     const metadata = (doc.metadata ?? {}) as DocumentMetadata & Record<string, unknown>;
 
-    const extractedDescription = entity.description?.trim() ? null : extractDescription(markdown, metadata);
+    const extractedDescription = extractDescription(markdown, metadata);
     const siteLanguages = detectSiteLanguages(markdown, metadata, extractedDescription);
     const descriptionLanguage = siteLanguages[0] ?? null;
-    const englishDescription = extractedDescription && isLikelyEnglish(extractedDescription) ? extractedDescription : null;
-    const descriptionOriginal = extractedDescription && !englishDescription ? extractedDescription : null;
+    const englishDescription = extractedDescription ? await toEnglishSummary(extractedDescription) : null;
+    const descriptionOriginal = extractedDescription && !isLikelyEnglish(extractedDescription) ? extractedDescription : null;
+    const intelligenceText = `${markdown}\n${JSON.stringify(metadata)}`.slice(0, 12000);
+    const targetAudience = inferTargetAudience(intelligenceText);
+    const targetRegions = inferTargetRegions(intelligenceText, siteLanguages);
+    const fiatOnRamp = inferFiatOnRamp(intelligenceText);
+    const appPlatforms = inferAppPlatforms(intelligenceText);
+    const tradingPairs = inferTradingPairs(intelligenceText);
+    const foundedYear = inferFoundedYear(intelligenceText);
+    const yearsOnMarket = foundedYear ? Math.max(0, new Date().getFullYear() - foundedYear) : null;
+    const businessSummary = buildBusinessSummary(englishDescription, {
+      targetRegions,
+      targetAudience,
+      fiatOnRamp,
+      appPlatforms,
+      tradingPairs,
+      yearsOnMarket,
+    });
     const linkedinUrl = entity.linkedin_url?.trim() ? null : extractLinkedIn(markdown, metadata);
     const twitterUrl = extractTwitter(markdown, metadata);
     const brandName = extractBrandName(metadata);
@@ -517,10 +693,18 @@ async function scrapeEntity(
     return {
       entityId: entity.id,
       entityName: entity.name,
-      description: englishDescription,
+      description: businessSummary ?? englishDescription,
       descriptionOriginal,
       descriptionLanguage,
       siteLanguages,
+      targetRegions,
+      targetAudience,
+      fiatOnRamp,
+      appPlatforms,
+      tradingPairs,
+      foundedYear,
+      yearsOnMarket,
+      businessSummary,
       linkedinUrl,
       twitterUrl,
       brandName,
@@ -538,6 +722,14 @@ async function scrapeEntity(
       descriptionOriginal: null,
       descriptionLanguage: null,
       siteLanguages: [],
+      targetRegions: [],
+      targetAudience: ['unknown'],
+      fiatOnRamp: null,
+      appPlatforms: [],
+      tradingPairs: null,
+      foundedYear: null,
+      yearsOnMarket: null,
+      businessSummary: null,
       linkedinUrl: null,
       twitterUrl: null,
       brandName: null,
@@ -599,6 +791,7 @@ async function fetchEntitiesToEnrich(
   country: string | null,
   limit: number,
   schema: SchemaInfo,
+  cryptoOnly: boolean,
 ): Promise<EntityToEnrich[]> {
   const sb = getSupabase();
 
@@ -647,6 +840,10 @@ async function fetchEntitiesToEnrich(
     .order('crypto_status', { ascending: true })
     .order('quality_score', { ascending: true, nullsFirst: true })
     .limit(limit);
+
+  if (cryptoOnly) {
+    query = query.in('crypto_status', ['confirmed_crypto', 'crypto_adjacent']);
+  }
 
   if (country) {
     query = query.eq('country_code', country);
@@ -715,6 +912,14 @@ async function writeOneEnrichmentResult(
     if (r.siteLanguages.length > 0) extraData.site_languages = r.siteLanguages;
     if (r.descriptionLanguage) extraData.site_primary_language = r.descriptionLanguage;
     if (r.descriptionOriginal) extraData.enrichment_description_original = r.descriptionOriginal;
+    if (r.targetRegions.length > 0) extraData.target_regions = r.targetRegions;
+    if (r.targetAudience.length > 0) extraData.target_audience = r.targetAudience;
+    if (r.fiatOnRamp !== null) extraData.fiat_onramp = r.fiatOnRamp;
+    if (r.appPlatforms.length > 0) extraData.app_platforms = r.appPlatforms;
+    if (r.tradingPairs !== null) extraData.trading_pairs = r.tradingPairs;
+    if (r.foundedYear !== null) extraData.founded_year = r.foundedYear;
+    if (r.yearsOnMarket !== null) extraData.years_on_market = r.yearsOnMarket;
+    if (r.businessSummary) extraData.site_business_summary_en = r.businessSummary;
     // Also stash main fields as fallback if dedicated columns are missing
     if (!schema.hasDescription && r.description) extraData.enrichment_description = r.description;
     if (!schema.hasLinkedinUrl && r.linkedinUrl) extraData.enrichment_linkedin_url = r.linkedinUrl;
@@ -768,7 +973,7 @@ async function logEnrichmentRun(stats: RunStats, errors: string[]): Promise<void
 
 async function main() {
   const startTime = Date.now();
-  const { country, limit: rawLimit } = parseArgs();
+  const { country, limit: rawLimit, cryptoOnly } = parseArgs();
 
   // Enforce system limits + acquire process lock + set runtime timeout
   const limit = enforceBatchLimit(rawLimit, SYSTEM_LIMITS.ENRICHMENT_MAX_BATCH, SCOPE);
@@ -778,7 +983,7 @@ async function main() {
   logger.info(SCOPE, '=======================================');
   logger.info(SCOPE, '  Firecrawl Enrichment Worker');
   logger.info(SCOPE, '=======================================');
-  logger.info(SCOPE, `Config: country=${country ?? 'all'}, limit=${limit}, dryRun=${config.flags.dryRun}`);
+  logger.info(SCOPE, `Config: country=${country ?? 'all'}, limit=${limit}, cryptoOnly=${cryptoOnly}, dryRun=${config.flags.dryRun}`);
 
   if (!config.firecrawl.enabled) {
     logger.error(SCOPE, 'FIRECRAWL_API_KEY not set. Exiting.');
@@ -797,7 +1002,7 @@ async function main() {
 
   // 1. Fetch entities to enrich
   logger.info(SCOPE, 'Fetching entities to enrich...');
-  const entities = await fetchEntitiesToEnrich(country, limit, schema);
+  const entities = await fetchEntitiesToEnrich(country, limit, schema, cryptoOnly);
   logger.info(SCOPE, `Found ${entities.length} entities to enrich`);
 
   if (entities.length === 0) {

@@ -33,8 +33,6 @@ import ProseBlock from '../components/ui/ProseBlock';
 import Timeline from '../components/ui/Timeline';
 import BigStatRow from '../components/ui/BigStatRow';
 import Callout, { CalloutStatGrid, CalloutStat } from '../components/ui/Callout';
-import MermaidDiagram from '../components/ui/MermaidDiagram';
-import FlowDiagram from '../components/ui/FlowDiagram';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import Breadcrumb from '../components/ui/Breadcrumb';
 import LogoBar from '../components/ui/LogoBar';
@@ -419,7 +417,6 @@ export default function DesignSystemPage() {
               { id: 'bullets', label: 'BulletItem' },
               { id: 'phasecards', label: 'PhaseCard' },
               { id: 'callout', label: 'Callout' },
-              { id: 'mermaid', label: 'Mermaid Diagrams' },
               { id: 'segmented', label: 'SegmentedControl' },
               { id: 'breadcrumb', label: 'Breadcrumb' },
               { id: 'navitem', label: 'NavItem' },
@@ -1144,80 +1141,6 @@ export default function DesignSystemPage() {
           </ProseBlock>
         </Section>
 
-        {/* ── Diagrams ── */}
-        <Section title="Diagrams" id="mermaid">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-
-            <h3 style={{ margin: 0 }}>VASP Licensing Flow — Semantic Status</h3>
-            <p className="st-text st-text--sm" style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-              React Flow with <code>:::approved</code>, <code>:::rejected</code>, <code>:::active</code>, <code>:::pending</code> semantic classes
-            </p>
-            <FlowDiagram chart={`
-graph TD
-  A[VASP Application]:::active -->|Submit| B{Regulator Review}
-  B -->|Approved| C[License Granted]:::approved
-  B -->|Rejected| D[Appeal Process]:::rejected
-  B -->|Incomplete| E[Request More Info]:::pending
-  E -->|Resubmit| B
-  C --> F[Operational]:::approved
-  D -->|Upheld| C
-  D -->|Denied| G[Application Closed]:::rejected
-            `} />
-
-            <h3 style={{ margin: 0 }}>Display Nodes — Key Statistics</h3>
-            <FlowDiagram chart={`
-graph LR
-  A[847 VASPs Registered]:::display --> B[142 Jurisdictions]:::display
-  B --> C[23 Pending Reviews]:::pending
-            `} />
-
-            <h3 style={{ margin: 0 }}>Inside Callout — Travel Rule</h3>
-            <Callout label="Travel Rule Flow" variant="info">
-              <p>FATF Recommendation 16 requires VASPs to share originator and beneficiary data during transfers.</p>
-              <FlowDiagram chart={`
-graph LR
-  A[Originator VASP]:::active -->|Transfer + Data| B[Beneficiary VASP]:::active
-  B -->|Confirm Receipt| A
-  A -.->|Report| C[Regulator]:::muted
-  B -.->|Report| D[Regulator]:::muted
-              `} />
-            </Callout>
-
-            <Callout label="CBDC Architecture" variant="accent">
-              <p>Central Bank Digital Currency implementation typically follows a two-tier model.</p>
-              <FlowDiagram chart={`
-graph TB
-  CB[Central Bank]:::info -->|Issue CBDC| T1[Tier 1: Banks]:::active
-  CB -->|Monetary Policy| T1
-  T1 -->|Distribute| T2[Tier 2: Payment Providers]
-  T2 -->|Wallets| U[End Users]
-  U -->|P2P Transfer| U
-  U -->|Payments| M[Merchants]
-              `} />
-            </Callout>
-
-            <h3 style={{ margin: 0 }}>Sequence Diagram (Mermaid)</h3>
-            <p className="st-text st-text--sm" style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-              Sequence diagrams remain rendered by Mermaid
-            </p>
-            <MermaidDiagram chart={`
-sequenceDiagram
-  participant V as VASP
-  participant R as Regulator
-  participant F as FATF
-  V->>R: Submit License Application
-  R->>R: AML/KYC Review
-  Note over R: Risk Assessment
-  R-->>V: Request Additional Docs
-  V->>R: Provide Documents
-  R->>F: Report Compliance Status
-  Note over F: Mutual Evaluation
-  F-->>R: Assessment Complete
-  R->>V: License Approved
-            `} />
-
-          </div>
-        </Section>
 
         {/* ── SegmentedControl ── */}
         <Section title="Segmented Control" id="segmented">
