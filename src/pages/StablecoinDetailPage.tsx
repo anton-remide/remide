@@ -249,10 +249,10 @@ export default function StablecoinDetailPage() {
         {issuer && (
           <div className="st-card clip-lg" style={{ padding: '20px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <Building2 size={16} style={{ color: 'var(--green)' }} />
+              <Building2 size={16} style={{ color: 'var(--color-success)' }} />
               <h6 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Issuer Profile</h6>
               {issuer.isVerified && (
-                <span className="st-badge" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontSize: '0.6875rem' }}>Verified</span>
+                <span className="st-badge" style={{ backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)', fontSize: '0.6875rem' }}>Verified</span>
               )}
             </div>
 
@@ -444,7 +444,7 @@ export default function StablecoinDetailPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                     <h6 style={{ fontSize: '0.8125rem', fontWeight: 600, margin: 0, flex: 1 }}>{lic.title}</h6>
                     {lic.canIssue && (
-                      <span className="st-badge" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
+                      <span className="st-badge" style={{ backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
                     )}
                   </div>
                   {lic.detail && (

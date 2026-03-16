@@ -72,7 +72,7 @@ export default function WelcomePage() {
 
         {/* What's unlocked */}
         <div className="st-card clip-lg reveal" style={{ padding: '24px 28px', marginBottom: 20 }}>
-          <h6 className="st-section-label" style={{ marginBottom: 16, color: '#16a34a' }}>
+          <h6 className="st-section-label" style={{ marginBottom: 16, color: 'var(--color-success)' }}>
             <Check size={14} style={{ marginRight: 4 }} />
             Unlocked with your free account
           </h6>
@@ -107,7 +107,7 @@ export default function WelcomePage() {
         <div className="st-card clip-lg reveal" style={{
           padding: '28px',
           marginBottom: 24,
-          background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f0 100%)',
+          background: 'linear-gradient(135deg, var(--color-surface), var(--color-bg))',
           border: '1px solid var(--border)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>

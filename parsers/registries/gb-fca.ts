@@ -58,11 +58,20 @@ export class GbFcaParser implements RegistryParser {
 
     // Try API first (if API key is configured)
     const apiKey = process.env.FCA_API_KEY;
+    const apiEmail = process.env.FCA_API_EMAIL;
     let entities: ParsedEntity[] = [];
 
     if (apiKey) {
       logger.info(this.config.id, 'Using FCA API with API key');
-      entities = await this.parseViaApi(apiKey, warnings);
+      if (!apiEmail) {
+        warnings.push('FCA_API_EMAIL is not set. If FCA API rejects requests, add FCA_API_EMAIL in .env.local.');
+      }
+      entities = await this.parseViaApi(apiKey, apiEmail, warnings);
+      if (entities.length === 0) {
+        warnings.push('FCA API returned 0 entities. Falling back to HTML scraping.');
+        const htmlEntities = await this.parseViaHtml(warnings);
+        entities = this.mergeByName(entities, htmlEntities);
+      }
     } else {
       logger.info(this.config.id, 'No FCA_API_KEY configured, attempting HTML scraping');
       warnings.push('No FCA_API_KEY set. HTML scraping may yield limited results. Register at register.fca.org.uk for API access.');
@@ -85,7 +94,11 @@ export class GbFcaParser implements RegistryParser {
   }
 
   /** Parse using FCA REST API */
-  private async parseViaApi(apiKey: string, warnings: string[]): Promise<ParsedEntity[]> {
+  private async parseViaApi(
+    apiKey: string,
+    apiEmail: string | undefined,
+    warnings: string[],
+  ): Promise<ParsedEntity[]> {
     const entities: ParsedEntity[] = [];
     let page = 1;
     const perPage = 20;
@@ -100,8 +113,8 @@ export class GbFcaParser implements RegistryParser {
           registryId: this.config.id,
           rateLimit: 200, // 50 req/10s = 200ms apart
           headers: {
-            'X-Auth-Email': '',
             'X-Auth-Key': apiKey,
+            ...(apiEmail ? { 'X-Auth-Email': apiEmail } : {}),
           },
         });
 
@@ -202,5 +215,19 @@ export class GbFcaParser implements RegistryParser {
       warnings.push(`HTML scraping failed: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
+  }
+
+  private mergeByName(primary: ParsedEntity[], secondary: ParsedEntity[]): ParsedEntity[] {
+    const byName = new Map<string, ParsedEntity>();
+    for (const entity of primary) {
+      byName.set(entity.name.toLowerCase().trim(), entity);
+    }
+    for (const entity of secondary) {
+      const key = entity.name.toLowerCase().trim();
+      if (!byName.has(key)) {
+        byName.set(key, entity);
+      }
+    }
+    return Array.from(byName.values());
   }
 }

@@ -119,7 +119,7 @@ export default function SignupPage() {
           {/* 1. Free — Instant Unlock */}
           <div className="st-signup-offer-card st-signup-offer-free">
             <h4 className="st-signup-offer-title">
-              <Check size={16} style={{ color: '#16a34a' }} />
+              <Check size={16} style={{ color: 'var(--color-success)' }} />
               Instant Unlock with Registration
             </h4>
             <ul className="st-signup-offer-list">

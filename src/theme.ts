@@ -16,17 +16,17 @@ type SemanticSwatch = {
 };
 
 const SEMANTIC_SWATCHES = {
-  success: { badgeBg: '#f0fdf4', badgeText: '#15803d', map: '#22c55e', mapDim: '#bbf7d0' },
-  info: { badgeBg: '#eef2ff', badgeText: '#4338ca', map: '#6366f1', mapDim: '#c7d2fe' },
-  warning: { badgeBg: '#fffbeb', badgeText: '#b45309', map: '#f59e0b', mapDim: '#fde68a' },
-  danger: { badgeBg: '#fef2f2', badgeText: '#b91c1c', map: '#ef4444', mapDim: '#fecaca' },
-  neutral: { badgeBg: '#f1f5f9', badgeText: '#475569', map: '#cbd5e1', mapDim: '#e2e8f0' },
-  neutralSoft: { badgeBg: '#f8fafc', badgeText: '#94a3b8', map: '#e2e8f0', mapDim: '#f1f5f9' },
-  teal: { badgeBg: '#f0fdfa', badgeText: '#0f766e' },
-  pending: { badgeBg: '#fff7ed', badgeText: '#c2410c' },
-  magenta: { badgeBg: '#fdf4ff', badgeText: '#a21caf' },
-  research: { badgeBg: '#f8fafc', badgeText: '#94a3b8', map: '#94a3b8', mapDim: '#cbd5e1' },
-  restrictedLegacy: { badgeBg: '#fff7ed', badgeText: '#c2410c', map: '#fb923c', mapDim: '#fed7aa' },
+  success: { badgeBg: 'var(--color-success-subtle)', badgeText: 'var(--color-success)', map: '#22c55e', mapDim: '#bbf7d0' },
+  info: { badgeBg: 'var(--color-info-subtle)', badgeText: 'var(--color-info)', map: '#6366f1', mapDim: '#c7d2fe' },
+  warning: { badgeBg: 'var(--color-warning-subtle)', badgeText: 'var(--color-warning)', map: '#f59e0b', mapDim: '#fde68a' },
+  danger: { badgeBg: 'var(--color-danger-subtle)', badgeText: 'var(--color-danger)', map: '#ef4444', mapDim: '#fecaca' },
+  neutral: { badgeBg: 'var(--color-neutral-subtle)', badgeText: 'var(--color-neutral)', map: '#cbd5e1', mapDim: '#e2e8f0' },
+  neutralSoft: { badgeBg: 'var(--color-neutral-subtle)', badgeText: 'var(--color-neutral)', map: '#e2e8f0', mapDim: '#f1f5f9' },
+  teal: { badgeBg: 'var(--color-success-subtle)', badgeText: '#0f766e' },
+  pending: { badgeBg: 'var(--color-warning-subtle)', badgeText: 'var(--color-warning)' },
+  magenta: { badgeBg: 'var(--color-info-subtle)', badgeText: '#a21caf' },
+  research: { badgeBg: 'var(--color-neutral-subtle)', badgeText: 'var(--color-neutral)', map: '#94a3b8', mapDim: '#cbd5e1' },
+  restrictedLegacy: { badgeBg: 'var(--color-warning-subtle)', badgeText: 'var(--color-warning)', map: '#fb923c', mapDim: '#fed7aa' },
 } as const satisfies Record<string, SemanticSwatch>;
 
 type SwatchKey = keyof typeof SEMANTIC_SWATCHES;

@@ -20,6 +20,11 @@ import { logger } from '../core/logger.js';
 
 const SOURCE_URL = 'https://www.fincen.gov/msb-registrant-search';
 
+const DEFAULT_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+};
+
 export class UsFincenParser implements RegistryParser {
   config: ParserConfig = {
     id: 'us-fincen',
@@ -48,10 +53,7 @@ export class UsFincenParser implements RegistryParser {
       logger.info(this.config.id, 'Attempting to fetch FinCEN MSB search page');
 
       const response = await fetch(SOURCE_URL, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (!response.ok) {
@@ -110,9 +112,7 @@ export class UsFincenParser implements RegistryParser {
 
       // First, fetch the form to get any CSRF tokens or hidden fields
       const formResponse = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        },
+        headers: DEFAULT_HEADERS,
       });
 
       if (!formResponse.ok) {
@@ -134,29 +134,43 @@ export class UsFincenParser implements RegistryParser {
       // Collect form fields
       const params = new URLSearchParams();
       form.find('input, select').each((_, el) => {
+        const tagName = el.tagName?.toLowerCase();
         const name = $(el).attr('name');
-        const value = $(el).attr('value') ?? '';
-        if (name) {
-          // Set money transmitter as the activity filter
-          if (name.toLowerCase().includes('activity') || name.toLowerCase().includes('type')) {
-            params.set(name, 'Money Transmitter');
-          } else {
-            params.set(name, value);
-          }
+        if (!name) return;
+
+        // Skip submit/reset controls.
+        const inputType = ($(el).attr('type') ?? '').toLowerCase();
+        if (tagName === 'input' && (inputType === 'submit' || inputType === 'reset' || inputType === 'button')) return;
+
+        // Set money transmitter on activity-like controls.
+        if (name.toLowerCase().includes('activity') || name.toLowerCase().includes('type')) {
+          params.set(name, 'Money Transmitter');
+          return;
         }
+
+        if (tagName === 'select') {
+          const selected = $(el).find('option[selected]').first();
+          const firstOption = $(el).find('option').first();
+          const selectedValue = selected.attr('value') ?? selected.text().trim();
+          const fallbackValue = firstOption.attr('value') ?? firstOption.text().trim();
+          params.set(name, selectedValue || fallbackValue || '');
+          return;
+        }
+
+        const value = $(el).attr('value') ?? '';
+        params.set(name, value);
       });
 
       // Submit the form
-      const searchUrl = action.startsWith('http') ? action : `https://www.fincen.gov${action}`;
+      const searchUrl = action ? new URL(action, url).toString() : url;
 
       const searchResponse = await fetch(
         method === 'GET' ? `${searchUrl}?${params.toString()}` : searchUrl,
         {
           method,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-            'Content-Type': method === 'POST' ? 'application/x-www-form-urlencoded' : '',
-          },
+          headers: method === 'POST'
+            ? { ...DEFAULT_HEADERS, 'Content-Type': 'application/x-www-form-urlencoded' }
+            : DEFAULT_HEADERS,
           body: method === 'POST' ? params.toString() : undefined,
         },
       );
@@ -170,6 +184,7 @@ export class UsFincenParser implements RegistryParser {
       const $results = cheerio.load(resultHtml);
 
       // Parse search results
+      const seen = new Set<string>();
       $results('table tr').each((_, row) => {
         const cells = $results(row).find('td');
         if (cells.length < 2) return;
@@ -178,6 +193,9 @@ export class UsFincenParser implements RegistryParser {
         if (!name || name.toLowerCase().includes('legal name')) return;
 
         const dba = cells.length > 1 ? $results(cells[1]).text().trim() : '';
+        const key = `${name.toLowerCase()}|${(dba || '').toLowerCase()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
 
         entities.push({
           name,

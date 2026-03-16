@@ -76,6 +76,7 @@ interface EntityRawData {
   enrichment_description?: string;
   enrichment_linkedin_url?: string;
   enrichment_twitter_url?: string;
+  site_languages?: string[] | string;
   [key: string]: unknown;
 }
 
@@ -144,6 +145,11 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
   const linkedinUrl = row.linkedin_url || rd?.enrichment_linkedin_url || '';
   const twitterUrl = row.twitter_url || rd?.enrichment_twitter_url || '';
   const registryUrl = row.registry_url || '';
+  const siteLanguages = Array.isArray(rd?.site_languages)
+    ? rd.site_languages.filter((v): v is string => typeof v === 'string' && v.trim().length > 0).map((v) => v.toUpperCase()).slice(0, 4)
+    : (typeof rd?.site_languages === 'string' && rd.site_languages.trim().length > 0
+      ? rd.site_languages.split(/[,\s|/]+/).filter(Boolean).map((v) => v.toUpperCase()).slice(0, 4)
+      : []);
 
   return {
     id: row.id,
@@ -158,6 +164,7 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
     status: (row.status as Entity['status']) ?? 'Unknown',
     regulator: row.regulator ?? '',
     website: row.website ?? '',
+    siteLanguages,
     description,
     registryUrl,
     linkedinUrl,
@@ -207,13 +214,13 @@ export async function getJurisdictionByCode(code: string): Promise<Jurisdiction 
 // Excludes heavy columns: raw_data, description, activities, entity_types, website, registry_url, linkedin_url, license_number
 const LIST_COLS = [
   'id', 'name', 'canonical_name', 'country_code', 'country',
-  'sector', 'status', 'regulator', 'license_type',
+  'sector', 'status', 'regulator', 'license_type', 'website',
   'dns_status', 'is_garbage',
 ].join(',');
 
 /** Partial row type for LIST_COLS-based queries (no raw_data, description, etc.) */
 type EntityListRow = Pick<EntityRow, 'id' | 'name' | 'canonical_name' | 'country_code' | 'country'
-  | 'sector' | 'status' | 'regulator' | 'license_type' | 'dns_status' | 'is_garbage'>;
+  | 'sector' | 'status' | 'regulator' | 'license_type' | 'website' | 'dns_status' | 'is_garbage'>;
 
 /** Fast count for landing page — no data transfer, just COUNT */
 export async function getEntityCount(): Promise<number> {
@@ -388,11 +395,11 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
       .limit(5),
     supabase
       .from('entities')
-      .select('id, name, canonical_name, country, country_code, regulator')
+      .select('id, name, canonical_name, country, country_code, regulator, website')
       .not('canonical_name', 'is', null)
       .neq('is_garbage', true)
       .neq('is_hidden', true)
-      .or(`name.ilike.${q},canonical_name.ilike.${q},country.ilike.${q},regulator.ilike.${q}`)
+      .or(`name.ilike.${q},canonical_name.ilike.${q},country.ilike.${q},regulator.ilike.${q},website.ilike.${q}`)
       .order('name')
       .limit(5),
   ]);

@@ -14,6 +14,11 @@ import { logger } from '../core/logger.js';
 
 const BASE_URL = 'https://eservices.mas.gov.sg/fid/institution';
 
+type MasCategory = {
+  url: string;
+  licenseType: string;
+};
+
 export class SgMasParser implements RegistryParser {
   config: ParserConfig = {
     id: 'sg-mas',
@@ -34,28 +39,51 @@ export class SgMasParser implements RegistryParser {
     const errors: string[] = [];
     const entities: ParsedEntity[] = [];
 
-    // Fetch list page with all results (rows=100 should get most/all)
-    const listUrls = [
+    // Fetch list pages by category.
+    const categories: MasCategory[] = [
       // Major Payment Institutions with DPT
-      `${BASE_URL}?sector=Payments&category=Major+Payment+Institution&activity=Digital+Payment+Token+Service&rows=100`,
+      {
+        url: `${BASE_URL}?sector=Payments&category=Major+Payment+Institution&activity=Digital+Payment+Token+Service&rows=100`,
+        licenseType: 'Major Payment Institution',
+      },
       // Standard Payment Institutions with DPT
-      `${BASE_URL}?sector=Payments&category=Standard+Payment+Institution&activity=Digital+Payment+Token+Service&rows=100`,
+      {
+        url: `${BASE_URL}?sector=Payments&category=Standard+Payment+Institution&activity=Digital+Payment+Token+Service&rows=100`,
+        licenseType: 'Standard Payment Institution',
+      },
     ];
 
-    for (const url of listUrls) {
+    for (const category of categories) {
       try {
-        logger.info(this.config.id, `Fetching: ${url}`);
-        const html = await fetchWithRetry(url, {
+        logger.info(this.config.id, `Fetching: ${category.url}`);
+        const firstHtml = await fetchWithRetry(category.url, {
           registryId: this.config.id,
           rateLimit: 5_000,
         });
+        const firstPageEntities = this.parseListPage(firstHtml, category.url, category.licenseType);
+        entities.push(...firstPageEntities);
+        logger.info(this.config.id, `Found ${firstPageEntities.length} entities from first page`);
 
-        const pageEntities = this.parseListPage(html, url);
-        entities.push(...pageEntities);
-        logger.info(this.config.id, `Found ${pageEntities.length} entities from page`);
+        // Pagination discovery from first page.
+        const extraUrls = this.extractPaginationUrls(firstHtml, category.url);
+        for (const pageUrl of extraUrls) {
+          try {
+            logger.info(this.config.id, `Fetching page: ${pageUrl}`);
+            const pageHtml = await fetchWithRetry(pageUrl, {
+              registryId: this.config.id,
+              rateLimit: 5_000,
+            });
+            const pageEntities = this.parseListPage(pageHtml, pageUrl, category.licenseType);
+            entities.push(...pageEntities);
+            logger.info(this.config.id, `Found ${pageEntities.length} entities from paginated page`);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            warnings.push(`Failed to fetch paginated URL ${pageUrl}: ${msg}`);
+          }
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        warnings.push(`Failed to fetch ${url}: ${msg}`);
+        warnings.push(`Failed to fetch ${category.url}: ${msg}`);
       }
     }
 
@@ -82,7 +110,7 @@ export class SgMasParser implements RegistryParser {
     };
   }
 
-  private parseListPage(html: string, sourceUrl: string): ParsedEntity[] {
+  private parseListPage(html: string, sourceUrl: string, licenseType: string): ParsedEntity[] {
     const $ = cheerio.load(html);
     const entities: ParsedEntity[] = [];
 
@@ -120,7 +148,7 @@ export class SgMasParser implements RegistryParser {
               country: 'Singapore',
               status: 'Licensed',
               regulator: 'MAS',
-              licenseType: 'Major Payment Institution',
+              licenseType,
               activities: ['Digital Payment Token Service'],
               website: detailUrl || undefined,
               sourceUrl,
@@ -147,7 +175,7 @@ export class SgMasParser implements RegistryParser {
               country: 'Singapore',
               status: 'Licensed',
               regulator: 'MAS',
-              licenseType: 'Payment Institution',
+              licenseType,
               activities: ['Digital Payment Token Service'],
               sourceUrl,
             });
@@ -157,5 +185,50 @@ export class SgMasParser implements RegistryParser {
     }
 
     return entities;
+  }
+
+  /**
+   * Detect pagination URLs from first list page.
+   * Keeps a conservative cap to avoid crawling unrelated links.
+   */
+  private extractPaginationUrls(html: string, seedUrl: string): string[] {
+    const $ = cheerio.load(html);
+    const out = new Set<string>();
+
+    // Strategy 1: explicit pagination links in DOM.
+    $('a[href]').each((_, a) => {
+      const href = ($(a).attr('href') ?? '').trim();
+      if (!href) return;
+      if (!/page=\d+/i.test(href)) return;
+
+      const full = href.startsWith('http')
+        ? href
+        : href.startsWith('/')
+          ? `https://eservices.mas.gov.sg${href}`
+          : '';
+      if (full) out.add(full);
+    });
+
+    // Strategy 2: infer page count from numeric pagination controls.
+    let maxPage = 1;
+    $('.pagination a, .pagination li, [data-page]').each((_, el) => {
+      const dataPage = $(el).attr('data-page')?.trim();
+      const text = $(el).text().trim();
+      const n = Number(dataPage || text);
+      if (Number.isFinite(n) && n > maxPage) maxPage = n;
+    });
+
+    if (maxPage > 1) {
+      const capped = Math.min(maxPage, 20);
+      for (let page = 2; page <= capped; page++) {
+        const u = new URL(seedUrl);
+        u.searchParams.set('page', String(page));
+        out.add(u.toString());
+      }
+    }
+
+    // Never include seed URL here (already fetched).
+    out.delete(seedUrl);
+    return Array.from(out);
   }
 }

@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
@@ -205,7 +206,7 @@ export default function WorldMap({
         layers: [{
           id: 'background',
           type: 'background',
-          paint: { 'background-color': COLORS.white },
+          paint: { 'background-color': getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim() || COLORS.white },
         }],
       },
       center: [20, 20],
@@ -246,7 +247,8 @@ export default function WorldMap({
           const numId = String(f.id ?? '');
           const alpha2 = numericToAlpha2[numId] ?? '';
           if (!alpha2 && import.meta.env.DEV) {
-            console.warn(`[WorldMap] Unmapped TopoJSON feature id=${numId}`);
+            // Suppress in production; helps identify missing ISO mappings during development
+            console.warn(`[WorldMap] Unmapped TopoJSON feature id=${numId}`); // eslint-disable-line no-console
           }
           const j = jurisdictionMap.get(alpha2);
           return {
@@ -309,6 +311,7 @@ export default function WorldMap({
       map.remove();
       mapRef.current = null;
     };
+  // Init-only: map instance is created once and managed via separate effects for data/style updates
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -428,17 +431,24 @@ export default function WorldMap({
     let touchTimer: ReturnType<typeof setTimeout> | undefined;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+    const toFlag = (code: string) =>
+      code.length === 2
+        ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+        : '';
+
     /** Build tooltip HTML for a feature */
     const buildTooltipHTML = (f: maplibregl.MapGeoJSONFeature) => {
       const name = f.properties?.countryName || '';
+      const alpha2 = f.properties?.alpha2 || '';
       const regime = f.properties?.regime || '';
       const travelRule = f.properties?.travelRule || '';
       const entities = f.properties?.entityCount || 0;
       const regulator = f.properties?.regulator || '';
       const stablecoinStatus = f.properties?.stablecoinStatus || 'No Data';
+      const flag = toFlag(alpha2);
       return `
-        <strong>${name}</strong>
-        <div style="margin-top:4px;font-size:0.75rem;color:var(--text-muted)">
+        <strong>${name}${flag ? ` ${flag}` : ''}</strong>
+        <div style="margin-top:4px;font-size:0.75rem;color:rgba(237,237,236,0.65)">
           ${regime} · ${travelRule}
           <br/>${entities} entities${stablecoinStatus !== 'No Data' ? ` · Stablecoins: ${stablecoinStatus}` : ''}
           ${regulator ? `<br/>${regulator}` : ''}
@@ -447,18 +457,18 @@ export default function WorldMap({
       `;
     };
 
-    /** Position tooltip: at cursor on desktop, centered bottom on mobile */
+    /** Position tooltip at cursor (fixed positioning via portal to body) */
     const positionTooltip = (point: maplibregl.Point) => {
-      if (!tooltip) return;
+      if (!tooltip || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
       if (isTouchDevice) {
-        // Center horizontally, anchor near bottom of map
-        tooltip.style.left = '50%';
+        tooltip.style.left = `${rect.left + rect.width / 2}px`;
         tooltip.style.top = '';
-        tooltip.style.bottom = '12px';
+        tooltip.style.bottom = `${window.innerHeight - rect.bottom + 12}px`;
         tooltip.style.transform = 'translateX(-50%)';
       } else {
-        tooltip.style.left = `${point.x + 12}px`;
-        tooltip.style.top = `${point.y - 12}px`;
+        tooltip.style.left = `${rect.left + point.x + 12}px`;
+        tooltip.style.top = `${rect.top + point.y - 12}px`;
         tooltip.style.bottom = '';
         tooltip.style.transform = '';
       }
@@ -617,7 +627,10 @@ export default function WorldMap({
   return (
     <div className={containerClass} style={height ? { height } : undefined} role="img" aria-label="Interactive world map showing regulatory status by country">
       <div ref={containerRef} className="st-map-canvas" />
-      <div ref={tooltipRef} className="st-map-tooltip" />
+      {createPortal(
+        <div ref={tooltipRef} className="st-map-tooltip" />,
+        document.body,
+      )}
 
       {/* Zoom Controls */}
       <div className="st-map-zoom-controls">

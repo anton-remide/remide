@@ -211,7 +211,7 @@ export default function ColumnHeaderFilter({
 
             {/* Search */}
             <div className="st-col-filter-search">
-              <Search size={13} color="var(--text-muted)" />
+              <Search size={13} color="var(--color-text-secondary)" />
               <input
                 type="text"
                 placeholder="Search..."
@@ -243,7 +243,7 @@ export default function ColumnHeaderFilter({
                 </label>
               ))}
               {filteredValues.length === 0 && (
-                <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+                <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 'var(--type-caption)' }}>
                   No matches
                 </div>
               )}

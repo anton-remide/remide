@@ -1,31 +1,41 @@
-import { useCounter } from '../../hooks/useAnimations';
-import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-interface Props {
-  icon: LucideIcon;
+export interface StatCardProps {
+  value: ReactNode;
   label: string;
-  value: number;
+  icon?: ReactNode;
+  onClick?: () => void;
+  active?: boolean;
+  className?: string;
 }
 
-export default function StatCard({ icon: Icon, label, value }: Props) {
-  const counterRef = useCounter(value);
+export default function StatCard({
+  value,
+  label,
+  icon,
+  onClick,
+  active,
+  className,
+}: StatCardProps) {
+  const Tag = onClick ? 'button' : 'div';
 
   return (
-    <div className="st-card clip-lg stagger-in" style={{ textAlign: 'center', padding: '20px 16px' }}>
-      <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 28,
-        height: 28,
-        borderRadius: 6,
-        backgroundColor: 'var(--bg-light)',
-        marginBottom: 12,
-      }}>
-        <Icon size={14} color="var(--text-muted)" strokeWidth={1.5} />
+    <Tag
+      className={[
+        'st-stat-card',
+        active && 'is-active',
+        onClick && 'is-interactive',
+        className,
+      ].filter(Boolean).join(' ')}
+      onClick={onClick}
+      type={onClick ? 'button' : undefined}
+      aria-pressed={onClick ? active : undefined}
+    >
+      <div className="st-stat-card__top">
+        <span className="st-stat-card__value">{value}</span>
+        {icon && <span className="st-stat-card__icon" aria-hidden="true">{icon}</span>}
       </div>
-      <div className="stat-value"><span ref={counterRef}>0</span></div>
-      <div className="stat-label">{label}</div>
-    </div>
+      <span className="st-stat-card__label">{label}</span>
+    </Tag>
   );
 }

@@ -42,9 +42,9 @@ const BACKING_LABELS: Record<number, string> = {
 };
 
 const BACKING_COLORS: Record<number, { color: string; bg: string }> = {
-  1: { color: '#2B7A4B', bg: '#ECFDF3' },  // Permitted — green
-  0: { color: '#A93F3F', bg: '#FFF0F0' },  // Prohibited — red
-  2: { color: '#586B82', bg: '#F1F5F9' },  // Unclear — gray
+  1: { color: 'var(--color-success)', bg: 'var(--color-success-subtle)' },
+  0: { color: 'var(--color-danger)', bg: 'var(--color-danger-subtle)' },
+  2: { color: 'var(--color-neutral)', bg: 'var(--color-neutral-subtle)' },
 };
 
 function BackingBadge({ value, alert }: { value: number | null; alert?: string }) {
@@ -398,8 +398,8 @@ export default function JurisdictionDetailPage() {
                   borderRadius: 6,
                   fontSize: '0.8125rem',
                   fontWeight: 500,
-                  backgroundColor: '#EEF0FF',
-                  color: '#4B5CC4',
+                  backgroundColor: 'var(--color-info-subtle)',
+                  color: 'var(--color-info)',
                 }}
               >
                 Stablecoin-Specific Law
@@ -540,8 +540,8 @@ export default function JurisdictionDetailPage() {
                             {ev.eventType !== null && (
                               <span style={{
                                 fontSize: '0.6875rem', padding: '1px 6px', borderRadius: 4,
-                                backgroundColor: ev.eventType === 2 ? '#EEF0FF' : '#F0FDFA',
-                                color: ev.eventType === 2 ? '#4B5CC4' : '#0D6857',
+                                backgroundColor: ev.eventType === 2 ? 'var(--color-info-subtle)' : 'var(--color-success-subtle)',
+                                color: ev.eventType === 2 ? 'var(--color-info)' : 'var(--color-success)',
                               }}>
                                 {ev.eventType === 2 ? 'Legislative' : 'Regulatory'}
                               </span>
@@ -592,7 +592,7 @@ export default function JurisdictionDetailPage() {
                     {lic.canIssue && (
                       <span className={!hasAccess ? 'st-blur-value' : ''} style={{
                         display: 'inline-block', marginTop: 4, padding: '1px 8px', borderRadius: 4,
-                        fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#ECFDF3', color: '#2B7A4B',
+                        fontSize: '0.6875rem', fontWeight: 500, backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)',
                       }}>
                         Can Issue
                       </span>
@@ -664,7 +664,7 @@ export default function JurisdictionDetailPage() {
                   {cbdc.crossBorder && (
                     <span style={{
                       display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#ECFDF3', color: '#2B7A4B',
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)',
                     }}>
                       Cross-Border
                     </span>
@@ -672,7 +672,7 @@ export default function JurisdictionDetailPage() {
                   {cbdc.programmable && (
                     <span style={{
                       display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#EEF0FF', color: '#4B5CC4',
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: 'var(--color-info-subtle)', color: 'var(--color-info)',
                     }}>
                       Programmable
                     </span>
@@ -680,7 +680,7 @@ export default function JurisdictionDetailPage() {
                   {cbdc.offlineCapable && (
                     <span style={{
                       display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#FFF8EB', color: '#92610B',
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: 'var(--color-warning-subtle)', color: 'var(--color-warning)',
                     }}>
                       Offline Capable
                     </span>
@@ -688,7 +688,7 @@ export default function JurisdictionDetailPage() {
                   {cbdc.interestBearing && (
                     <span style={{
                       display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: '#F0FDFA', color: '#0D6857',
+                      fontSize: '0.6875rem', fontWeight: 500, backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)',
                     }}>
                       Interest-Bearing
                     </span>
@@ -755,7 +755,7 @@ export default function JurisdictionDetailPage() {
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-md)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.transform = '';

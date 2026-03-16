@@ -19,9 +19,9 @@ function BoolIndicator({ value, label }: { value: boolean; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       {value ? (
-        <CheckCircle size={14} style={{ color: '#2B7A4B' }} />
+        <CheckCircle size={14} style={{ color: 'var(--color-success)' }} />
       ) : (
-        <XCircle size={14} style={{ color: '#94A3B8' }} />
+        <XCircle size={14} style={{ color: 'var(--color-neutral)' }} />
       )}
       <span style={{ fontSize: '0.875rem', color: value ? 'var(--text)' : 'var(--text-muted)' }}>
         {label}

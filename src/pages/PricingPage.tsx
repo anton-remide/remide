@@ -91,7 +91,7 @@ export default function PricingPage() {
       {/* Payment Success Banner */}
       {searchParams.get('success') === 'true' && (
         <div style={{
-          background: '#16a34a', color: '#fff', textAlign: 'center',
+          background: 'var(--color-success)', color: 'var(--color-surface)', textAlign: 'center',
           padding: '12px 20px', fontSize: '0.9375rem', fontWeight: 600,
         }}>
           <Check size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
@@ -100,7 +100,7 @@ export default function PricingPage() {
       )}
       {searchParams.get('canceled') === 'true' && (
         <div style={{
-          background: '#f59e0b', color: '#000', textAlign: 'center',
+          background: 'var(--color-warning)', color: 'var(--color-text-main)', textAlign: 'center',
           padding: '12px 20px', fontSize: '0.9375rem',
         }}>
           Payment was canceled. You can try again anytime.
@@ -227,7 +227,7 @@ export default function PricingPage() {
               /* ── Paid user view: clean confirmation ── */
               <>
                 <div className="st-pricing-card-header">
-                  <div className="st-pricing-card-badge" style={{ background: '#16a34a', color: '#fff' }}>
+                  <div className="st-pricing-card-badge" style={{ background: 'var(--color-success)', color: 'var(--color-surface)' }}>
                     <Check size={14} />
                     Full Access Active
                   </div>
@@ -236,7 +236,7 @@ export default function PricingPage() {
                   </p>
                 </div>
                 <div className="st-pricing-card-cta-wrap">
-                  <Link to="/jurisdictions" className="st-pricing-card-cta" style={{ background: '#16a34a', textDecoration: 'none' }}>
+                  <Link to="/jurisdictions" className="st-pricing-card-cta" style={{ background: 'var(--color-success)', textDecoration: 'none' }}>
                     <Check size={18} />
                     Explore Regulatory Map
                   </Link>
@@ -264,7 +264,7 @@ export default function PricingPage() {
                 </div>
                 <div className="st-pricing-card-cta-wrap">
                   {checkoutError && (
-                    <div style={{ color: '#dc2626', fontSize: '0.8125rem', marginBottom: 8, textAlign: 'center' }}>{checkoutError}</div>
+                    <div style={{ color: 'var(--color-danger)', fontSize: '0.8125rem', marginBottom: 8, textAlign: 'center' }}>{checkoutError}</div>
                   )}
                   {user ? (
                     <button
@@ -375,7 +375,7 @@ export default function PricingPage() {
               </Link>
             )}
             {isPaid ? (
-              <span className="st-btn" style={{ background: '#16a34a', color: '#fff', cursor: 'default' }}>
+              <span className="st-btn" style={{ background: 'var(--color-success)', color: 'var(--color-surface)', cursor: 'default' }}>
                 <Check size={14} /> Full Access
               </span>
             ) : user ? (
@@ -492,7 +492,7 @@ export default function PricingPage() {
                 Thank you for being an early supporter.
                 All current features and future updates are included.
               </p>
-              <Link to="/entities" className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto', background: '#16a34a', textDecoration: 'none' }}>
+              <Link to="/entities" className="st-pricing-card-cta" style={{ maxWidth: 360, margin: '0 auto', background: 'var(--color-success)', textDecoration: 'none' }}>
                 <Check size={18} />
                 Browse All Entities
               </Link>

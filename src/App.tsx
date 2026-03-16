@@ -26,6 +26,7 @@ const WelcomePage = lazy(() => import('./pages/WelcomePage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
 
 /* BrowserRouter basename — matches Vite base config.
    Dev: BASE_URL = '/'  →  basename = ''
@@ -65,6 +66,10 @@ export default function App() {
                 <Route path="/stablecoins/:id" element={<StablecoinDetailPage />} />
                 <Route path="/cbdcs/:id" element={<CbdcDetailPage />} />
                 <Route path="/issuers/:slug" element={<IssuerDetailPage />} />
+
+                {/* Design System preview (dev only) */}
+                <Route path="/ui" element={<DesignSystemPage />} />
+                <Route path="/ui/*" element={<DesignSystemPage />} />
 
                 {/* 404 catch-all */}
                 <Route path="*" element={<NotFoundPage />} />

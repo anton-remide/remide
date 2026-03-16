@@ -66,7 +66,7 @@ export default function ResetPasswordPage() {
 
         {success ? (
           <div className="st-auth-form clip-lg" style={{ textAlign: 'center', padding: '40px 32px' }}>
-            <CheckCircle size={40} style={{ color: '#2B7A4B', marginBottom: 16 }} />
+            <CheckCircle size={40} style={{ color: 'var(--color-success)', marginBottom: 16 }} />
             <h4 style={{ marginBottom: 8 }}>All done!</h4>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
               Your password has been updated. Redirecting...

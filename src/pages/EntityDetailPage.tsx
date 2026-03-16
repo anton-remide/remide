@@ -132,7 +132,7 @@ export default function EntityDetailPage() {
             </>
           )}
           {entity.dnsStatus === 'dead' && (
-            <Badge label="Dead Website" colorMap={{ 'Dead Website': { bg: '#fee2e2', text: '#991b1b' } }} />
+            <Badge label="Dead Website" colorMap={{ 'Dead Website': { bg: 'var(--color-danger-subtle)', text: 'var(--color-danger)' } }} />
           )}
         </div>
       </div>
@@ -183,10 +183,37 @@ export default function EntityDetailPage() {
                   {entity.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                   <ExternalLink size={12} />
                 </a>
+                {entity.siteLanguages && entity.siteLanguages.length > 0 && (
+                  <span style={{ marginLeft: 8, display: 'inline-flex', gap: 4, flexWrap: 'wrap', verticalAlign: 'middle' }}>
+                    {entity.siteLanguages.map((lang) => (
+                      <span
+                        key={lang}
+                        className="st-badge"
+                        style={{ height: 20, fontSize: '0.6875rem', background: 'var(--bg-light)', color: 'var(--text-muted)' }}
+                        title="Detected website language"
+                      >
+                        {lang}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </span>
             ) : (
               <span className="st-info-value st-blur-value" style={{ opacity: 0.6 }}>
                 {entity.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                {entity.siteLanguages && entity.siteLanguages.length > 0 && (
+                  <span style={{ marginLeft: 8, display: 'inline-flex', gap: 4, flexWrap: 'wrap', verticalAlign: 'middle' }}>
+                    {entity.siteLanguages.map((lang) => (
+                      <span
+                        key={lang}
+                        className="st-badge"
+                        style={{ height: 20, fontSize: '0.6875rem', background: 'var(--bg-light)', color: 'var(--text-muted)' }}
+                      >
+                        {lang}
+                      </span>
+                    ))}
+                  </span>
+                )}
               </span>
             )}
           </div>

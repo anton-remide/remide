@@ -13,12 +13,17 @@ import { AuAustracParser } from './registries/au-austrac.js';
 import { SgMasParser } from './registries/sg-mas.js';
 import { NlDnbParser } from './registries/nl-dnb.js';
 import { ChFinmaParser } from './registries/ch-finma.js';
+import { ChVqfParser } from './registries/ch-vqf.js';
+import { ChSofitParser } from './registries/ch-sofit.js';
 import { CaFintracParser } from './registries/ca-fintrac.js';
+import { CaOscParser } from './registries/ca-osc.js';
 import { GbFcaParser } from './registries/gb-fca.js';
+import { GbFcaEmiParser } from './registries/gb-fca-emi.js';
 import { UsFincenParser } from './registries/us-fincen.js';
 import { AeVaraParser } from './registries/ae-vara.js';
 
 import { ItConsobParser } from './registries/it-consob.js';
+import { ItOamVaspParser } from './registries/it-oam-vasp.js';
 import { EsCnmvParser } from './registries/es-cnmv.js';
 import { AtFmaParser } from './registries/at-fma.js';
 import { IeCbiParser } from './registries/ie-cbi.js';
@@ -53,6 +58,8 @@ import { IdOjkParser } from './registries/id-ojk.js';
 import { UsNydfsParser } from './registries/us-nydfs.js';
 import { UsFdicParser } from './registries/us-fdic.js';
 import { HkSfcParser } from './registries/hk-sfc.js';
+import { HkSfcLcParser } from './registries/hk-sfc-lc.js';
+import { NzFmaParser } from './registries/nz-fma.js';
 import { BrBcbParser } from './registries/br-bcb.js';
 import { NgSecParser } from './registries/ng-sec.js';
 import { SvCnadParser } from './registries/sv-cnad.js';
@@ -105,12 +112,17 @@ export const PARSERS: Record<string, () => RegistryParser> = {
   'sg-mas': () => new SgMasParser(),
   'nl-dnb': () => new NlDnbParser(),
   'ch-finma': () => new ChFinmaParser(),
+  'ch-vqf': () => new ChVqfParser(),
+  'ch-sofit': () => new ChSofitParser(),
   'ca-fintrac': () => new CaFintracParser(),
+  'ca-osc': () => new CaOscParser(),
   'gb-fca': () => new GbFcaParser(),
+  'gb-fca-emi': () => new GbFcaEmiParser(),
   'us-fincen': () => new UsFincenParser(),
   'ae-vara': () => new AeVaraParser(),
 
   'it-consob': () => new ItConsobParser(),
+  'it-oam-vasp': () => new ItOamVaspParser(),
   'es-cnmv': () => new EsCnmvParser(),
   'at-fma': () => new AtFmaParser(),
   'ie-cbi': () => new IeCbiParser(),
@@ -145,6 +157,8 @@ export const PARSERS: Record<string, () => RegistryParser> = {
   'us-nydfs': () => new UsNydfsParser(),
   'us-fdic': () => new UsFdicParser(),
   'hk-sfc': () => new HkSfcParser(),
+  'hk-sfc-lc': () => new HkSfcLcParser(),
+  'nz-fma': () => new NzFmaParser(),
   'br-bcb': () => new BrBcbParser(),
   'ng-sec': () => new NgSecParser(),
   'sv-cnad': () => new SvCnadParser(),

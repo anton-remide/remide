@@ -17,6 +17,7 @@ export interface Entity {
   status: EntityStatus;
   regulator: string;
   website: string;
+  siteLanguages?: string[];
   description: string;
   registryUrl: string;
   linkedinUrl: string;

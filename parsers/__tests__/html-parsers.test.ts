@@ -25,7 +25,14 @@ import { SgMasParser } from '../registries/sg-mas.js';
 import { AeVaraParser } from '../registries/ae-vara.js';
 import { AuAustracParser } from '../registries/au-austrac.js';
 import { GbFcaParser } from '../registries/gb-fca.js';
+import { GbFcaEmiParser } from '../registries/gb-fca-emi.js';
+import { CaOscParser } from '../registries/ca-osc.js';
+import { NzFmaParser } from '../registries/nz-fma.js';
+import { HkSfcLcParser } from '../registries/hk-sfc-lc.js';
 import { UsFincenParser } from '../registries/us-fincen.js';
+import { ItOamVaspParser, parseOamHtml } from '../registries/it-oam-vasp.js';
+import { ChVqfParser, parseVqfHtml } from '../registries/ch-vqf.js';
+import { ChSofitParser, parseSofitHtml } from '../registries/ch-sofit.js';
 
 // Cast to Vitest mock types for intellisense
 const mockFetchWithRetry = fetchWithRetry as ReturnType<typeof vi.fn>;
@@ -128,7 +135,7 @@ describe('SG-MAS Parser', () => {
     // 2 from each URL call, deduplicated = 2
     expect(result.entities.length).toBe(2);
     expect(result.entities[0].name).toBe('Table Entity One');
-    expect(result.entities[0].licenseType).toBe('Payment Institution');
+    expect(result.entities[0].licenseType).toContain('Payment Institution');
   });
 
   it('filters out short names and "search" text', async () => {
@@ -383,6 +390,7 @@ describe('AU-AUSTRAC Parser', () => {
     expect(parser.config.id).toBe('au-austrac');
     expect(parser.config.countryCode).toBe('AU');
     expect(parser.config.rateLimit).toBe(15_000);
+    expect(parser.config.needsBrowser).toBe(true);
   });
 
   it('parses actions page table with status detection', async () => {
@@ -574,6 +582,215 @@ describe('AU-AUSTRAC Parser', () => {
 });
 
 // ---------------------------------------------------------------------------
+// IT-OAM-VASP
+// ---------------------------------------------------------------------------
+
+describe('IT-OAM-VASP Parser', () => {
+  let parser: ItOamVaspParser;
+
+  beforeEach(() => {
+    parser = new ItOamVaspParser();
+    vi.clearAllMocks();
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('it-oam-vasp');
+    expect(parser.config.countryCode).toBe('IT');
+    expect(parser.config.sourceType).toBe('html');
+    expect(parser.config.needsBrowser).toBe(true);
+  });
+
+  it('parseOamHtml extracts entities from table rows', () => {
+    const page = html(`
+      <table>
+        <tbody>
+          <tr>
+            <td>Hercle S.r.l.</td>
+            <td>N. OAM-12345</td>
+            <td>Iscritto</td>
+            <td><a href="/operatori/hercle">Dettaglio</a></td>
+          </tr>
+          <tr>
+            <td>Alpha Exchange S.p.A.</td>
+            <td>ID: VV-9988</td>
+            <td>Sospeso</td>
+          </tr>
+        </tbody>
+      </table>
+    `);
+
+    const entities = parseOamHtml(page, 'https://www.organismo-am.it/test');
+
+    expect(entities).toHaveLength(2);
+    expect(entities[0].name).toBe('Hercle S.r.l.');
+    expect(entities[0].licenseNumber).toBe('OAM-12345');
+    expect(entities[0].status).toBe('Registered');
+    expect(entities[0].sourceUrl).toBe('https://www.organismo-am.it/operatori/hercle');
+    expect(entities[1].status).toBe('Suspended');
+  });
+
+  it('parseOamHtml deduplicates entities and supports JSON-LD ItemList', () => {
+    const page = html(`
+      <ul>
+        <li><a href="/operatori/beta">Beta Crypto Srl</a> - N. 7654</li>
+      </ul>
+      <script type="application/ld+json">
+        {
+          "@type": "ItemList",
+          "itemListElement": [
+            {
+              "item": {
+                "name": "Beta Crypto Srl",
+                "url": "https://www.organismo-am.it/operatori/beta"
+              }
+            },
+            {
+              "item": {
+                "name": "Gamma Digital Assets S.r.l.",
+                "url": "https://www.organismo-am.it/operatori/gamma"
+              }
+            }
+          ]
+        }
+      </script>
+    `);
+
+    const entities = parseOamHtml(page, 'https://www.organismo-am.it/test');
+    const names = entities.map((e) => e.name);
+
+    expect(entities).toHaveLength(2);
+    expect(names).toContain('Beta Crypto Srl');
+    expect(names).toContain('Gamma Digital Assets S.r.l.');
+  });
+
+  it('parse() merges results from multiple OAM URLs', async () => {
+    const page1 = html(`
+      <table><tbody>
+        <tr><td>One VASP Srl</td><td>N. 1111</td><td>Iscritto</td></tr>
+      </tbody></table>
+    `);
+    const page2 = html(`
+      <ul>
+        <li><a href="/operatori/two">Two Exchange Spa</a> - N. 2222</li>
+      </ul>
+    `);
+
+    mockFetchWithRetry
+      .mockResolvedValueOnce(page1)
+      .mockResolvedValueOnce(page2);
+
+    const result = await parser.parse();
+    const names = result.entities.map((e) => e.name);
+
+    expect(result.registryId).toBe('it-oam-vasp');
+    expect(result.countryCode).toBe('IT');
+    expect(result.entities).toHaveLength(2);
+    expect(names).toContain('One VASP Srl');
+    expect(names).toContain('Two Exchange Spa');
+  });
+
+  it('parse() returns warning when both fetches fail', async () => {
+    mockFetchWithRetry
+      .mockRejectedValueOnce(new Error('Timeout'))
+      .mockRejectedValueOnce(new Error('503'));
+
+    const result = await parser.parse();
+
+    expect(result.entities).toHaveLength(0);
+    expect(result.warnings.length).toBeGreaterThanOrEqual(2);
+    expect(result.warnings.some((w) => w.includes('No OAM entities found'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CH-VQF
+// ---------------------------------------------------------------------------
+
+describe('CH-VQF Parser', () => {
+  let parser: ChVqfParser;
+
+  beforeEach(() => {
+    parser = new ChVqfParser();
+    vi.clearAllMocks();
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('ch-vqf');
+    expect(parser.config.countryCode).toBe('CH');
+    expect(parser.config.sourceType).toBe('html');
+  });
+
+  it('parseVqfHtml extracts members from table', () => {
+    const page = html(`
+      <table><tbody>
+        <tr><td>Swiss Crypto Brokers AG</td><td>Member ID VQF-1001</td><td>Active</td></tr>
+        <tr><td>Alpine Digital SA</td><td>Nr 2002</td><td>Suspended</td></tr>
+      </tbody></table>
+    `);
+
+    const entities = parseVqfHtml(page, 'https://www.vqf.ch/test');
+    expect(entities).toHaveLength(2);
+    expect(entities[0].name).toBe('Swiss Crypto Brokers AG');
+    expect(entities[0].licenseNumber).toBe('VQF-1001');
+    expect(entities[1].status).toBe('Suspended');
+  });
+
+  it('parse() merges and deduplicates entities from multiple URLs', async () => {
+    const page1 = html(`<ul><li><a href="/members/one">One Crypto GmbH</a> - ID 111</li></ul>`);
+    const page2 = html(`<ul><li><a href="/members/one">One Crypto GmbH</a> - ID 111</li><li>Two Exchange AG - ID 222</li></ul>`);
+
+    mockFetchWithRetry.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
+
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(2);
+    expect(result.entities.map((e) => e.name)).toContain('Two Exchange AG');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CH-SOFIT
+// ---------------------------------------------------------------------------
+
+describe('CH-SOFIT Parser', () => {
+  let parser: ChSofitParser;
+
+  beforeEach(() => {
+    parser = new ChSofitParser();
+    vi.clearAllMocks();
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('ch-sofit');
+    expect(parser.config.countryCode).toBe('CH');
+    expect(parser.config.sourceType).toBe('html');
+  });
+
+  it('parseSofitHtml extracts members from list and status text', () => {
+    const page = html(`
+      <ul>
+        <li><a href="/m/alpha">Alpha Custody AG</a> - Member No 4500 - Active</li>
+        <li><a href="/m/beta">Beta Wallet SA</a> - ID 4600 - Revoked</li>
+      </ul>
+    `);
+
+    const entities = parseSofitHtml(page, 'https://www.so-fit.ch/test');
+    expect(entities).toHaveLength(2);
+    expect(entities[0].licenseNumber).toBe('4500');
+    expect(entities[1].status).toBe('Revoked');
+  });
+
+  it('parse() returns warning when both endpoints fail', async () => {
+    mockFetchWithRetry
+      .mockRejectedValueOnce(new Error('Network'))
+      .mockRejectedValueOnce(new Error('Timeout'));
+
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(0);
+    expect(result.warnings.some((w) => w.includes('No SO-FIT entities found'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // GB-FCA
 // ---------------------------------------------------------------------------
 
@@ -691,6 +908,32 @@ describe('GB-FCA Parser', () => {
 
     expect(result.entities.length).toBe(0);
     expect(result.warnings.some((w) => w.includes('FCA API returned status: Error'))).toBe(true);
+  });
+
+  it('API mode: falls back to HTML when API returns zero entities', async () => {
+    process.env.FCA_API_KEY = 'test-key';
+    process.env.FCA_API_EMAIL = 'ops@example.com';
+
+    const apiEmpty = {
+      Status: 'Success',
+      ResultInfo: { total_count: '0', page: '1', per_page: '20' },
+      Data: [],
+    };
+
+    const htmlWithFirms = html(`
+      <div>
+        <span class="firm-name"><a href="/s/firm/900635">Coinbase CB Payments Ltd</a></span>
+      </div>
+    `);
+
+    mockFetchJsonWithRetry.mockResolvedValueOnce(apiEmpty);
+    mockFetchWithRetry.mockResolvedValueOnce(htmlWithFirms);
+
+    const result = await parser.parse();
+
+    expect(result.entities.length).toBe(1);
+    expect(result.entities[0].name).toBe('Coinbase CB Payments Ltd');
+    expect(result.warnings.some((w) => w.includes('FCA API returned 0 entities'))).toBe(true);
   });
 
   it('API mode: accepts FSR-API-02-01-11 status as valid', async () => {
@@ -821,6 +1064,208 @@ describe('GB-FCA Parser', () => {
     // Should have 20 entities from page 1 despite page 2 failure
     expect(result.entities.length).toBe(20);
     expect(result.warnings.some((w) => w.includes('FCA API error on page 2'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GB-FCA-EMI
+// ---------------------------------------------------------------------------
+
+describe('GB-FCA-EMI Parser', () => {
+  let parser: GbFcaEmiParser;
+  const originalApiKey = process.env.FCA_API_KEY;
+  const originalApiEmail = process.env.FCA_API_EMAIL;
+
+  beforeEach(() => {
+    parser = new GbFcaEmiParser();
+    vi.clearAllMocks();
+    delete process.env.FCA_API_KEY;
+    delete process.env.FCA_API_EMAIL;
+  });
+
+  afterEach(() => {
+    if (originalApiKey !== undefined) process.env.FCA_API_KEY = originalApiKey;
+    else delete process.env.FCA_API_KEY;
+    if (originalApiEmail !== undefined) process.env.FCA_API_EMAIL = originalApiEmail;
+    else delete process.env.FCA_API_EMAIL;
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('gb-fca-emi');
+    expect(parser.config.countryCode).toBe('GB');
+    expect(parser.config.sourceType).toBe('api');
+    expect(parser.config.needsBrowser).toBe(true);
+  });
+
+  it('API mode: parses EMI entities', async () => {
+    process.env.FCA_API_KEY = 'test-key';
+    process.env.FCA_API_EMAIL = 'ops@example.com';
+
+    mockFetchJsonWithRetry.mockResolvedValue({
+      Status: 'Success',
+      ResultInfo: { total_count: '2', page: '1', per_page: '20' },
+      Data: [
+        { 'Organisation Name': 'Revolut Ltd', 'FRN': '900562', 'Status': 'Registered', 'Type': 'Electronic Money Institution' },
+        { 'Organisation Name': 'Stripe Payments UK Ltd', 'FRN': '900461', 'Status': 'Registered', 'Type': 'Electronic Money Institution' },
+      ],
+    });
+
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(2);
+    expect(result.entities[0].licenseType).toBe('Electronic Money Institution');
+    expect(result.entities[0].licenseNumber).toBe('900562');
+  });
+
+  it('falls back to HTML when API returns zero', async () => {
+    process.env.FCA_API_KEY = 'test-key';
+
+    mockFetchJsonWithRetry.mockResolvedValue({
+      Status: 'Success',
+      ResultInfo: { total_count: '0', page: '1', per_page: '20' },
+      Data: [],
+    });
+    mockFetchWithRetry.mockResolvedValue(html(`
+      <div><span class="firm-name"><a href="/s/firm/901024">Nium Fintech Ltd</a></span></div>
+    `));
+
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(1);
+    expect(result.entities[0].name).toBe('Nium Fintech Ltd');
+    expect(result.entities[0].licenseNumber).toBe('901024');
+  });
+
+  it('uses known fallback list when API and HTML are empty', async () => {
+    process.env.FCA_API_KEY = 'test-key';
+    mockFetchJsonWithRetry.mockResolvedValue({
+      Status: 'Error',
+      ResultInfo: { total_count: '0', page: '1', per_page: '20' },
+      Data: [],
+    });
+    mockFetchWithRetry.mockResolvedValue(html('<div></div>'));
+
+    const result = await parser.parse();
+    expect(result.entities.length).toBeGreaterThan(3);
+    expect(result.entities.some((e) => e.name.includes('Revolut'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CA-OSC
+// ---------------------------------------------------------------------------
+
+describe('CA-OSC Parser', () => {
+  let parser: CaOscParser;
+
+  beforeEach(() => {
+    parser = new CaOscParser();
+    vi.clearAllMocks();
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('ca-osc');
+    expect(parser.config.countryCode).toBe('CA');
+    expect(parser.config.sourceType).toBe('html');
+  });
+
+  it('parses entities from list/table HTML when available', async () => {
+    mockFetchWithRetry.mockResolvedValue(html(`
+      <table>
+        <tbody>
+          <tr><td>Coinbase Canada, Inc.</td><td>Registered</td></tr>
+          <tr><td>Wealthsimple Investments Inc.</td><td>Registered</td></tr>
+        </tbody>
+      </table>
+    `));
+
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(2);
+    expect(result.entities[0].regulator).toBe('OSC');
+    expect(result.entities[0].licenseType).toBe('Crypto Trading Platform Registration');
+  });
+
+  it('uses known fallback when HTML has no parsable entities', async () => {
+    mockFetchWithRetry.mockResolvedValue(html('<div>No list</div>'));
+    const result = await parser.parse();
+    expect(result.entities.length).toBeGreaterThan(5);
+    expect(result.warnings.some((w) => w.includes('fallback'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// NZ-FMA
+// ---------------------------------------------------------------------------
+
+describe('NZ-FMA Parser', () => {
+  let parser: NzFmaParser;
+
+  beforeEach(() => {
+    parser = new NzFmaParser();
+    vi.clearAllMocks();
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('nz-fma');
+    expect(parser.config.countryCode).toBe('NZ');
+    expect(parser.config.sourceType).toBe('html');
+  });
+
+  it('parses providers from table/list html', async () => {
+    mockFetchWithRetry.mockResolvedValue(html(`
+      <table><tbody>
+        <tr><td>Easy Crypto Limited</td><td>Registered</td></tr>
+        <tr><td>Independent Reserve NZ Limited</td><td>Registered</td></tr>
+      </tbody></table>
+    `));
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(2);
+    expect(result.entities[0].regulator).toBe('FMA');
+  });
+
+  it('falls back to known baseline when html extraction returns zero', async () => {
+    mockFetchWithRetry.mockResolvedValue(html('<div>No entities here</div>'));
+    const result = await parser.parse();
+    expect(result.entities.length).toBeGreaterThan(3);
+    expect(result.warnings.some((w) => w.includes('fallback'))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// HK-SFC-LC
+// ---------------------------------------------------------------------------
+
+describe('HK-SFC-LC Parser', () => {
+  let parser: HkSfcLcParser;
+
+  beforeEach(() => {
+    parser = new HkSfcLcParser();
+    vi.clearAllMocks();
+  });
+
+  it('has correct config', () => {
+    expect(parser.config.id).toBe('hk-sfc-lc');
+    expect(parser.config.countryCode).toBe('HK');
+    expect(parser.config.sourceType).toBe('html');
+  });
+
+  it('parses entities from table HTML', async () => {
+    mockFetchWithRetry.mockResolvedValue(html(`
+      <table><tbody>
+        <tr><td>OSL Digital Securities Limited</td><td>BPL993</td></tr>
+        <tr><td>Victory Securities Company Limited</td><td>AAV008</td></tr>
+      </tbody></table>
+    `));
+
+    const result = await parser.parse();
+    expect(result.entities).toHaveLength(2);
+    expect(result.entities[0].licenseType).toBe('Licensed Corporation');
+    expect(result.entities[0].licenseNumber).toBe('BPL993');
+  });
+
+  it('falls back to known list when HTML returns zero', async () => {
+    mockFetchWithRetry.mockResolvedValue(html('<div>empty</div>'));
+    const result = await parser.parse();
+    expect(result.entities.length).toBeGreaterThan(3);
+    expect(result.warnings.some((w) => w.includes('fallback'))).toBe(true);
   });
 });
 

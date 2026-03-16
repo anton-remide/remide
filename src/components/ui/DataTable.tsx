@@ -233,7 +233,7 @@ export default function DataTable<T extends Record<string, unknown>>({
               ))
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>
+                <td colSpan={columns.length} style={{ textAlign: 'center', padding: 32, color: 'var(--color-text-secondary)' }}>
                   No results found
                 </td>
               </tr>
@@ -270,7 +270,7 @@ export default function DataTable<T extends Record<string, unknown>>({
             Prev
           </button>
 
-          <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: 'var(--type-body-sm)', color: 'var(--color-text-secondary)' }}>
             Page {page} of {totalPages}
           </span>
 

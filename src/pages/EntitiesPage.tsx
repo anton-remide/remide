@@ -97,7 +97,13 @@ function VaspsTab({ searchQuery, tabSwitcher, stats }: { searchQuery?: string; t
   );
 
   const filterFn = useCallback((e: Entity, q: string) => {
-    return e.name.toLowerCase().includes(q) || e.country.toLowerCase().includes(q) || e.sector.toLowerCase().includes(q);
+    const website = (e.website || '').toLowerCase();
+    return (
+      e.name.toLowerCase().includes(q) ||
+      e.country.toLowerCase().includes(q) ||
+      e.sector.toLowerCase().includes(q) ||
+      website.includes(q)
+    );
   }, []);
 
   const table = useTableState(colFilters.filtered as Entity[], filterFn, { field: 'name', direction: 'asc' });
@@ -243,7 +249,7 @@ function VaspsTab({ searchQuery, tabSwitcher, stats }: { searchQuery?: string; t
 
       {/* Insight panel */}
       <div className="st-insight-panel" style={{ marginBottom: 16, marginTop: 0 }}>
-        <div className="st-insight-disclaimer" style={{ padding: '8px 16px', background: 'rgba(10,37,64,0.025)', borderRadius: 8, border: '1px solid rgba(10,37,64,0.06)' }}>
+        <div className="st-insight-disclaimer" style={{ padding: '8px 16px', background: 'var(--color-neutral-subtle)', borderRadius: 8, border: '1px solid var(--color-border)' }}>
           Aggregated from {stats ? '80+' : '…'} official registries. We are continuously connecting additional data sources — entity counts grow with each update.
         </div>
       </div>
@@ -477,7 +483,7 @@ function CbdcsTab({ tabSwitcher }: { tabSwitcher: React.ReactNode }) {
       label: 'Cross-Border',
       sortable: true,
       render: (r) => (
-        <span style={{ color: r.crossBorder ? '#2B7A4B' : 'var(--text-muted)' }}>
+        <span style={{ color: r.crossBorder ? 'var(--color-success)' : 'var(--text-muted)' }}>
           {r.crossBorder ? '✓ Yes' : '—'}
         </span>
       ),
@@ -569,7 +575,7 @@ function IssuersTab({ tabSwitcher }: { tabSwitcher: React.ReactNode }) {
       label: 'Verified',
       sortable: true,
       render: (r) => (
-        <span style={{ color: r.isVerified ? '#2B7A4B' : 'var(--text-muted)' }}>
+        <span style={{ color: r.isVerified ? 'var(--color-success)' : 'var(--text-muted)' }}>
           {r.isVerified ? '✓ Yes' : '—'}
         </span>
       ),

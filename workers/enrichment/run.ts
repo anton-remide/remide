@@ -42,6 +42,9 @@ interface EnrichmentResult {
   entityId: string;
   entityName: string;
   description: string | null;
+  descriptionOriginal: string | null;
+  descriptionLanguage: string | null;
+  siteLanguages: string[];
   linkedinUrl: string | null;
   twitterUrl: string | null;
   brandName: string | null;
@@ -325,6 +328,73 @@ function extractDescription(markdown: string, metadata: Record<string, unknown>)
   return null;
 }
 
+/**
+ * Heuristic language tagging (no external API):
+ * - Prefer explicit metadata language/locale when present
+ * - Add script-based hints from content
+ */
+function detectSiteLanguages(markdown: string, metadata: Record<string, unknown>, description: string | null): string[] {
+  const langs = new Set<string>();
+
+  const normalizeLang = (v: string): string | null => {
+    const m = v.toLowerCase().match(/[a-z]{2,3}/);
+    if (!m) return null;
+    const code = m[0];
+    if (code === 'eng') return 'EN';
+    if (code === 'fra') return 'FR';
+    if (code === 'deu') return 'DE';
+    if (code === 'spa') return 'ES';
+    if (code === 'ita') return 'IT';
+    if (code === 'por') return 'PT';
+    if (code === 'nld') return 'NL';
+    if (code === 'rus') return 'RU';
+    if (code === 'ukr') return 'UK';
+    if (code === 'tur') return 'TR';
+    if (code === 'zho') return 'ZH';
+    if (code === 'jpn') return 'JA';
+    if (code === 'kor') return 'KO';
+    return code.toUpperCase();
+  };
+
+  const addMetaLang = (raw: unknown) => {
+    if (!raw || typeof raw !== 'string') return;
+    const normalized = normalizeLang(raw);
+    if (normalized) langs.add(normalized);
+  };
+
+  addMetaLang(metadata?.language);
+  addMetaLang(metadata?.lang);
+  addMetaLang(metadata?.locale);
+  addMetaLang(metadata?.['og:locale']);
+  addMetaLang(metadata?.contentLanguage);
+
+  const content = `${description ?? ''}\n${markdown}`.slice(0, 4000);
+  if (/[а-яА-ЯёЁіІїЇєЄ]/.test(content)) langs.add('RU');
+  if (/[\u4E00-\u9FFF]/.test(content)) langs.add('ZH');
+  if (/[\u3040-\u30FF]/.test(content)) langs.add('JA');
+  if (/[\uAC00-\uD7AF]/.test(content)) langs.add('KO');
+  if (/[çğıİöşüÇĞİÖŞÜ]/.test(content)) langs.add('TR');
+  if (/[àâçéèêëîïôùûüÿœæ]/i.test(content)) langs.add('FR');
+  if (/[áéíóúñ¿¡]/i.test(content)) langs.add('ES');
+  if (/[ãõáâàçéêíóôú]/i.test(content)) langs.add('PT');
+  if (/[àèéìíîòóù]/i.test(content)) langs.add('IT');
+
+  // English fallback when no explicit language was detected.
+  if (langs.size === 0) langs.add('EN');
+
+  return Array.from(langs).slice(0, 4);
+}
+
+function isLikelyEnglish(text: string): boolean {
+  const t = text.toLowerCase();
+  // Strong non-Latin scripts => not English.
+  if (/[а-яА-ЯёЁіІїЇєЄ\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/.test(t)) return false;
+  // Lightweight stopword check.
+  const hits = [' the ', ' and ', ' for ', ' with ', ' from ', ' company ', ' services ', ' platform ']
+    .filter((w) => t.includes(w)).length;
+  return hits >= 2 || /^[\x00-\x7F\s.,:;!?'"()\-/%]+$/.test(text);
+}
+
 function looksLikeUrl(text: string): boolean {
   return /^https?:\/\//.test(text.trim());
 }
@@ -408,6 +478,9 @@ async function scrapeEntity(
         entityId: entity.id,
         entityName: entity.name,
         description: null,
+        descriptionOriginal: null,
+        descriptionLanguage: null,
+        siteLanguages: [],
         linkedinUrl: null,
         twitterUrl: null,
         brandName: null,
@@ -429,7 +502,11 @@ async function scrapeEntity(
     const markdown = doc.markdown ?? '';
     const metadata = (doc.metadata ?? {}) as DocumentMetadata & Record<string, unknown>;
 
-    const description = entity.description?.trim() ? null : extractDescription(markdown, metadata);
+    const extractedDescription = entity.description?.trim() ? null : extractDescription(markdown, metadata);
+    const siteLanguages = detectSiteLanguages(markdown, metadata, extractedDescription);
+    const descriptionLanguage = siteLanguages[0] ?? null;
+    const englishDescription = extractedDescription && isLikelyEnglish(extractedDescription) ? extractedDescription : null;
+    const descriptionOriginal = extractedDescription && !englishDescription ? extractedDescription : null;
     const linkedinUrl = entity.linkedin_url?.trim() ? null : extractLinkedIn(markdown, metadata);
     const twitterUrl = extractTwitter(markdown, metadata);
     const brandName = extractBrandName(metadata);
@@ -440,7 +517,10 @@ async function scrapeEntity(
     return {
       entityId: entity.id,
       entityName: entity.name,
-      description,
+      description: englishDescription,
+      descriptionOriginal,
+      descriptionLanguage,
+      siteLanguages,
       linkedinUrl,
       twitterUrl,
       brandName,
@@ -455,6 +535,9 @@ async function scrapeEntity(
       entityId: entity.id,
       entityName: entity.name,
       description: null,
+      descriptionOriginal: null,
+      descriptionLanguage: null,
+      siteLanguages: [],
       linkedinUrl: null,
       twitterUrl: null,
       brandName: null,
@@ -531,6 +614,11 @@ async function fetchEntitiesToEnrich(
   let query = sb
     .from('entities')
     .select(selectCols.join(', '))
+    // Never spend enrichment budget on records already classified as garbage/hidden.
+    .neq('is_garbage', true)
+    .neq('is_hidden', true)
+    // Enrichment should run after quality classification to avoid scraping noisy fresh rows.
+    .not('last_quality_at', 'is', null)
     .not('website', 'is', null)
     .neq('website', '')
     .neq('website', 'Not available')
@@ -624,6 +712,9 @@ async function writeOneEnrichmentResult(
 
   // Stash extra enrichment data in raw_data JSONB
   if (Object.keys(extraData).length > 0 || Object.keys(updates).length === 0) {
+    if (r.siteLanguages.length > 0) extraData.site_languages = r.siteLanguages;
+    if (r.descriptionLanguage) extraData.site_primary_language = r.descriptionLanguage;
+    if (r.descriptionOriginal) extraData.enrichment_description_original = r.descriptionOriginal;
     // Also stash main fields as fallback if dedicated columns are missing
     if (!schema.hasDescription && r.description) extraData.enrichment_description = r.description;
     if (!schema.hasLinkedinUrl && r.linkedinUrl) extraData.enrichment_linkedin_url = r.linkedinUrl;

@@ -122,7 +122,7 @@ export default function IssuerDetailPage() {
           )}
           {issuer.name}
           {issuer.isVerified && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.875rem', color: 'var(--green)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.875rem', color: 'var(--color-success)' }}>
               <BadgeCheck size={18} /> Verified
             </span>
           )}
@@ -270,7 +270,7 @@ export default function IssuerDetailPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <h6 style={{ fontSize: '0.8125rem', fontWeight: 600, margin: 0, flex: 1 }}>{sub.name}</h6>
                       {sub.canIssue && (
-                        <span className="st-badge" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
+                        <span className="st-badge" style={{ backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
                       )}
                     </div>
                     <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -308,7 +308,7 @@ export default function IssuerDetailPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <h6 style={{ fontSize: '0.8125rem', fontWeight: 600, margin: 0, flex: 1 }}>{lic.title}</h6>
                       {lic.canIssue && (
-                        <span className="st-badge" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
+                        <span className="st-badge" style={{ backgroundColor: 'var(--color-success-subtle)', color: 'var(--color-success)', fontSize: '0.625rem', flexShrink: 0 }}>Can Issue</span>
                       )}
                     </div>
                     {lic.detail && (

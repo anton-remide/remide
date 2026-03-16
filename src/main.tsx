@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/app.css';
 import AuthProvider from './context/AuthProvider';
+import { ThemeProvider } from './context/ThemeProvider';
 import App from './App';
 
 if (window.location.hash.includes('figmacapture=')) {
@@ -11,8 +12,10 @@ if (window.location.hash.includes('figmacapture=')) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

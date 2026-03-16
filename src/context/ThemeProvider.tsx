@@ -1,0 +1,53 @@
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+
+export type Theme = 'beige' | 'darkgray' | 'nearblack';
+
+const THEMES: Theme[] = ['beige', 'darkgray', 'nearblack'];
+const STORAGE_KEY = 'remide-theme';
+
+interface ThemeContextValue {
+  theme: Theme;
+  setTheme: (t: Theme) => void;
+  cycleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+function applyTheme(t: Theme) {
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    return stored && THEMES.includes(stored) ? stored : 'beige';
+  });
+
+  useEffect(() => {
+    applyTheme(theme);
+    localStorage.setItem(STORAGE_KEY, theme);
+  }, [theme]);
+
+  const setTheme = useCallback((t: Theme) => setThemeState(t), []);
+
+  const cycleTheme = useCallback(() => {
+    setThemeState(prev => {
+      const idx = THEMES.indexOf(prev);
+      return THEMES[(idx + 1) % THEMES.length];
+    });
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, cycleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+  return ctx;
+}
+
+export { THEMES };
