@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm ci --force
       - run: npx vitest run --config vitest.config.ts --reporter=verbose
         continue-on-error: true
 
@@ -29,6 +29,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm ci --force
       - run: npx vitest run --config parsers/vitest.config.ts --reporter=verbose
         continue-on-error: true

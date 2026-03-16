@@ -28,7 +28,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --force
 
       - name: Run parser tests
         run: npx vitest run --config parsers/vitest.config.ts
