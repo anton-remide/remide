@@ -27,6 +27,9 @@ jobs:
 
       - run: npm ci --force
 
+      - name: Run tests (blocks deploy on failure)
+        run: npx vitest run --config vitest.config.ts
+
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

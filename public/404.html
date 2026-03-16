@@ -5,13 +5,13 @@
     <title>RemiDe — Redirecting…</title>
     <script>
       // GitHub Pages SPA redirect trick.
-      // When GH Pages hits a 404 (e.g. /remide/jurisdictions),
+      // When GH Pages hits a 404 (e.g. /jurisdictions/CH),
       // this script encodes the path into a query param and redirects
       // to index.html, which then restores the correct URL via
       // history.replaceState.
       //
       // Based on: https://github.com/rafgraph/spa-github-pages
-      var pathSegmentsToKeep = 1; // '/remide' = 1 segment
+      var pathSegmentsToKeep = 0; // root deploy at tracker.remide.xyz
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
