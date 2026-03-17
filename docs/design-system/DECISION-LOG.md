@@ -67,6 +67,28 @@ Rationale:
 
 **Deferred:** CSS `@layer` introduction. The token-spec mentions `@layer reset, vendor, tokens, components, pages, utilities` but introducing layers into an existing 9500-line file reorders the cascade and can break specificity assumptions silently. This is a separate work package.
 
+### Design Philosophy: Strict Atoms, Creative Composition
+
+**Decision (2026-03-15):** The design system enforces strict consistency at the atom level but deliberately avoids prescribing layouts and page composition.
+
+**The principle:**
+- **Atoms are law.** Button, Badge, Input, Heading, Avatar — these are rigid building blocks with defined props, variants, sizes, and theme behavior. No creative interpretation. A Button is a Button everywhere.
+- **Composition is creative territory.** When you assemble a page — deciding section order, spacing rhythm, visual hierarchy, content density, where to put a CTA — that's design work. A library of preset layouts kills exactly the creative judgment that makes pages good.
+- **Plan 03 (Composition page) is a reference guide, not a rulebook.** It documents the spacing scale, typography pairing defaults, surface hierarchy, and grid system so developers have a shared vocabulary. But these are *recommended defaults*, not constraints. A developer building a landing page should feel free to break the "standard section rhythm" if the content demands it.
+
+**Why this matters:**
+- Over-engineered layout systems create "template fatigue" — every page looks the same
+- The best design systems (Tailwind, Radix) give you tools but never dictate composition
+- RemiDe surfaces serve different purposes (reports, dashboards, landing pages, data browsers) — a single layout grammar cannot serve all of them equally well
+- Creativity at the page level is what differentiates a good product from a generic one
+
+**What this means in practice:**
+- `component-registry.ts` documents every atom's API exhaustively — props, variants, CSS classes
+- Plan 03's composition page shows *how things can work together*, not *how they must work together*
+- Templates page shows *examples for inspiration*, not *prescriptions for assembly*
+- A developer should never feel blocked by "the system doesn't allow this layout" — if atoms exist, any composition is valid
+- The only hard constraints are at the token level: use design tokens (not hardcoded hex/px), respect theme contracts, maintain WCAG contrast ratios
+
 ### No Bootstrap Grid
 
 **Decision:** Bootstrap is imported but only for base styles. All layout uses CSS Grid/Flexbox via `st-*` classes. Bootstrap grid classes (`row`/`col`/`g-*`) are not used in JSX.
@@ -388,5 +410,6 @@ After Phase 1: split the DS page (Plan 02), build composition demos (Plan 03), p
 2. **Do not change `--content-max-width`** from 1200px — visual breaking change across 5+ layouts. Needs its own audit.
 3. **Do not touch diagram components** — they live in a separate spec (`diagrams-graphics-spec.md`).
 4. **Do not build Phase 2 components** until Phase 1 is done and deployed. They don't block page assembly.
-5. **Do not copy existing page layouts into templates** — templates are built FROM library components, not extracted from pages.
-6. **Do not use `style={{...}}` for layout** — use Section/Stack/Container once they exist.
+5. **Do not copy existing page layouts into templates** — templates are examples for inspiration, not prescriptions for assembly.
+6. **Do not treat composition/layout rules as law** — atoms are strict, but page composition is creative territory. Plan 03's spacing, rhythm, and stacking patterns are recommended defaults, not constraints. See §2 "Strict Atoms, Creative Composition".
+7. **Do not use `style={{...}}` for colors or font sizes** — use design tokens. But `style={{...}}` for one-off layout tweaks is fine when the design calls for it.

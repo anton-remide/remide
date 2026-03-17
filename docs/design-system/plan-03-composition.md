@@ -3,14 +3,16 @@
 > **For:** Sasha (frontend) | **Status:** Ready for implementation
 > **Route:** `/ui/composition` | **File:** `src/pages/design-system/DesignSystemCompositionPage.tsx`
 > **Depends on:** Plan 02 (page architecture) must be done first so routes exist
-> **Scope:** DEFINE new rules from scratch. This is prescriptive, not descriptive.
+> **Scope:** Reference guide — shared vocabulary and recommended defaults, NOT a prescriptive rulebook. See DECISION-LOG §2 "Strict Atoms, Creative Composition".
 > **Reviewed:** Cycles 1-3. Cycle 3 = page assembly simulation. All gaps incorporated.
 
 ## Purpose
 
-This page defines the **spatial rules** for the RemiDe design system: how components relate to each other, how sections breathe, how layouts respond to viewport changes. It's the reference for both developers and AI agents building pages.
+This page documents the **spatial vocabulary** of the RemiDe design system: spacing tokens, typography pairing defaults, surface hierarchy, and grid dimensions. It's a shared reference — not a set of rules that must be followed.
 
-Every rule on this page should be demonstrated with a **live visual example** — not just text documentation.
+**Design philosophy:** Atoms are strict (a Button is always a Button). Composition is creative. The patterns below are *recommended starting points* — a developer building a page should use them as defaults but break them freely when the content demands it. A landing page hero might need unusual spacing. A data dashboard might ignore the standard section rhythm. That's fine.
+
+Every pattern on this page should be demonstrated with a **live visual example** — not just text documentation.
 
 ---
 
@@ -160,9 +162,9 @@ A vertical stack of colored blocks with measured spacing rulers between them. Ea
 
 ## Section 3: Section Coupling Taxonomy (`#coupling`)
 
-Defines how strongly adjacent sections are related, which determines the spacing between them.
+A mental model for choosing spacing between adjacent sections. These are sensible defaults — override them when the visual flow of your specific page calls for it.
 
-### Three coupling levels
+### Three coupling levels (recommended defaults)
 
 | Coupling | Token | Value | When to use |
 |----------|-------|-------|-------------|
@@ -262,9 +264,9 @@ For each pattern, show a live rendered example with real components (using place
 
 ## Section 6: Typography Pairing (`#typography`)
 
-The exhaustive decision tree for when to use Doto (`--font2`) vs DM Sans (`--font1`). This eliminates the ad-hoc Doto usage currently scattered across 13 page files.
+Reference for when to use Doto (`--font2`) vs DM Sans (`--font1`). The table below captures the defaults enforced by components (Heading, Badge, Button) and recommended conventions for other contexts.
 
-### Decision Tree
+### Decision Tree (defaults and recommendations)
 
 | Context | Font | Weight | Size token | Example |
 |---------|------|--------|-----------|---------|
@@ -283,13 +285,16 @@ The exhaustive decision tree for when to use Doto (`--font2`) vs DM Sans (`--fon
 | **Label** (form, table header) | DM Sans (`--font1`) | 600 | `--type-body-sm` | "Email address", "JURISDICTION" |
 | **Callout stat value** | Doto (`--font2`) | 700 | `--type-heading-2` | Large number in callout card |
 
-### Hard rules
+### Component-enforced constraints (these ARE strict — they're baked into atoms)
 
-1. **Headings that use the `Heading` component** get Doto automatically for Display/H1/H2/H3 levels. Developers do not choose the font — the component enforces it.
-2. **Badge text is NEVER Doto.** Badges are always DM Sans at `--type-micro`.
-3. **Button labels are NEVER Doto.** Buttons are always DM Sans.
-4. **Numbers in inline body text** stay DM Sans. Doto is only for numbers displayed as a primary data point (stat card, callout, table cell with financial data).
-5. **When in doubt: DM Sans.** Doto is reserved for high-signal visual emphasis — headings and data values only.
+1. **Heading component** auto-applies Doto for Display/H1/H2/H3 levels. Developers don't choose the font — the component enforces it.
+2. **Badge text is always DM Sans** at `--type-micro`. The Badge component enforces this.
+3. **Button labels are always DM Sans.** The Button component enforces this.
+
+### Recommendations (not enforced — use your judgment)
+
+4. **Numbers in inline body text** — DM Sans is usually better. Doto works for primary data points (stat cards, callout values, financial tables).
+5. **When in doubt: DM Sans.** Doto is high-signal — headings and standalone data values.
 
 ### Visual demo
 
@@ -512,15 +517,14 @@ Container here because it's NOT a section — it's inside the header element.
 ```
 `surface="inverse"` scopes all child tokens to NearBlack palette. No inline color overrides needed — Heading, CalloutStat, AuthorCard etc. automatically get light text on dark background.
 
-### Anti-patterns
+### Common pitfalls (things that usually indicate a simpler approach exists)
 
-| Wrong | Right | Why |
-|-------|-------|-----|
-| `<Section><Container><Stack>` | `<Section maxWidth="default"><Stack>` | Section owns containment. No need for Container inside Section. |
-| `<Stack>` for a page section | `<Section>` | If it has an id and title, it's a Section. Stack is for arrangement within. |
-| `<Container>` around a card grid | `<Section>` or `<Stack>` | Container is only for max-width constraint. Use Stack for flex arrangement. |
-| `style={{ background: '#1C1C1A', color: '#F5F5F0' }}` on hero | `surface="inverse"` on Section | Never hardcode dark colors. Use surface prop to scope theme tokens. |
-| Raw `<a>` for links | `<StyledLink>` | StyledLink provides focus ring, hover transitions, external icon, react-router integration. |
+| Instead of... | Consider... | Why |
+|---------------|-------------|-----|
+| `<Section><Container><Stack>` | `<Section maxWidth="default"><Stack>` | Section owns containment — Container inside Section is redundant. |
+| `<Stack>` for a page section | `<Section>` | If it has an id and title, Section gives you scroll anchoring and spacing for free. |
+| `style={{ background: '#1C1C1A', color: '#F5F5F0' }}` on hero | `surface="inverse"` on Section | Hardcoded colors break when themes change. Surface prop scopes tokens. |
+| Raw `<a>` for links | `<StyledLink>` | StyledLink provides focus ring, hover transitions, external icon. |
 
 ---
 
@@ -643,9 +647,9 @@ A 3D-perspective diagram showing stacked layers with labels. Can be built with C
 ## Templates Page — 5 Page Recipes
 
 > **Route:** `/ui/templates` | **File:** `src/pages/design-system/DesignSystemTemplatesPage.tsx`
-> **Purpose:** Section-level blocks assembled EXCLUSIVELY from library components. NOT copies of existing pages.
+> **Purpose:** Examples showing how library components can be composed into real pages. Inspiration, not prescription.
 
-Each recipe is a documented wireframe showing which components, Section spacing, and composition rules to use. Templates are the "end product" — proof that the system assembles real pages.
+Each recipe is a documented wireframe showing one possible way to assemble a page type. These are starting points — not the only valid approach. A developer building a new report page might use a completely different section order or layout. That's fine, as long as the atoms themselves are used correctly.
 
 ### Recipe 1: Report Page
 
