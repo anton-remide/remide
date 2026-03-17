@@ -66,12 +66,11 @@ export default function MermaidDiagram({ chart, className }: MermaidDiagramProps
             nodeTextColor: textMain,
           },
           flowchart: {
-            padding: 16,
+            padding: 20,
             nodeSpacing: 50,
             rankSpacing: 56,
             curve: 'linear',
-            htmlLabels: true,
-            defaultRenderer: 'dagre-wrapper',
+            htmlLabels: false,
           },
           sequence: {
             actorMargin: 80,
@@ -83,8 +82,36 @@ export default function MermaidDiagram({ chart, className }: MermaidDiagramProps
           },
         });
 
+        const bgColor = s.getPropertyValue('--color-bg').trim() || '#F6F2EE';
+        const bgMatch = bgColor.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+        const bgR = bgMatch ? parseInt(bgMatch[1], 16) : 246;
+        const bgG = bgMatch ? parseInt(bgMatch[2], 16) : 242;
+        const bgB = bgMatch ? parseInt(bgMatch[3], 16) : 238;
+
+        const resolveVar = (varName: string): string => {
+          const val = s.getPropertyValue(`--${varName}`).trim();
+          if (!val) return '#888';
+          const rgbaMatch = val.match(/rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)/);
+          if (rgbaMatch) {
+            const r = Number(rgbaMatch[1]);
+            const g = Number(rgbaMatch[2]);
+            const b = Number(rgbaMatch[3]);
+            const a = rgbaMatch[4] != null ? Number(rgbaMatch[4]) : 1;
+            const blendR = Math.round(r * a + bgR * (1 - a));
+            const blendG = Math.round(g * a + bgG * (1 - a));
+            const blendB = Math.round(b * a + bgB * (1 - a));
+            return `#${blendR.toString(16).padStart(2, '0')}${blendG.toString(16).padStart(2, '0')}${blendB.toString(16).padStart(2, '0')}`;
+          }
+          return val;
+        };
+
+        const resolvedChart = chart.trim().replace(
+          /var\(--([a-zA-Z0-9-]+)\)/g,
+          (_, varName) => resolveVar(varName),
+        );
+
         const id = `mermaid_${uniqueId}_${Date.now()}`;
-        const { svg: rendered } = await mermaid.render(id, chart.trim());
+        const { svg: rendered } = await mermaid.render(id, resolvedChart);
 
         if (!cancelled) {
           setSvg(rendered);

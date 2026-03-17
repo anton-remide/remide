@@ -37,6 +37,8 @@ import Breadcrumb from '../components/ui/Breadcrumb';
 import LogoBar from '../components/ui/LogoBar';
 import NavItem from '../components/ui/NavItem';
 import DataTable from '../components/ui/DataTable';
+import Diagram from '../components/ui/Diagram';
+import { flowchartDemos, sequenceDemos } from '../components/ui/diagram-demos';
 import type { SortConfig } from '../types';
 
 const THEME_LABELS: Record<Theme, string> = {
@@ -431,6 +433,7 @@ export default function DesignSystemPage() {
               { id: 'datatable', label: 'DataTable' },
             ]},
             { title: 'System', items: [
+              { id: 'diagrams', label: 'Diagrams' },
               { id: 'density', label: 'Density' },
               { id: 'unique', label: 'Unique Elements' },
             ]},
@@ -1197,6 +1200,38 @@ export default function DesignSystemPage() {
             Click "Type" header to open the filter popup.
           </p>
           <DataTableDemo />
+        </Section>
+
+        {/* ── Diagrams ── */}
+        <Section title="Diagrams" id="diagrams">
+          <p style={{ fontSize: 'var(--type-body)', color: 'var(--color-text-secondary)', marginBottom: 24 }}>
+            All diagrams render through Mermaid with theme-aware colors via design tokens.
+            Charts are defined in <code>diagram-demos.ts</code>.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+            {flowchartDemos.map((demo, i) => (
+              <div key={i}>
+                <Heading level={4} style={{ marginBottom: 8 }}>{demo.title}</Heading>
+                {demo.description && (
+                  <Text size="sm" color="secondary" style={{ marginBottom: 16 }}>{demo.description}</Text>
+                )}
+                {!demo.description && <div style={{ height: 12 }} />}
+                <Diagram chart={demo.chart} />
+              </div>
+            ))}
+
+            {sequenceDemos.map((demo, i) => (
+              <div key={`seq-${i}`}>
+                <Heading level={4} style={{ marginBottom: 8 }}>{demo.title}</Heading>
+                {demo.description && (
+                  <Text size="sm" color="secondary" style={{ marginBottom: 16 }}>{demo.description}</Text>
+                )}
+                {!demo.description && <div style={{ height: 12 }} />}
+                <Diagram chart={demo.chart} />
+              </div>
+            ))}
+          </div>
         </Section>
 
         {/* ── Density Preview ── */}

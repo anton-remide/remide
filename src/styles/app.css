@@ -8950,7 +8950,7 @@ article.st-page:has(.st-floating-cta) {
 .st-mermaid {
   width: 100%;
   overflow-x: auto;
-  padding: var(--space-6) 0;
+  padding: var(--space-2) 0;
 }
 
 .st-mermaid svg {
@@ -9007,13 +9007,13 @@ article.st-page:has(.st-floating-cta) {
 
 .st-mermaid .node rect,
 .st-mermaid .basic.label-container {
-  rx: 4 !important;
-  ry: 4 !important;
+  rx: 3 !important;
+  ry: 3 !important;
 }
 
 .st-mermaid .node .label-container {
-  rx: 4 !important;
-  ry: 4 !important;
+  rx: 3 !important;
+  ry: 3 !important;
 }
 
 /* Node labels */
@@ -9167,7 +9167,7 @@ article.st-page:has(.st-floating-cta) {
 .st-mermaid .flowchart-link,
 .st-mermaid path.transition {
   stroke: var(--color-text-secondary) !important;
-  stroke-width: 1.5px !important;
+  stroke-width: 1px !important;
   fill: none !important;
 }
 
@@ -9219,6 +9219,13 @@ article.st-page:has(.st-floating-cta) {
 }
 
 /* Edge label containers from Mermaid's foreignObject */
+.st-mermaid .node foreignObject {
+  overflow: visible !important;
+}
+.st-mermaid .node foreignObject div {
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
 .st-mermaid .edgeLabel foreignObject {
   overflow: visible !important;
 }
@@ -9255,14 +9262,14 @@ article.st-page:has(.st-floating-cta) {
   fill: var(--color-surface) !important;
   stroke: var(--color-border-strong) !important;
   stroke-width: 1px !important;
-  rx: 4 !important;
-  ry: 4 !important;
+  rx: 3 !important;
+  ry: 3 !important;
 }
 
 .st-mermaid text.actor > tspan {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font1) !important;
   font-size: 13px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   fill: var(--color-text-main) !important;
 }
 
@@ -9277,7 +9284,7 @@ article.st-page:has(.st-floating-cta) {
 .st-mermaid .messageLine0,
 .st-mermaid line.messageLine0 {
   stroke: var(--color-text-secondary) !important;
-  stroke-width: 1.5px !important;
+  stroke-width: 1px !important;
 }
 
 .st-mermaid .messageLine1,
@@ -9571,226 +9578,3 @@ article.st-page:has(.st-floating-cta) {
   }
 }
 
-/* ==========================================================================
-   Flow Diagrams (React Flow)
-   ========================================================================== */
-
-/* ── Container ── */
-.st-flow-diagram {
-  width: 100%;
-  min-height: 120px;
-}
-
-.st-flow-diagram .react-flow {
-  background: transparent;
-}
-
-.st-flow-diagram .react-flow__renderer {
-  overflow: visible;
-}
-
-.st-flow-diagram .react-flow__edge-path {
-  stroke: var(--color-text-secondary);
-  stroke-width: 1.5px;
-}
-
-.st-flow-diagram .react-flow__edge.st-diagram-edge--dashed .react-flow__edge-path {
-  stroke-dasharray: 6 3;
-}
-
-.st-flow-diagram .react-flow__arrowhead polyline,
-.st-flow-diagram .react-flow__arrowhead polygon {
-  fill: var(--color-text-secondary);
-  stroke: var(--color-text-secondary);
-}
-
-/* Hide React Flow default chrome */
-.st-flow-diagram .react-flow__panel,
-.st-flow-diagram .react-flow__attribution,
-.st-flow-diagram .react-flow__minimap,
-.st-flow-diagram .react-flow__controls {
-  display: none !important;
-}
-
-/* ── Handles (connection points — hidden in read-only mode) ── */
-.st-flow-diagram .react-flow__handle {
-  width: 1px;
-  height: 1px;
-  min-width: 0;
-  min-height: 0;
-  border: none;
-  background: transparent;
-  opacity: 0;
-}
-
-/* ── Node Base ── */
-.st-diagram-node {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 120px;
-  padding: 10px 20px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  font-family: var(--font1);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-main);
-  text-align: center;
-  white-space: nowrap;
-  line-height: 1.35;
-}
-
-.st-diagram-node__label {
-  position: relative;
-  z-index: 1;
-}
-
-/* Diamond (decision) */
-.st-diagram-node--diamond {
-  min-width: 80px;
-  padding: 12px 16px;
-  border-radius: 0;
-  transform: rotate(45deg);
-}
-
-.st-diagram-node--diamond .st-diagram-node__label {
-  transform: rotate(-45deg);
-  white-space: nowrap;
-}
-
-/* Round */
-.st-diagram-node--round {
-  border-radius: var(--radius-lg);
-}
-
-/* ── Semantic Status Variants ── */
-.st-diagram-node--approved {
-  background: var(--color-success-subtle);
-  border-color: var(--color-success);
-  color: var(--color-success);
-  font-weight: 600;
-}
-
-.st-diagram-node--rejected {
-  background: var(--color-danger-subtle);
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-  font-weight: 600;
-}
-
-.st-diagram-node--active {
-  background: var(--color-accent-subtle);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  font-weight: 600;
-  border-width: 2px;
-}
-
-.st-diagram-node--pending {
-  background: var(--color-info-subtle);
-  border-color: var(--color-info);
-  color: var(--color-info);
-  font-weight: 600;
-}
-
-.st-diagram-node--warning {
-  background: var(--color-warning-subtle);
-  border-color: var(--color-warning);
-  color: var(--color-warning);
-  font-weight: 600;
-}
-
-.st-diagram-node--display {
-  border-color: var(--color-accent);
-  border-width: 2px;
-  font-family: var(--font2, var(--font1));
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-main);
-  padding: 14px 24px;
-}
-
-.st-diagram-node--muted {
-  background: var(--color-bg);
-  border-color: var(--color-border);
-  color: var(--color-text-secondary);
-  font-weight: 400;
-  font-size: 12px;
-}
-
-.st-diagram-node--expired {
-  background: var(--color-bg);
-  border-color: var(--color-text-secondary);
-  border-style: dashed;
-  color: var(--color-text-secondary);
-  text-decoration: line-through;
-}
-
-.st-diagram-node--revoked {
-  background: var(--color-danger-subtle);
-  border-color: var(--color-danger);
-  border-style: dashed;
-  color: var(--color-danger);
-  font-weight: 600;
-  text-decoration: line-through;
-}
-
-.st-diagram-node--conditional {
-  background: var(--color-warning-subtle);
-  border-color: var(--color-warning);
-  border-style: dashed;
-  color: var(--color-warning);
-  font-weight: 600;
-}
-
-.st-diagram-node--info {
-  background: var(--color-info-subtle);
-  border-color: var(--color-info);
-  color: var(--color-info);
-  font-weight: 600;
-}
-
-/* ── Edge Labels ── */
-.st-diagram-edge-label {
-  font-family: var(--font1);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  background: var(--color-bg);
-  padding: 2px 6px;
-  border-radius: 2px;
-  white-space: nowrap;
-}
-
-/* ── Edge Paths ── */
-.st-diagram-edge path {
-  stroke: var(--color-text-secondary);
-  stroke-width: 1.5px;
-}
-
-.st-diagram-edge--dashed path {
-  stroke-dasharray: 6 3;
-}
-
-/* ── Inside Callout ── */
-.st-callout .st-flow-diagram {
-  padding: var(--space-2) 0;
-}
-
-/* ── Print ── */
-@media print {
-  .st-diagram-node {
-    background: #fff;
-    border-color: #000;
-    color: #000;
-  }
-  .st-diagram-edge path {
-    stroke: #000;
-  }
-  .st-diagram-edge-label {
-    background: #fff;
-    color: #000;
-  }
-}
