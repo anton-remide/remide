@@ -214,6 +214,18 @@ Explicitly deferred with rationale:
 - **Main:** Flex container with per-page sidebar + content via `<Outlet />`
 - **Footer (sticky):** Theme + Density + Viewport toggles. Compact and Mobile are placeholder-disabled.
 
+### Per-Component Reference Pages (Tailwind-style)
+
+**Decision:** Individual routes per component (`/ui/atoms/button`, `/ui/atoms/badge`, etc.) instead of one long page with anchor sections.
+
+**Why subpages over anchors:**
+- A single page with 54 components' props tables + code examples = 8000-10000 lines, 3-5 second load
+- Subpages enable code splitting — each component's demos load independently
+- Clean shareable URLs — can link directly to a specific component reference
+- Tailwind, Radix, and Chakra all use this pattern at scale
+
+**Architecture:** A `component-registry.ts` data file drives both the index catalog and each reference page. Each component also has a `demos/*.tsx` file exporting variant renders and usage examples. The index page at `/ui/atoms` shows a searchable card grid. The sidebar persists on component pages for quick navigation between components.
+
 ### Typography Decision
 
 Anton chose: **Heading component uses Doto for Display/H1/H2/H3** (same as global heading styles) — unified system where the pixel font is for large headings and data values, DM Sans is for body text.

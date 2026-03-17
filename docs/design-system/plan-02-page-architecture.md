@@ -2,7 +2,7 @@
 
 > **For:** Sasha (frontend) | **Status:** Ready for implementation
 > **Depends on:** Plan 01 token prerequisites (0b z-index tokens) must be done first. Component work can be parallel.
-> **Reviewed:** Cycles 1-3. No additional changes from Cycle 3 (page architecture was not a simulation bottleneck).
+> **Reviewed:** Cycles 1-3. Updated post-Cycle 3 with per-component reference pages (Tailwind-style individual routes).
 
 ## Current State
 
@@ -14,13 +14,14 @@ Everything lives in a single file:
 
 ## Target State
 
-Three routed sub-pages with a shared layout shell:
+Routed sub-pages with a shared layout shell and per-component reference pages:
 
 ```
-/ui              → redirects to /ui/atoms
-/ui/atoms        → Components showcase (current content)
-/ui/composition  → Layout patterns & spacing rules (Plan 03)
-/ui/templates    → Section-level blocks built from library (Plan 04 — future)
+/ui                      → redirects to /ui/atoms
+/ui/atoms                → Component catalog (index grid with search/filter)
+/ui/atoms/:componentId   → Per-component reference page (props, variants, code)
+/ui/composition          → Layout patterns & spacing rules (Plan 03)
+/ui/templates            → Section-level page recipes (Plan 03)
 ```
 
 ---
@@ -31,9 +32,11 @@ Three routed sub-pages with a shared layout shell:
 src/pages/
   design-system/
     DesignSystemLayout.tsx          ← Shared shell: header + sidebar + sticky footer
-    DesignSystemAtomsPage.tsx       ← Current DesignSystemPage.tsx content
+    DesignSystemAtomsIndex.tsx      ← Component catalog grid (search, filter, cards)
+    DesignSystemAtomPage.tsx        ← Per-component reference (dynamic route)
     DesignSystemCompositionPage.tsx  ← New (Plan 03)
     DesignSystemTemplatesPage.tsx   ← New (stub for now)
+    component-registry.ts           ← Metadata for all components (props, classes, status)
 ```
 
 ---
@@ -276,20 +279,159 @@ Add to `app.css`:
 
 ---
 
-## Step 2: Split `DesignSystemPage.tsx` → `DesignSystemAtomsPage.tsx`
+## Step 2: Component Registry (`component-registry.ts`)
 
-1. Rename `src/pages/DesignSystemPage.tsx` → `src/pages/design-system/DesignSystemAtomsPage.tsx`
-2. Remove from it:
-   - The outer wrapper `<div data-density={density}>` (now in Layout)
-   - The sticky toolbar with theme/density buttons (now in Layout footer)
-   - The `useTheme()` call (now in Layout)
-3. Keep:
-   - The sidebar section list (render as part of this page's `<nav>`)
-   - All `<Section>` components
-   - All demo code (FilterChipDemo, ChipDemo, SegmentedDemo, DataTableDemo, etc.)
-4. Export the sidebar items list so Layout can render the correct sidebar
+A single data file that drives both the index page and each per-component page. Every component registers its metadata here.
 
-The page should still have its own sidebar. The sidebar is part of each sub-page, not the layout, because each page has different sections.
+```typescript
+// src/pages/design-system/component-registry.ts
+
+export type ComponentCategory = 'atom' | 'molecule' | 'organism' | 'layout';
+export type ComponentStatus = 'stable' | 'new' | 'experimental' | 'deprecated';
+
+export interface PropDef {
+  name: string;
+  type: string;
+  default?: string;
+  required?: boolean;
+  description: string;
+}
+
+export interface ComponentMeta {
+  id: string;                       // URL slug: 'button', 'badge', 'section'
+  name: string;                     // Display: 'Button', 'Badge', 'Section'
+  description: string;              // One-liner for the catalog card
+  category: ComponentCategory;
+  status: ComponentStatus;
+  props: PropDef[];
+  cssClasses: string[];             // ['st-btn', 'st-btn--primary', ...]
+  relatedComponents?: string[];     // IDs of related components
+  importPath: string;               // '../components/ui/Button'
+}
+
+export const COMPONENT_REGISTRY: ComponentMeta[] = [
+  {
+    id: 'button',
+    name: 'Button',
+    description: 'Primary action trigger with multiple variants and sizes.',
+    category: 'atom',
+    status: 'stable',
+    props: [
+      { name: 'variant', type: "'primary' | 'secondary' | 'ghost' | 'danger'", default: "'primary'", description: 'Visual style' },
+      { name: 'size', type: "'sm' | 'default' | 'lg'", default: "'default'", description: 'Size preset' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable interaction' },
+      { name: 'leftIcon', type: 'ReactNode', description: 'Icon before label' },
+      { name: 'className', type: 'string', description: 'Additional CSS classes' },
+    ],
+    cssClasses: ['st-btn', 'st-btn--primary', 'st-btn--secondary', 'st-btn--ghost', 'st-btn--danger', 'st-btn--sm', 'st-btn--lg'],
+    relatedComponents: ['styled-link', 'icon'],
+    importPath: '../components/ui/Button',
+  },
+  // ... one entry per component, populated incrementally as components ship
+];
+
+export function getComponentById(id: string): ComponentMeta | undefined {
+  return COMPONENT_REGISTRY.find(c => c.id === id);
+}
+
+export function getComponentsByCategory(cat: ComponentCategory): ComponentMeta[] {
+  return COMPONENT_REGISTRY.filter(c => c.category === cat);
+}
+```
+
+**Populate incrementally:** When building a Plan 01 component, add its registry entry at the same time. Existing components get their entries when demos are migrated from the old page.
+
+---
+
+## Step 2b: Atoms Index Page (`DesignSystemAtomsIndex.tsx`)
+
+Replaces the old single-page gallery. Shows a searchable, filterable catalog of all components.
+
+### Layout
+
+- **Sidebar (left):** All components listed by category (Atoms, Molecules, Organisms, Layout). Each item is a `NavLink` to `/ui/atoms/:id`. Active item highlighted.
+- **Content (right):** Card grid. Each card shows component name, description, category badge, status badge, and a mini live preview. Click navigates to `/ui/atoms/:id`.
+- **Search bar** at top of content area filters by name/description.
+
+### Sidebar structure
+
+```typescript
+const CATEGORY_ORDER: ComponentCategory[] = ['atom', 'molecule', 'organism', 'layout'];
+const CATEGORY_LABELS: Record<ComponentCategory, string> = {
+  atom: 'Atoms',
+  molecule: 'Molecules',
+  organism: 'Organisms',
+  layout: 'Layout',
+};
+```
+
+The sidebar persists on every `/ui/atoms/*` route — both the index and individual component pages — so developers can jump between components without returning to the index.
+
+---
+
+## Step 2c: Per-Component Reference Page (`DesignSystemAtomPage.tsx`)
+
+Reads `:componentId` from URL params, looks up the registry, and renders a full reference page.
+
+### Page sections
+
+**1. Header** — Component name (Doto font, H1), one-line description, category badge, status badge.
+
+**2. Live Preview** — The component rendered with default props in a themed preview area. Three small theme previews side by side (Beige, DarkGray, NearBlack) so you can see all themes at a glance.
+
+**3. Props Table** — Auto-generated from `ComponentMeta.props`:
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| variant | `'primary' \| 'secondary'` | `'primary'` | Visual style |
+
+**4. Variants** — Each variant/combination rendered as a grid with a code snippet below. Grouped by prop (e.g., all `variant` values, then all `size` values).
+
+**5. Usage Examples** — 2-3 common patterns with JSX code blocks. E.g., "Button with icon", "Button as link", "Button group".
+
+**6. CSS Classes** — Table of all `st-*` classes this component uses and what each one does.
+
+**7. Related Components** — Links to related components from the registry.
+
+### Demo rendering
+
+Each component needs a demo module that exports variant/example JSX. Create alongside the component:
+
+```
+src/pages/design-system/demos/
+  button-demo.tsx
+  badge-demo.tsx
+  heading-demo.tsx
+  ...
+```
+
+Each demo file exports:
+```typescript
+export const variants: DemoVariant[] = [
+  { label: 'Primary', jsx: <Button variant="primary">Click me</Button> },
+  { label: 'Secondary', jsx: <Button variant="secondary">Click me</Button> },
+  // ...
+];
+
+export const examples: DemoExample[] = [
+  {
+    title: 'Button with icon',
+    code: `<Button leftIcon={<Search />}>Search</Button>`,
+    jsx: <Button leftIcon={<Search />}>Search</Button>,
+  },
+  // ...
+];
+```
+
+The `DesignSystemAtomPage` lazily imports the correct demo based on `componentId`.
+
+### 404 handling
+
+If `:componentId` doesn't match any registry entry, render a "Component not found" message with a link back to `/ui/atoms`.
+
+### Sidebar on component pages
+
+Same sidebar as the index page — all components listed by category. The current component is highlighted. This lets developers navigate between components without returning to the index.
 
 ---
 
@@ -308,17 +450,21 @@ With:
 
 ```tsx
 const DesignSystemLayout = lazy(() => import('./pages/design-system/DesignSystemLayout'));
-const DesignSystemAtomsPage = lazy(() => import('./pages/design-system/DesignSystemAtomsPage'));
+const DesignSystemAtomsIndex = lazy(() => import('./pages/design-system/DesignSystemAtomsIndex'));
+const DesignSystemAtomPage = lazy(() => import('./pages/design-system/DesignSystemAtomPage'));
 const DesignSystemCompositionPage = lazy(() => import('./pages/design-system/DesignSystemCompositionPage'));
 const DesignSystemTemplatesPage = lazy(() => import('./pages/design-system/DesignSystemTemplatesPage'));
 // ...
 <Route path="/ui" element={<DesignSystemLayout />}>
   <Route index element={<Navigate to="/ui/atoms" replace />} />
-  <Route path="atoms" element={<DesignSystemAtomsPage />} />
+  <Route path="atoms" element={<DesignSystemAtomsIndex />} />
+  <Route path="atoms/:componentId" element={<DesignSystemAtomPage />} />
   <Route path="composition" element={<DesignSystemCompositionPage />} />
   <Route path="templates" element={<DesignSystemTemplatesPage />} />
 </Route>
 ```
+
+**SPA redirect note:** The `404.html` redirect with `pathSegmentsToKeep=0` handles all these routes correctly — tested and guarded by `src/__tests__/spa-redirect.test.ts`. Nested routes like `/ui/atoms/button` will redirect through `/?/ui/atoms/button` and be decoded by `index.html`.
 
 ---
 
@@ -370,7 +516,7 @@ export default function DesignSystemTemplatesPage() {
 
 3. **paddingBottom** — Add `padding-bottom: 60px` to content area to account for the sticky footer (44px + breathing room).
 
-4. **Sidebar pattern** — Each page renders its own `<nav>` sidebar. The sidebar is sticky, positioned inside `st-ds-main` flex container. Current sidebar code (DesignSystemPage lines 372-472) can be extracted into a helper or kept inline per page.
+4. **Sidebar pattern** — Each top-level page renders its own `<nav>` sidebar. For `/ui/atoms` and `/ui/atoms/:componentId`, the sidebar is the same — a full component list grouped by category, driven by `component-registry.ts`. The sidebar is sticky, positioned inside `st-ds-main` flex container. For `/ui/composition` and `/ui/templates`, sidebars list their own section anchors.
 
 5. **scroll-margin-top** — Each `<Section>` already has `scrollMarginTop` for anchor scrolling. This needs to account for the main header + ds header. Current value: `calc(var(--header-current-height, 64px) + var(--top-banner-height, 0px) + 46px + 24px)`.
 
