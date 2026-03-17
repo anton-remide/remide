@@ -53,6 +53,7 @@ interface EnrichmentResult {
   foundedYear: number | null;
   yearsOnMarket: number | null;
   businessSummary: string | null;
+  fieldConfidence: Record<string, number>;
   linkedinUrl: string | null;
   twitterUrl: string | null;
   brandName: string | null;
@@ -61,6 +62,11 @@ interface EnrichmentResult {
   keywords: string[];
   success: boolean;
   error?: string;
+}
+
+interface Inferred<T> {
+  value: T;
+  confidence: number;
 }
 
 interface RunStats {
@@ -516,71 +522,142 @@ function extractKeywords(metadata: Record<string, unknown>): string[] {
   return [];
 }
 
-function inferTargetAudience(text: string): string[] {
+function inferTargetAudience(text: string): Inferred<string[]> {
   const t = text.toLowerCase();
-  const consumerHits = ['retail', 'personal', 'individual', 'beginner', 'invest from', 'app store', 'google play']
+  const consumerHits = [
+    'retail',
+    'personal',
+    'individual',
+    'beginner',
+    'invest from',
+    'app store',
+    'google play',
+    'for everyone',
+    'pengguna',
+    'nasabah',
+  ]
     .filter((k) => t.includes(k)).length;
-  const businessHits = ['institutional', 'enterprise', 'api', 'merchant', 'otc desk', 'b2b', 'prime brokerage']
+  const businessHits = [
+    'institutional',
+    'enterprise',
+    'api',
+    'merchant',
+    'otc desk',
+    'b2b',
+    'prime brokerage',
+    'business account',
+    'corporate',
+    'mitra bisnis',
+  ]
     .filter((k) => t.includes(k)).length;
   const out: string[] = [];
   if (consumerHits > 0) out.push('consumer');
   if (businessHits > 0) out.push('business');
   if (out.length === 0) out.push('unknown');
-  return out;
+  const totalHits = consumerHits + businessHits;
+  const confidence = totalHits >= 2 ? 1 : totalHits === 1 ? 0.6 : 0.2;
+  return { value: out, confidence };
 }
 
-function inferTargetRegions(text: string, siteLanguages: string[]): string[] {
+function inferTargetRegions(text: string, siteLanguages: string[], websiteUrl: string): Inferred<string[]> {
   const t = text.toLowerCase();
   const regions: string[] = [];
   if (/global|worldwide|international/.test(t)) regions.push('global');
   if (/united states|usa|us users/.test(t)) regions.push('US');
   if (/europe|eu|eea/.test(t)) regions.push('EU');
   if (/united kingdom|uk/.test(t)) regions.push('UK');
+  if (/indonesia|indonesian|idr|rupiah/.test(t)) regions.push('ID');
   if (/singapore|indonesia|malaysia|thailand|philippines|asia/.test(t)) regions.push('APAC');
   if (/uae|middle east|mena/.test(t)) regions.push('MENA');
+  let confidence = 0;
+  if (regions.length >= 2) confidence = 0.9;
+  else if (regions.length === 1) confidence = 0.6;
+  try {
+    const host = new URL(websiteUrl).hostname.toLowerCase();
+    if (host.endsWith('.id') || host.includes('.co.id')) {
+      if (!regions.includes('ID')) regions.push('ID');
+      if (!regions.includes('APAC')) regions.push('APAC');
+      confidence = Math.max(confidence, 0.6);
+    }
+  } catch {
+    // Ignore URL parse errors
+  }
   if (regions.length === 0 && siteLanguages.length === 1) {
     regions.push(siteLanguages[0]);
+    confidence = 0.3;
   }
-  return Array.from(new Set(regions)).slice(0, 4);
+  return { value: Array.from(new Set(regions)).slice(0, 4), confidence };
 }
 
-function inferFiatOnRamp(text: string): boolean | null {
+function inferFiatOnRamp(text: string): Inferred<boolean | null> {
   const t = text.toLowerCase();
-  const positive = ['fiat', 'bank transfer', 'bank card', 'credit card', 'debit card', 'visa', 'mastercard', 'deposit idr', 'deposit usd']
+  const positive = [
+    'fiat',
+    'bank transfer',
+    'bank card',
+    'credit card',
+    'debit card',
+    'visa',
+    'mastercard',
+    'deposit idr',
+    'deposit usd',
+    'buy crypto with',
+    'idr',
+    'rupiah',
+    'sepa',
+    'swift',
+    'wire transfer',
+    'cash deposit',
+    'e-wallet',
+    'dana',
+    'ovo',
+    'gopay',
+  ]
     .some((k) => t.includes(k));
   const negative = ['crypto only', 'only crypto deposits', 'no fiat']
     .some((k) => t.includes(k));
-  if (positive && !negative) return true;
-  if (negative && !positive) return false;
-  return null;
+  if (positive && !negative) {
+    const explicit = ['bank transfer', 'credit card', 'debit card', 'visa', 'mastercard', 'sepa', 'swift']
+      .some((k) => t.includes(k));
+    return { value: true, confidence: explicit ? 1 : 0.7 };
+  }
+  if (negative && !positive) return { value: false, confidence: 0.8 };
+  if (positive && negative) return { value: null, confidence: 0.2 };
+  return { value: null, confidence: 0 };
 }
 
-function inferAppPlatforms(text: string): string[] {
+function inferAppPlatforms(text: string): Inferred<string[]> {
   const t = text.toLowerCase();
   const platforms: string[] = ['web'];
+  let confidence = 0.4;
   if (t.includes('app store') || t.includes('google play') || t.includes('android') || t.includes('ios')) {
     platforms.push('mobile');
+    confidence = Math.max(confidence, 0.8);
   }
   if (t.includes('windows') || t.includes('macos') || t.includes('desktop app')) {
     platforms.push('desktop');
+    confidence = Math.max(confidence, 0.8);
   }
-  return Array.from(new Set(platforms));
+  return { value: Array.from(new Set(platforms)), confidence };
 }
 
-function inferTradingPairs(text: string): number | null {
+function inferTradingPairs(text: string): Inferred<number | null> {
   const t = text.toLowerCase();
-  const matches = [...t.matchAll(/(\d{2,5})\+?\s*(trading pairs|pairs|markets)/g)];
+  const matches = [
+    ...t.matchAll(/(\d{2,5})\+?\s*(trading pairs|pairs|markets)/g),
+    ...t.matchAll(/(\d{2,5})\+?\s*(assets|coins|tokens|cryptocurrencies)/g),
+  ];
   const values = matches.map((m) => Number.parseInt(m[1], 10)).filter((n) => Number.isFinite(n) && n > 1);
-  if (values.length === 0) return null;
-  return Math.max(...values);
+  if (values.length === 0) return { value: null, confidence: 0 };
+  return { value: Math.max(...values), confidence: values.length > 1 ? 1 : 0.8 };
 }
 
-function inferFoundedYear(text: string): number | null {
+function inferFoundedYear(text: string): Inferred<number | null> {
   const now = new Date().getFullYear();
   const matches = [...text.matchAll(/\b(20[0-2]\d|19[8-9]\d)\b/g)].map((m) => Number.parseInt(m[1], 10));
   const plausible = matches.filter((y) => y >= 2008 && y <= now);
-  if (plausible.length === 0) return null;
-  return Math.min(...plausible);
+  if (plausible.length === 0) return { value: null, confidence: 0 };
+  return { value: Math.min(...plausible), confidence: plausible.length > 1 ? 0.8 : 0.6 };
 }
 
 function buildBusinessSummary(description: string | null, profile: {
@@ -588,7 +665,6 @@ function buildBusinessSummary(description: string | null, profile: {
   targetAudience: string[];
   fiatOnRamp: boolean | null;
   appPlatforms: string[];
-  tradingPairs: number | null;
   yearsOnMarket: number | null;
 }): string | null {
   if (!description) return null;
@@ -598,7 +674,6 @@ function buildBusinessSummary(description: string | null, profile: {
   if (profile.targetAudience.length > 0) bits.push(`Audience: ${profile.targetAudience.join(', ')}`);
   if (profile.fiatOnRamp !== null) bits.push(`Fiat on-ramp: ${profile.fiatOnRamp ? 'yes' : 'no'}`);
   if (profile.appPlatforms.length > 0) bits.push(`Platforms: ${profile.appPlatforms.join(', ')}`);
-  if (profile.tradingPairs) bits.push(`Trading pairs: ~${profile.tradingPairs}`);
   if (profile.yearsOnMarket !== null) bits.push(`Time on market: ~${profile.yearsOnMarket} years`);
   if (bits.length === 0) return p1;
   return `${p1}\n\n${bits.join('. ')}.`;
@@ -641,6 +716,7 @@ async function scrapeEntity(
         foundedYear: null,
         yearsOnMarket: null,
         businessSummary: null,
+        fieldConfidence: {},
         linkedinUrl: null,
         twitterUrl: null,
         brandName: null,
@@ -668,19 +744,24 @@ async function scrapeEntity(
     const englishDescription = extractedDescription ? await toEnglishSummary(extractedDescription) : null;
     const descriptionOriginal = extractedDescription && !isLikelyEnglish(extractedDescription) ? extractedDescription : null;
     const intelligenceText = `${markdown}\n${JSON.stringify(metadata)}`.slice(0, 12000);
-    const targetAudience = inferTargetAudience(intelligenceText);
-    const targetRegions = inferTargetRegions(intelligenceText, siteLanguages);
-    const fiatOnRamp = inferFiatOnRamp(intelligenceText);
-    const appPlatforms = inferAppPlatforms(intelligenceText);
-    const tradingPairs = inferTradingPairs(intelligenceText);
-    const foundedYear = inferFoundedYear(intelligenceText);
+    const targetAudienceInfer = inferTargetAudience(intelligenceText);
+    const targetRegionsInfer = inferTargetRegions(intelligenceText, siteLanguages, url);
+    const fiatOnRampInfer = inferFiatOnRamp(intelligenceText);
+    const appPlatformsInfer = inferAppPlatforms(intelligenceText);
+    const tradingPairsInfer = inferTradingPairs(intelligenceText);
+    const foundedYearInfer = inferFoundedYear(intelligenceText);
+    const targetAudience = targetAudienceInfer.value;
+    const targetRegions = targetRegionsInfer.value;
+    const fiatOnRamp = fiatOnRampInfer.value;
+    const appPlatforms = appPlatformsInfer.value;
+    const tradingPairs = tradingPairsInfer.value;
+    const foundedYear = foundedYearInfer.value;
     const yearsOnMarket = foundedYear ? Math.max(0, new Date().getFullYear() - foundedYear) : null;
     const businessSummary = buildBusinessSummary(englishDescription, {
       targetRegions,
       targetAudience,
       fiatOnRamp,
       appPlatforms,
-      tradingPairs,
       yearsOnMarket,
     });
     const linkedinUrl = entity.linkedin_url?.trim() ? null : extractLinkedIn(markdown, metadata);
@@ -705,6 +786,15 @@ async function scrapeEntity(
       foundedYear,
       yearsOnMarket,
       businessSummary,
+      fieldConfidence: {
+        target_regions: targetRegionsInfer.confidence,
+        target_audience: targetAudienceInfer.confidence,
+        fiat_onramp: fiatOnRampInfer.confidence,
+        app_platforms: appPlatformsInfer.confidence,
+        trading_pairs: tradingPairsInfer.confidence,
+        founded_year: foundedYearInfer.confidence,
+        years_on_market: foundedYearInfer.confidence,
+      },
       linkedinUrl,
       twitterUrl,
       brandName,
@@ -730,6 +820,7 @@ async function scrapeEntity(
       foundedYear: null,
       yearsOnMarket: null,
       businessSummary: null,
+      fieldConfidence: {},
       linkedinUrl: null,
       twitterUrl: null,
       brandName: null,
@@ -920,6 +1011,7 @@ async function writeOneEnrichmentResult(
     if (r.foundedYear !== null) extraData.founded_year = r.foundedYear;
     if (r.yearsOnMarket !== null) extraData.years_on_market = r.yearsOnMarket;
     if (r.businessSummary) extraData.site_business_summary_en = r.businessSummary;
+    if (Object.keys(r.fieldConfidence).length > 0) extraData.field_confidence = r.fieldConfidence;
     // Also stash main fields as fallback if dedicated columns are missing
     if (!schema.hasDescription && r.description) extraData.enrichment_description = r.description;
     if (!schema.hasLinkedinUrl && r.linkedinUrl) extraData.enrichment_linkedin_url = r.linkedinUrl;

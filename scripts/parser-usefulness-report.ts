@@ -39,7 +39,7 @@ interface ParsedSignals {
   targetAudience: string[];
   fiatOnRamp: boolean | null;
   appPlatforms: string[];
-  tradingPairs: number | null;
+  tradingPairs: number | null; // optional signal, not part of mandatory score
   yearsOnMarket: number | null;
   foundedYear: number | null;
   summary: string | null;
@@ -202,7 +202,6 @@ function computeEntityScore(signals: ParsedSignals, enrichedAt: string | null, d
     'target_audience',
     'fiat_onramp',
     'app_platforms',
-    'trading_pairs',
     'years_on_market',
     'site_business_summary_en',
   ];
@@ -214,7 +213,6 @@ function computeEntityScore(signals: ParsedSignals, enrichedAt: string | null, d
   }
   if (signals.fiatOnRamp === null) missing.push('fiat_onramp');
   if (signals.appPlatforms.length === 0) missing.push('app_platforms');
-  if (signals.tradingPairs === null) missing.push('trading_pairs');
   if (signals.yearsOnMarket === null) missing.push('years_on_market');
   if (!signals.summary || signals.summary.length < 60) missing.push('site_business_summary_en');
 
@@ -225,7 +223,6 @@ function computeEntityScore(signals: ParsedSignals, enrichedAt: string | null, d
     signals.confidence.target_audience,
     signals.confidence.fiat_onramp,
     signals.confidence.app_platforms,
-    signals.confidence.trading_pairs,
     signals.confidence.years_on_market,
   ];
   const confidence = (confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length) * 100;
@@ -294,7 +291,6 @@ function buildReport(rows: EntityRow[], minSample: number): ParserReportRow[] {
       'target_audience',
       'fiat_onramp',
       'app_platforms',
-      'trading_pairs',
       'years_on_market',
       'site_business_summary_en',
     ];
@@ -311,10 +307,10 @@ function buildReport(rows: EntityRow[], minSample: number): ParserReportRow[] {
     const pusValues = scores.map((s) => s.pus);
     const medianPus = percentile(pusValues, 0.5);
     const p25Pus = percentile(pusValues, 0.25);
-    const parserPus = medianPus + p25Pus * 0.3;
+    const parserPus = clamp(medianPus + p25Pus * 0.3, 0, 100);
 
     const missingCounts = nullCounters.get(parserId)!;
-    const mandatoryCount = 7;
+    const mandatoryCount = 6;
     const totalSlots = scores.length * mandatoryCount;
     const missingTotal = Object.values(missingCounts).reduce((a, b) => a + b, 0);
     const nullRate = totalSlots > 0 ? (missingTotal / totalSlots) * 100 : 0;
