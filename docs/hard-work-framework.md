@@ -1,6 +1,6 @@
 # Hard Work Framework — Protocol Specification
 
-> **Version:** 1.0 | **Date:** 2026-03-14 | **Replaces:** A/B/C/D Adversarial Debate Protocol (PROC-002)
+> **Version:** 2.0 | **Date:** 2026-03-15 | **Replaces:** v1.0 (added Explore/Validate modes)
 > **Decision:** PROC-005 | **Owner:** Anton
 
 ## Overview
@@ -288,6 +288,62 @@ RULES:
 - Bring at least 2 patterns/anti-patterns from your domain that apply here.
 - Your output: Domain mapping → Patterns that apply → Reframe → Verdict with confidence %.
 ```
+
+---
+
+## Execution Modes (v2.0)
+
+Phase 3 supports two distinct execution modes. Choose based on the nature of the problem.
+
+### Mode Selection
+
+| Mode | Best For | Cycle Structure | Risk |
+|------|----------|-----------------|------|
+| **Validate** (original) | Problems with a clear direction; need stress-testing | Lead builds → Critic attacks → Lateral reframes | Anchoring on Lead's initial solution |
+| **Explore** (All-Create) | Open-ended design; multiple valid solutions possible | All three create → All three critique → Synthesize | Higher cost (more subagent calls) |
+
+### Validate Mode (Sequential Pipeline)
+
+The original Phase 3 workflow described above. Best when:
+- The user has a strong opinion on direction
+- The task is an implementation decision (not a design question)
+- The Lead's domain expertise is the primary value
+
+```
+Cycle 1: Lead proposes → Critic attacks → Lateral reframes
+Cycle 2: Arbiter synthesizes + user feedback → all three refine
+Cycle 3: Final convergence
+```
+
+### Explore Mode (All-Create)
+
+All three agents independently create their own complete solution. Best when:
+- The problem is open-ended (IA, UX, strategy, naming)
+- There's no obvious "right answer" — multiple valid approaches exist
+- The user wants to see divergent proposals before converging
+
+```
+Cycle 1 — CREATE:
+  All 3 agents each produce a COMPLETE, independent proposal.
+  Arbiter summarizes all three → presents to user.
+
+Cycle 2 — CRITIQUE:
+  Each agent receives ALL THREE proposals (including their own).
+  Each agent critiques the OTHER TWO proposals from their lens.
+  Arbiter maps agreements, conflicts, strongest arguments.
+
+Cycle 3 — SYNTHESIZE:
+  Each agent proposes fixes for the critiques raised against their proposal.
+  Arbiter produces a UNIFIED solution, cherry-picking the best from each.
+  User approves or requests another cycle.
+```
+
+**Key difference from Validate:** In Explore Mode, agents in Cycle 1 do NOT have assigned Lead/Critic/Lateral behavioral constraints. Each agent builds from their unique perspective (their Role Casting identity), but all three are in "build" mode. The Critic and Lateral re-statement rules (no solutions, no domain learning) are suspended in Cycle 1 — they only activate in Cycle 2.
+
+### When to Switch Modes Mid-Session
+
+- **Validate → Explore:** Cycle 1 reveals the Lead's proposal is too narrow; user says "show me alternatives"
+- **Explore → Validate:** All three Cycle 1 proposals converge on similar structure; switch to Validate for refinement
 
 ---
 
