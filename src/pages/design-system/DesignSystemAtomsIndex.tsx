@@ -20,7 +20,7 @@ function MiniPreview({ componentId }: { componentId: string }) {
     case 'button':
       return <Button variant="primary">Button</Button>;
     case 'heading':
-      return <Heading level="h3">Heading</Heading>;
+      return <Heading level={3}>Heading</Heading>;
     case 'text':
       return <Text size="sm">Text</Text>;
     case 'input':
@@ -99,7 +99,7 @@ export default function DesignSystemAtomsIndex() {
   }, [search]);
 
   return (
-    <>
+    <div className="st-ds-atoms-root">
       <AtomsSidebar currentId={undefined} />
       <div className="st-ds-content">
         <div className="st-ds-content__toolbar">
@@ -139,6 +139,6 @@ export default function DesignSystemAtomsIndex() {
           <p className="st-ds-empty">No components match &quot;{search}&quot;</p>
         )}
       </div>
-    </>
+    </div>
   );
 }

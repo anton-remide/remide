@@ -9,7 +9,7 @@ export default function DesignSystemAtomPage() {
 
   if (!meta) {
     return (
-      <>
+      <div className="st-ds-atoms-root">
         <AtomsSidebar />
         <div className="st-ds-content">
           <div className="st-ds-not-found">
@@ -22,12 +22,12 @@ export default function DesignSystemAtomPage() {
             </Link>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="st-ds-atoms-root">
       <AtomsSidebar currentId={meta.id} />
       <div className="st-ds-content">
         <div className="st-ds-atom-page">
@@ -61,6 +61,6 @@ export default function DesignSystemAtomPage() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

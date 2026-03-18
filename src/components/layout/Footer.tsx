@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme, THEMES, type Theme } from '../../context/ThemeProvider';
 
 const THEME_ICON: Record<Theme, string> = {
@@ -15,6 +15,12 @@ const THEME_LABEL: Record<Theme, string> = {
 
 export default function Footer() {
   const { theme, setTheme } = useTheme();
+  const { pathname } = useLocation();
+  const isDesignSystem = pathname.startsWith('/ui');
+
+  if (isDesignSystem) {
+    return <footer className="st-footer" />;
+  }
 
   return (
     <footer className="st-footer">
