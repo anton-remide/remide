@@ -1,0 +1,49 @@
+name: Brand Coverage (CoinGecko Match)
+
+on:
+  schedule:
+    # Weekly on Tuesday at 07:00 UTC — after parsers (Monday 06:00) + quality (Monday 07:30)
+    - cron: '0 7 * * 2'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max brands to check'
+        required: false
+        default: '200'
+      dry_run:
+        description: 'Dry run (no DB writes)'
+        type: boolean
+        default: false
+
+jobs:
+  brand-coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci --force
+
+      - name: Run brand coverage worker
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          ARGS="--limit ${{ inputs.limit || '200' }}"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          echo "Running brand coverage: $ARGS"
+          npx tsx workers/brand-coverage/run.ts $ARGS
+
+      - name: Summary
+        if: always()
+        run: echo "Brand coverage completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

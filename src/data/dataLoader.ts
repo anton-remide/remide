@@ -395,11 +395,11 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
       .limit(5),
     supabase
       .from('entities')
-      .select('id, name, canonical_name, country, country_code, regulator, website')
+      .select('id, name, canonical_name, country, country_code, regulator, website, brand_name')
       .not('canonical_name', 'is', null)
       .neq('is_garbage', true)
       .neq('is_hidden', true)
-      .or(`name.ilike.${q},canonical_name.ilike.${q},country.ilike.${q},regulator.ilike.${q},website.ilike.${q}`)
+      .or(`name.ilike.${q},canonical_name.ilike.${q},brand_name.ilike.${q},country.ilike.${q},regulator.ilike.${q},website.ilike.${q}`)
       .order('name')
       .limit(5),
   ]);
