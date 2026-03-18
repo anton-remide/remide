@@ -10,6 +10,7 @@ const THEME_LABELS: Record<Theme, string> = {
 };
 
 const TAB_LINKS = [
+  { to: '/ui/foundations', label: 'Foundations' },
   { to: '/ui/atoms', label: 'Components' },
   { to: '/ui/composition', label: 'Composition' },
   { to: '/ui/templates', label: 'Templates' },
@@ -23,12 +24,11 @@ export default function DesignSystemLayout() {
   return (
     <div
       data-density={density}
+      className="st-ds-layout"
       style={{
-        background: 'var(--color-bg)',
+        background: '#fff',
         color: 'var(--color-text-main)',
-        minHeight: '100vh',
-        transition: 'background 300ms, color 300ms',
-        paddingTop: 'calc(var(--header-current-height, 64px) + var(--top-banner-height, 0px))',
+        transition: 'color 300ms',
       }}
     >
       <header className="st-ds-header">

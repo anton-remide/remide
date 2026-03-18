@@ -27,6 +27,7 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const DesignSystemLayout = lazy(() => import('./pages/design-system/DesignSystemLayout'));
+const DesignSystemFoundationsPage = lazy(() => import('./pages/design-system/DesignSystemFoundationsPage'));
 const DesignSystemAtomsIndex = lazy(() => import('./pages/design-system/DesignSystemAtomsIndex'));
 const DesignSystemAtomPage = lazy(() => import('./pages/design-system/DesignSystemAtomPage'));
 const DesignSystemCompositionPage = lazy(() => import('./pages/design-system/DesignSystemCompositionPage'));
@@ -74,6 +75,7 @@ export default function App() {
                 {/* Design System — Plan 02 */}
                 <Route path="/ui" element={<DesignSystemLayout />}>
                   <Route index element={<Navigate to="/ui/atoms" replace />} />
+                  <Route path="foundations" element={<DesignSystemFoundationsPage />} />
                   <Route path="atoms" element={<DesignSystemAtomsIndex />} />
                   <Route path="atoms/:componentId" element={<DesignSystemAtomPage />} />
                   <Route path="composition" element={<DesignSystemCompositionPage />} />
