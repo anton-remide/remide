@@ -315,7 +315,7 @@ async function matchBrand(
   matches.sort((a, b) => b.confidence - a.confidence);
 
   const matchStatus: MatchResult['matchStatus'] =
-    matches.length > 0 && matches[0].confidence >= 0.6
+    matches.length > 0 && matches[0].confidence >= 0.4
       ? 'matched'
       : matches.length > 0
         ? 'partial'
@@ -490,6 +490,73 @@ function pct(n: number, total: number): string {
   return total > 0 ? `${((n / total) * 100).toFixed(1)}%` : '0%';
 }
 
+/* ── Curated: Stablecoin & Payments Companies ── */
+
+function getStablecoinPaymentsBrands(): BrandEntry[] {
+  const list: Array<{ name: string; slug: string; website: string; cat: string }> = [
+    // Stablecoin issuers
+    { name: 'Circle', slug: 'circle', website: 'https://www.circle.com', cat: 'stablecoin_issuer' },
+    { name: 'Tether', slug: 'tether', website: 'https://tether.to', cat: 'stablecoin_issuer' },
+    { name: 'Paxos', slug: 'paxos', website: 'https://paxos.com', cat: 'stablecoin_issuer' },
+    { name: 'Monerium', slug: 'monerium', website: 'https://monerium.com', cat: 'stablecoin_issuer' },
+    { name: 'Stasis', slug: 'stasis', website: 'https://stasis.net', cat: 'stablecoin_issuer' },
+    { name: 'Brale', slug: 'brale', website: 'https://brale.xyz', cat: 'stablecoin_issuer' },
+    { name: 'Ripple', slug: 'ripple', website: 'https://ripple.com', cat: 'stablecoin_issuer' },
+    { name: 'PayPal USD', slug: 'paypal-usd', website: 'https://www.paypal.com', cat: 'stablecoin_issuer' },
+    { name: 'Agora', slug: 'agora', website: 'https://www.agora.finance', cat: 'stablecoin_issuer' },
+    { name: 'First Digital', slug: 'first-digital', website: 'https://firstdigitallabs.com', cat: 'stablecoin_issuer' },
+
+    // Fiat on-ramp / off-ramp (stablecoin-native)
+    { name: 'MoonPay', slug: 'moonpay', website: 'https://www.moonpay.com', cat: 'onramp' },
+    { name: 'Transak', slug: 'transak', website: 'https://transak.com', cat: 'onramp' },
+    { name: 'Banxa', slug: 'banxa', website: 'https://banxa.com', cat: 'onramp' },
+    { name: 'Simplex', slug: 'simplex', website: 'https://www.simplex.com', cat: 'onramp' },
+    { name: 'Alchemy Pay', slug: 'alchemy-pay', website: 'https://alchemypay.org', cat: 'onramp' },
+    { name: 'Mercuryo', slug: 'mercuryo', website: 'https://mercuryo.io', cat: 'onramp' },
+    { name: 'Sardine', slug: 'sardine', website: 'https://www.sardine.ai', cat: 'onramp' },
+    { name: 'Onramper', slug: 'onramper', website: 'https://onramper.com', cat: 'onramp' },
+    { name: 'Guardarian', slug: 'guardarian', website: 'https://guardarian.com', cat: 'onramp' },
+    { name: 'Paybis', slug: 'paybis', website: 'https://paybis.com', cat: 'onramp' },
+    { name: 'Wert', slug: 'wert', website: 'https://wert.io', cat: 'onramp' },
+    { name: 'Topper', slug: 'topper', website: 'https://topper.dev', cat: 'onramp' },
+    { name: 'Utorg', slug: 'utorg', website: 'https://utorg.pro', cat: 'onramp' },
+
+    // Stablecoin infrastructure / B2B stablecoin payments
+    { name: 'Bridge', slug: 'bridge', website: 'https://www.bridge.xyz', cat: 'stablecoin_infra' },
+    { name: 'Zero Hash', slug: 'zero-hash', website: 'https://zerohash.com', cat: 'stablecoin_infra' },
+    { name: 'Fireblocks', slug: 'fireblocks', website: 'https://www.fireblocks.com', cat: 'stablecoin_infra' },
+    { name: 'BitGo', slug: 'bitgo', website: 'https://www.bitgo.com', cat: 'stablecoin_infra' },
+    { name: 'Anchorage Digital', slug: 'anchorage', website: 'https://www.anchorage.com', cat: 'stablecoin_infra' },
+    { name: 'Copper', slug: 'copper', website: 'https://copper.co', cat: 'stablecoin_infra' },
+    { name: 'Cobo', slug: 'cobo', website: 'https://www.cobo.com', cat: 'stablecoin_infra' },
+
+    // Stablecoin payment processors
+    { name: 'BitPay', slug: 'bitpay', website: 'https://bitpay.com', cat: 'stablecoin_processor' },
+    { name: 'CoinGate', slug: 'coingate', website: 'https://coingate.com', cat: 'stablecoin_processor' },
+    { name: 'NOWPayments', slug: 'nowpayments', website: 'https://nowpayments.io', cat: 'stablecoin_processor' },
+    { name: 'TripleA', slug: 'triplea', website: 'https://triple-a.io', cat: 'stablecoin_processor' },
+    { name: 'CoinsPaid', slug: 'coinspaid', website: 'https://coinspaid.com', cat: 'stablecoin_processor' },
+    { name: 'Slash', slug: 'slash', website: 'https://slash.fi', cat: 'stablecoin_processor' },
+    { name: 'Request Finance', slug: 'request-finance', website: 'https://www.request.finance', cat: 'stablecoin_processor' },
+
+    // PYUSD / stablecoin via subsidiaries at TradFi
+    { name: 'PayPal', slug: 'paypal-pyusd', website: 'https://www.paypal.com', cat: 'tradfi_stablecoin' },
+    { name: 'Revolut', slug: 'revolut', website: 'https://www.revolut.com', cat: 'tradfi_stablecoin' },
+    { name: 'Robinhood', slug: 'robinhood', website: 'https://robinhood.com', cat: 'tradfi_stablecoin' },
+  ];
+
+  return list.map((item, i) => ({
+    slug: item.slug,
+    displayName: item.name,
+    website: item.website,
+    domain: extractDomain(item.website),
+    category: item.cat,
+    source: 'stablecoin-payments',
+    sourceRank: i + 1,
+    country: null,
+  }));
+}
+
 /* ── Helpers ── */
 
 function sleep(ms: number): Promise<void> {
@@ -518,8 +585,16 @@ async function main() {
   let brands: BrandEntry[] = [];
   if (args.source === 'coingecko') {
     brands = await fetchCoinGeckoExchanges(args.limit);
+  } else if (args.source === 'stablecoin-payments') {
+    brands = getStablecoinPaymentsBrands().slice(0, args.limit);
+    logger.info(SCOPE, `Loaded ${brands.length} stablecoin/payments brands from curated list`);
+  } else if (args.source === 'all') {
+    const cg = await fetchCoinGeckoExchanges(Math.min(args.limit, 100));
+    const sp = getStablecoinPaymentsBrands();
+    brands = [...cg, ...sp];
+    logger.info(SCOPE, `Combined: ${cg.length} exchanges + ${sp.length} stablecoin/payments = ${brands.length} brands`);
   } else {
-    logger.error(SCOPE, `Unknown source: ${args.source}`);
+    logger.error(SCOPE, `Unknown source: ${args.source}. Use: coingecko, stablecoin-payments, all`);
     process.exit(1);
   }
 
