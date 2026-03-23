@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { backendUnavailableReason, isBackendEnabled, supabase } from '../lib/supabase';
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!isBackendEnabled) {
+      setError(`${backendUnavailableReason} Account confirmation is unavailable in this preview.`);
+      return undefined;
+    }
+
     // Listen for auth events — PASSWORD_RECOVERY needs special handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {

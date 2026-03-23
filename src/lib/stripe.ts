@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { backendUnavailableReason, isBackendEnabled, supabase } from './supabase';
 
 const CHECKOUT_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`;
 
@@ -10,6 +10,10 @@ const CHECKOUT_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1
  */
 export async function redirectToCheckout(): Promise<{ error: string | null }> {
   try {
+    if (!isBackendEnabled) {
+      return { error: `${backendUnavailableReason} Checkout is unavailable in this preview.` };
+    }
+
     // 1. Get current session token
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {

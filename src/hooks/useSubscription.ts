@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '../lib/supabase';
+import { isBackendEnabled, supabase } from '../lib/supabase';
 import type { PaywallTier } from './usePaywall';
 
 interface SubscriptionState {
@@ -22,7 +22,7 @@ export function useSubscription(): SubscriptionState {
   const [loading, setLoading] = useState(true);
 
   const fetchTier = async () => {
-    if (!user) {
+    if (!isBackendEnabled || !user) {
       setTier('anonymous');
       setLoading(false);
       return;

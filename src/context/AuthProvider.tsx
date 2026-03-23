@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { backendUnavailableReason, isBackendEnabled, supabase } from '../lib/supabase';
 
 interface AuthContextType {
   session: Session | null;
@@ -21,6 +21,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isBackendEnabled) {
+      setLoading(false);
+      return undefined;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
@@ -40,6 +45,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     metadata?: Record<string, string>,
   ) => {
+    if (!isBackendEnabled) {
+      return { error: `${backendUnavailableReason} Authentication is unavailable in this preview.` };
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -52,16 +61,29 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!isBackendEnabled) {
+      return { error: `${backendUnavailableReason} Authentication is unavailable in this preview.` };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
   }, []);
 
   const signOut = useCallback(async () => {
+    if (!isBackendEnabled) {
+      setSession(null);
+      return;
+    }
+
     await supabase.auth.signOut();
     setSession(null);
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
+    if (!isBackendEnabled) {
+      return { error: `${backendUnavailableReason} Password reset is unavailable in this preview.` };
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
     });
@@ -78,6 +100,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updatePassword = useCallback(async (password: string) => {
+    if (!isBackendEnabled) {
+      return { error: `${backendUnavailableReason} Password updates are unavailable in this preview.` };
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
     return { error: error?.message ?? null };
   }, []);

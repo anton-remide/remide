@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { isBackendEnabled, supabase } from '../lib/supabase';
 import type {
   Entity, Jurisdiction, Stablecoin, Cbdc, StablecoinJurisdiction,
   StablecoinIssuer, StablecoinLaw, StablecoinEvent,
@@ -10,6 +10,19 @@ import { EU_MEMBER_CODES } from './regionCodes';
 
 const CACHE_TTL = 5 * 60_000; // 5 minutes
 const cache = new Map<string, { data: unknown; ts: number }>();
+const DATA_DISABLED = !isBackendEnabled;
+
+const EMPTY_ENTITY_STATS = {
+  total: 0,
+  crypto: 0,
+  payments: 0,
+  banking: 0,
+};
+
+const EMPTY_SEARCH_RESULT = {
+  jurisdictions: [],
+  entities: [],
+};
 
 function getCached<T>(key: string): T | null {
   const entry = cache.get(key);
@@ -182,6 +195,7 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
 // ── Public API (all async) ──
 
 export async function getJurisdictions(): Promise<Jurisdiction[]> {
+  if (DATA_DISABLED) return [];
   const cached = getCached<Jurisdiction[]>('jurisdictions');
   if (cached) return cached;
 
@@ -197,6 +211,7 @@ export async function getJurisdictions(): Promise<Jurisdiction[]> {
 }
 
 export async function getJurisdictionByCode(code: string): Promise<Jurisdiction | null> {
+  if (DATA_DISABLED) return null;
   const { data, error } = await supabase
     .from('jurisdictions')
     .select('*')
@@ -224,6 +239,7 @@ type EntityListRow = Pick<EntityRow, 'id' | 'name' | 'canonical_name' | 'country
 
 /** Fast count for landing page — no data transfer, just COUNT */
 export async function getEntityCount(): Promise<number> {
+  if (DATA_DISABLED) return 0;
   const { count, error } = await supabase
     .from('entities')
     .select('id', { count: 'exact', head: true })
@@ -243,6 +259,7 @@ export interface EntityStats {
 }
 
 export async function getEntityStats(): Promise<EntityStats> {
+  if (DATA_DISABLED) return EMPTY_ENTITY_STATS;
   const cached = getCached<EntityStats>('entityStats');
   if (cached) return cached;
 
@@ -268,6 +285,7 @@ export async function getEntityStats(): Promise<EntityStats> {
 }
 
 export async function getEntities(): Promise<Entity[]> {
+  if (DATA_DISABLED) return [];
   const cached = getCached<Entity[]>('entities');
   if (cached) return cached;
 
@@ -305,6 +323,11 @@ export async function getEntitiesProgressive(
   onProgress: EntityProgressCallback,
   signal?: { cancelled: boolean },
 ): Promise<Entity[]> {
+  if (DATA_DISABLED) {
+    onProgress([], 0, 0);
+    return [];
+  }
+
   // Cache hit = instant render
   const cached = getCached<Entity[]>('entities');
   if (cached) {
@@ -364,6 +387,7 @@ export async function getEntitiesProgressive(
 }
 
 export async function getEntityById(id: string): Promise<Entity | null> {
+  if (DATA_DISABLED) return null;
   const { data, error } = await supabase
     .from('entities')
     .select('*')
@@ -385,6 +409,7 @@ export interface SearchResult {
 }
 
 export async function searchGlobal(query: string): Promise<SearchResult> {
+  if (DATA_DISABLED) return EMPTY_SEARCH_RESULT;
   const q = `%${query}%`;
   const [jRes, eRes] = await Promise.all([
     supabase
@@ -421,6 +446,7 @@ export async function searchGlobal(query: string): Promise<SearchResult> {
 }
 
 export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
+  if (DATA_DISABLED) return [];
   const all: EntityListRow[] = [];
   const PAGE = 1000;
   let from = 0;
@@ -449,6 +475,7 @@ export async function getEntitiesByCountry(code: string): Promise<Entity[]> {
  * For non-regional codes, falls back to single-country query.
  */
 export async function getEntitiesByRegion(code: string): Promise<Entity[]> {
+  if (DATA_DISABLED) return [];
   const upper = code.toUpperCase();
   const isEU = upper === 'EU';
   const countryCodes = isEU ? [...EU_MEMBER_CODES] : [upper];
@@ -478,6 +505,7 @@ export async function getEntitiesByRegion(code: string): Promise<Entity[]> {
 
 /** Fetch all member state jurisdictions for a regional code (e.g. EU → 27 jurisdictions) */
 export async function getJurisdictionsByRegion(code: string): Promise<Jurisdiction[]> {
+  if (DATA_DISABLED) return [];
   const upper = code.toUpperCase();
   if (upper !== 'EU') return [];
 
@@ -596,6 +624,7 @@ function mapCbdc(row: CbdcRow): Cbdc {
 }
 
 export async function getStablecoins(): Promise<Stablecoin[]> {
+  if (DATA_DISABLED) return [];
   // Fetch stablecoins + all jurisdictions in parallel
   const [scRes, sjRes] = await Promise.all([
     supabase.from('stablecoins').select('*').order('market_cap_bn', { ascending: false }),
@@ -619,6 +648,7 @@ export async function getStablecoins(): Promise<Stablecoin[]> {
 }
 
 export async function getStablecoinById(id: string): Promise<Stablecoin | null> {
+  if (DATA_DISABLED) return null;
   const [scRes, sjRes] = await Promise.all([
     supabase.from('stablecoins').select('*').eq('id', id).single(),
     supabase.from('stablecoin_jurisdictions').select('*').eq('stablecoin_id', id),
@@ -640,6 +670,7 @@ export async function getStablecoinById(id: string): Promise<Stablecoin | null> 
 }
 
 export async function getCbdcs(): Promise<Cbdc[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('cbdcs')
     .select('*');
@@ -654,6 +685,7 @@ export async function getCbdcs(): Promise<Cbdc[]> {
 }
 
 export async function getCbdcById(id: string): Promise<Cbdc | null> {
+  if (DATA_DISABLED) return null;
   const { data, error } = await supabase
     .from('cbdcs')
     .select('*')
@@ -671,6 +703,7 @@ export async function getCbdcById(id: string): Promise<Cbdc | null> {
 
 /** Stablecoins that list this country code in majorJurisdictions */
 export async function getStablecoinsByCountry(code: string): Promise<Stablecoin[]> {
+  if (DATA_DISABLED) return [];
   const upper = code.toUpperCase();
 
   // Find stablecoin IDs for this country from the junction table
@@ -707,6 +740,7 @@ export async function getStablecoinsByCountry(code: string): Promise<Stablecoin[
 
 /** CBDCs issued by this country */
 export async function getCbdcsByCountry(code: string): Promise<Cbdc[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('cbdcs')
     .select('*')
@@ -759,6 +793,7 @@ function mapIssuer(row: StablecoinIssuerRow): StablecoinIssuer {
 }
 
 export async function getStablecoinIssuers(): Promise<StablecoinIssuer[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('stablecoin_issuers')
     .select('*')
@@ -769,6 +804,7 @@ export async function getStablecoinIssuers(): Promise<StablecoinIssuer[]> {
 }
 
 export async function getIssuerBySlug(slug: string): Promise<StablecoinIssuer | null> {
+  if (DATA_DISABLED) return null;
   const { data, error } = await supabase
     .from('stablecoin_issuers')
     .select('*')
@@ -783,6 +819,7 @@ export async function getIssuerBySlug(slug: string): Promise<StablecoinIssuer | 
 }
 
 export async function getStablecoinsByIssuer(issuerId: number): Promise<Stablecoin[]> {
+  if (DATA_DISABLED) return [];
   const { data: scData, error: scErr } = await supabase
     .from('stablecoins')
     .select('*')
@@ -813,6 +850,7 @@ export async function getStablecoinsByIssuer(issuerId: number): Promise<Stableco
 }
 
 export async function getStablecoinIssuerByStrideId(strideId: number): Promise<StablecoinIssuer | null> {
+  if (DATA_DISABLED) return null;
   const { data, error } = await supabase
     .from('stablecoin_issuers')
     .select('*')
@@ -851,6 +889,7 @@ function mapLaw(row: StablecoinLawRow): StablecoinLaw {
 }
 
 export async function getStablecoinLawsByCountry(code: string): Promise<StablecoinLaw[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('stablecoin_laws')
     .select('*')
@@ -888,6 +927,7 @@ function mapEvent(row: StablecoinEventRow): StablecoinEvent {
 }
 
 export async function getStablecoinEventsByCountry(code: string): Promise<StablecoinEvent[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('stablecoin_events')
     .select('*')
@@ -929,6 +969,7 @@ function mapSubsidiary(row: IssuerSubsidiaryRow): IssuerSubsidiary {
 }
 
 export async function getSubsidiariesByIssuer(issuerStrideId: number): Promise<IssuerSubsidiary[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('issuer_subsidiaries')
     .select('*')
@@ -968,6 +1009,7 @@ function mapLicense(row: IssuerLicenseRow): IssuerLicense {
 }
 
 export async function getLicensesByIssuer(issuerStrideId: number): Promise<IssuerLicense[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('issuer_licenses')
     .select('*')
@@ -1000,6 +1042,7 @@ function mapBlockchain(row: StablecoinBlockchainRow): StablecoinBlockchain {
 }
 
 export async function getBlockchainsByStablecoin(ticker: string): Promise<StablecoinBlockchain[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('stablecoin_blockchains')
     .select('*')
@@ -1011,6 +1054,7 @@ export async function getBlockchainsByStablecoin(ticker: string): Promise<Stable
 }
 
 export async function getLicensesByCountry(code: string): Promise<IssuerLicense[]> {
+  if (DATA_DISABLED) return [];
   const { data, error } = await supabase
     .from('issuer_licenses')
     .select('*')
