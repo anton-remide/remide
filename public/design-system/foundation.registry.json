@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "updatedAt": "2026-03-24T00:00:00.000Z",
+    "updatedAt": "2026-03-24T08:26:19.191Z",
     "defaultTheme": "beige",
     "defaultDensity": "comfortable",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
@@ -12,10 +12,18 @@
       "label": "Fonts",
       "description": "Base font roles and legacy aliases used across the system.",
       "kind": "token",
-      "modes": ["base"],
+      "modes": [
+        "base"
+      ],
       "groups": [
-        { "id": "roles", "label": "Roles" },
-        { "id": "aliases", "label": "Legacy Aliases" }
+        {
+          "id": "roles",
+          "label": "Roles"
+        },
+        {
+          "id": "aliases",
+          "label": "Legacy Aliases"
+        }
       ],
       "tokens": [
         {
@@ -87,12 +95,28 @@
       "label": "Colors",
       "description": "Theme-aware surface, text, accent, and semantic colors.",
       "kind": "token",
-      "modes": ["beige", "darkgray", "nearblack"],
+      "modes": [
+        "beige",
+        "darkgray",
+        "nearblack"
+      ],
       "groups": [
-        { "id": "surfaces", "label": "Surfaces" },
-        { "id": "text", "label": "Text" },
-        { "id": "accent", "label": "Accent" },
-        { "id": "semantic", "label": "Semantic" }
+        {
+          "id": "surfaces",
+          "label": "Surfaces"
+        },
+        {
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "id": "accent",
+          "label": "Accent"
+        },
+        {
+          "id": "semantic",
+          "label": "Semantic"
+        }
       ],
       "tokens": [
         {
@@ -216,7 +240,7 @@
           "usage": "Buttons, highlights, active states.",
           "preview": "color",
           "values": {
-            "beige": "#FF5F0F",
+            "beige": "#FF6dd3",
             "darkgray": "#FF7A33",
             "nearblack": "#FF7A33"
           }
@@ -396,10 +420,18 @@
       "label": "Typography Scale",
       "description": "Type scale tokens used across headings, text, labels, and metadata.",
       "kind": "token",
-      "modes": ["base"],
+      "modes": [
+        "base"
+      ],
       "groups": [
-        { "id": "display", "label": "Display" },
-        { "id": "body", "label": "Body" }
+        {
+          "id": "display",
+          "label": "Display"
+        },
+        {
+          "id": "body",
+          "label": "Body"
+        }
       ],
       "tokens": [
         {
@@ -529,22 +561,148 @@
       "label": "Spacing",
       "description": "4px-based spacing scale.",
       "kind": "token",
-      "modes": ["base"],
+      "modes": [
+        "base"
+      ],
       "groups": [
-        { "id": "scale", "label": "Scale" }
+        {
+          "id": "scale",
+          "label": "Scale"
+        }
       ],
       "tokens": [
-        { "id": "space-0", "name": "--space-0", "label": "0", "group": "scale", "description": "Reset spacing.", "usage": "Reset / none.", "preview": "spacing", "values": { "base": "0" } },
-        { "id": "space-0-5", "name": "--space-0-5", "label": "0.5", "group": "scale", "description": "Hairline spacing.", "usage": "Micro gaps.", "preview": "spacing", "values": { "base": "2px" } },
-        { "id": "space-1", "name": "--space-1", "label": "1", "group": "scale", "description": "Tight inline gap.", "usage": "Icon gaps, inline spacing.", "preview": "spacing", "values": { "base": "4px" } },
-        { "id": "space-2", "name": "--space-2", "label": "2", "group": "scale", "description": "Small gap.", "usage": "Compact stacks, input padding.", "preview": "spacing", "values": { "base": "8px" } },
-        { "id": "space-3", "name": "--space-3", "label": "3", "group": "scale", "description": "Default small block gap.", "usage": "Rows, default control padding.", "preview": "spacing", "values": { "base": "12px" } },
-        { "id": "space-4", "name": "--space-4", "label": "4", "group": "scale", "description": "Comfortable block gap.", "usage": "Card padding, layout spacing.", "preview": "spacing", "values": { "base": "16px" } },
-        { "id": "space-6", "name": "--space-6", "label": "6", "group": "scale", "description": "Large internal spacing.", "usage": "Card body, section groups.", "preview": "spacing", "values": { "base": "24px" } },
-        { "id": "space-8", "name": "--space-8", "label": "8", "group": "scale", "description": "Large section gap.", "usage": "Section spacing.", "preview": "spacing", "values": { "base": "32px" } },
-        { "id": "space-12", "name": "--space-12", "label": "12", "group": "scale", "description": "Major section break.", "usage": "Wide section spacing.", "preview": "spacing", "values": { "base": "48px" } },
-        { "id": "space-16", "name": "--space-16", "label": "16", "group": "scale", "description": "Page-level spacing.", "usage": "Large padding blocks.", "preview": "spacing", "values": { "base": "64px" } },
-        { "id": "space-24", "name": "--space-24", "label": "24", "group": "scale", "description": "Hero spacing.", "usage": "Top-level vertical rhythm.", "preview": "spacing", "values": { "base": "96px" } }
+        {
+          "id": "space-0",
+          "name": "--space-0",
+          "label": "0",
+          "group": "scale",
+          "description": "Reset spacing.",
+          "usage": "Reset / none.",
+          "preview": "spacing",
+          "values": {
+            "base": "0"
+          }
+        },
+        {
+          "id": "space-0-5",
+          "name": "--space-0-5",
+          "label": "0.5",
+          "group": "scale",
+          "description": "Hairline spacing.",
+          "usage": "Micro gaps.",
+          "preview": "spacing",
+          "values": {
+            "base": "2px"
+          }
+        },
+        {
+          "id": "space-1",
+          "name": "--space-1",
+          "label": "1",
+          "group": "scale",
+          "description": "Tight inline gap.",
+          "usage": "Icon gaps, inline spacing.",
+          "preview": "spacing",
+          "values": {
+            "base": "4px"
+          }
+        },
+        {
+          "id": "space-2",
+          "name": "--space-2",
+          "label": "2",
+          "group": "scale",
+          "description": "Small gap.",
+          "usage": "Compact stacks, input padding.",
+          "preview": "spacing",
+          "values": {
+            "base": "8px"
+          }
+        },
+        {
+          "id": "space-3",
+          "name": "--space-3",
+          "label": "3",
+          "group": "scale",
+          "description": "Default small block gap.",
+          "usage": "Rows, default control padding.",
+          "preview": "spacing",
+          "values": {
+            "base": "12px"
+          }
+        },
+        {
+          "id": "space-4",
+          "name": "--space-4",
+          "label": "4",
+          "group": "scale",
+          "description": "Comfortable block gap.",
+          "usage": "Card padding, layout spacing.",
+          "preview": "spacing",
+          "values": {
+            "base": "16px"
+          }
+        },
+        {
+          "id": "space-6",
+          "name": "--space-6",
+          "label": "6",
+          "group": "scale",
+          "description": "Large internal spacing.",
+          "usage": "Card body, section groups.",
+          "preview": "spacing",
+          "values": {
+            "base": "24px"
+          }
+        },
+        {
+          "id": "space-8",
+          "name": "--space-8",
+          "label": "8",
+          "group": "scale",
+          "description": "Large section gap.",
+          "usage": "Section spacing.",
+          "preview": "spacing",
+          "values": {
+            "base": "32px"
+          }
+        },
+        {
+          "id": "space-12",
+          "name": "--space-12",
+          "label": "12",
+          "group": "scale",
+          "description": "Major section break.",
+          "usage": "Wide section spacing.",
+          "preview": "spacing",
+          "values": {
+            "base": "48px"
+          }
+        },
+        {
+          "id": "space-16",
+          "name": "--space-16",
+          "label": "16",
+          "group": "scale",
+          "description": "Page-level spacing.",
+          "usage": "Large padding blocks.",
+          "preview": "spacing",
+          "values": {
+            "base": "64px"
+          }
+        },
+        {
+          "id": "space-24",
+          "name": "--space-24",
+          "label": "24",
+          "group": "scale",
+          "description": "Hero spacing.",
+          "usage": "Top-level vertical rhythm.",
+          "preview": "spacing",
+          "values": {
+            "base": "96px"
+          }
+        }
       ]
     },
     {
@@ -552,16 +710,76 @@
       "label": "Radii",
       "description": "Corner radius scale.",
       "kind": "token",
-      "modes": ["base"],
+      "modes": [
+        "base"
+      ],
       "groups": [
-        { "id": "corners", "label": "Corners" }
+        {
+          "id": "corners",
+          "label": "Corners"
+        }
       ],
       "tokens": [
-        { "id": "radius-0", "name": "--radius-0", "label": "0", "group": "corners", "description": "Sharp edge.", "usage": "Tables and dividers.", "preview": "radius", "values": { "base": "0" } },
-        { "id": "radius-sm", "name": "--radius-sm", "label": "Small", "group": "corners", "description": "Small radius.", "usage": "Badges and tight controls.", "preview": "radius", "values": { "base": "4px" } },
-        { "id": "radius-md", "name": "--radius-md", "label": "Medium", "group": "corners", "description": "Default radius.", "usage": "Buttons, inputs, panels.", "preview": "radius", "values": { "base": "8px" } },
-        { "id": "radius-lg", "name": "--radius-lg", "label": "Large", "group": "corners", "description": "Large radius.", "usage": "Cards, modals, raised surfaces.", "preview": "radius", "values": { "base": "16px" } },
-        { "id": "radius-pill", "name": "--radius-pill", "label": "Pill", "group": "corners", "description": "Full round.", "usage": "Pills, chips, segmented toggles.", "preview": "radius", "values": { "base": "9999px" } }
+        {
+          "id": "radius-0",
+          "name": "--radius-0",
+          "label": "0",
+          "group": "corners",
+          "description": "Sharp edge.",
+          "usage": "Tables and dividers.",
+          "preview": "radius",
+          "values": {
+            "base": "0"
+          }
+        },
+        {
+          "id": "radius-sm",
+          "name": "--radius-sm",
+          "label": "Small",
+          "group": "corners",
+          "description": "Small radius.",
+          "usage": "Badges and tight controls.",
+          "preview": "radius",
+          "values": {
+            "base": "4px"
+          }
+        },
+        {
+          "id": "radius-md",
+          "name": "--radius-md",
+          "label": "Medium",
+          "group": "corners",
+          "description": "Default radius.",
+          "usage": "Buttons, inputs, panels.",
+          "preview": "radius",
+          "values": {
+            "base": "8px"
+          }
+        },
+        {
+          "id": "radius-lg",
+          "name": "--radius-lg",
+          "label": "Large",
+          "group": "corners",
+          "description": "Large radius.",
+          "usage": "Cards, modals, raised surfaces.",
+          "preview": "radius",
+          "values": {
+            "base": "16px"
+          }
+        },
+        {
+          "id": "radius-pill",
+          "name": "--radius-pill",
+          "label": "Pill",
+          "group": "corners",
+          "description": "Full round.",
+          "usage": "Pills, chips, segmented toggles.",
+          "preview": "radius",
+          "values": {
+            "base": "9999px"
+          }
+        }
       ]
     },
     {
@@ -569,10 +787,20 @@
       "label": "Shadows",
       "description": "Theme-aware elevation shadows and focus ring.",
       "kind": "token",
-      "modes": ["beige", "darkgray", "nearblack"],
+      "modes": [
+        "beige",
+        "darkgray",
+        "nearblack"
+      ],
       "groups": [
-        { "id": "elevation", "label": "Elevation" },
-        { "id": "focus", "label": "Focus" }
+        {
+          "id": "elevation",
+          "label": "Elevation"
+        },
+        {
+          "id": "focus",
+          "label": "Focus"
+        }
       ],
       "tokens": [
         {
@@ -652,9 +880,15 @@
       "label": "Density",
       "description": "Comfortable and compact UI density overrides.",
       "kind": "token",
-      "modes": ["comfortable", "compact"],
+      "modes": [
+        "comfortable",
+        "compact"
+      ],
       "groups": [
-        { "id": "overrides", "label": "Overrides" }
+        {
+          "id": "overrides",
+          "label": "Overrides"
+        }
       ],
       "tokens": [
         {
@@ -771,9 +1005,18 @@
       "description": "Role-level typography contracts. These are behavior rules, not variable values.",
       "kind": "rule",
       "groups": [
-        { "id": "headings", "label": "Headings" },
-        { "id": "text", "label": "Text" },
-        { "id": "labels", "label": "Labels" }
+        {
+          "id": "headings",
+          "label": "Headings"
+        },
+        {
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "id": "labels",
+          "label": "Labels"
+        }
       ],
       "items": [
         {

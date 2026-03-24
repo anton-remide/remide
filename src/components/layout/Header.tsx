@@ -6,6 +6,7 @@ import { useClickOutside } from '../../hooks/useClickOutside';
 import MobileMenu from './MobileMenu';
 import HeaderSearch from './HeaderSearch';
 import MobileSearchOverlay from './MobileSearchOverlay';
+import { trackEvent } from '../../utils/analytics';
 
 export default function Header() {
   const location = useLocation();
@@ -41,6 +42,7 @@ export default function Header() {
   const navLinks = [
     { to: '/jurisdictions', label: 'Jurisdictions' },
     { to: '/entities', label: 'Entities' },
+    { to: '/ui/foundations', label: 'Design System', analyticsTarget: 'design_system' },
   ];
 
   const handleSignOut = async () => {
@@ -77,6 +79,11 @@ export default function Header() {
                     key={link.to}
                     to={link.to}
                     className={location.pathname.startsWith(link.to) ? 'active' : ''}
+                    onClick={() => {
+                      if ('analyticsTarget' in link && link.analyticsTarget) {
+                        trackEvent('header_nav_click', { target: link.analyticsTarget });
+                      }
+                    }}
                   >
                     {link.label}
                   </Link>
