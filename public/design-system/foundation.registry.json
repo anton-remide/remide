@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "updatedAt": "2026-03-24T08:26:19.191Z",
     "defaultTheme": "beige",
-    "defaultDensity": "comfortable",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
   },
   "collections": [
@@ -841,128 +840,6 @@
             "beige": "0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent)",
             "darkgray": "0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent)",
             "nearblack": "0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent)"
-          }
-        }
-      ]
-    },
-    {
-      "id": "density",
-      "label": "Density",
-      "description": "Comfortable and compact UI density overrides.",
-      "kind": "token",
-      "modes": [
-        "comfortable",
-        "compact"
-      ],
-      "groups": [
-        {
-          "id": "overrides",
-          "label": "Overrides"
-        }
-      ],
-      "tokens": [
-        {
-          "id": "density-font-body",
-          "name": "--density-font-body",
-          "label": "Body Font",
-          "group": "overrides",
-          "description": "Body font size override by density.",
-          "usage": "Data tables, dense forms, compact layouts.",
-          "preview": "text",
-          "values": {
-            "comfortable": "14px",
-            "compact": "13px"
-          }
-        },
-        {
-          "id": "density-font-caption",
-          "name": "--density-font-caption",
-          "label": "Caption Font",
-          "group": "overrides",
-          "description": "Caption font size override by density.",
-          "usage": "Metadata and compact UI labels.",
-          "preview": "text",
-          "values": {
-            "comfortable": "12px",
-            "compact": "11px"
-          }
-        },
-        {
-          "id": "density-line-height",
-          "name": "--density-line-height",
-          "label": "Line Height",
-          "group": "overrides",
-          "description": "Line height override by density.",
-          "usage": "Dense lists and rows.",
-          "preview": "generic",
-          "values": {
-            "comfortable": "1.55",
-            "compact": "1.4"
-          }
-        },
-        {
-          "id": "density-padding-y",
-          "name": "--density-padding-y",
-          "label": "Padding Y",
-          "group": "overrides",
-          "description": "Vertical padding override by density.",
-          "usage": "Rows and controls.",
-          "preview": "spacing",
-          "values": {
-            "comfortable": "12px",
-            "compact": "8px"
-          }
-        },
-        {
-          "id": "density-padding-x",
-          "name": "--density-padding-x",
-          "label": "Padding X",
-          "group": "overrides",
-          "description": "Horizontal padding override by density.",
-          "usage": "Rows and controls.",
-          "preview": "spacing",
-          "values": {
-            "comfortable": "16px",
-            "compact": "12px"
-          }
-        },
-        {
-          "id": "density-gap",
-          "name": "--density-gap",
-          "label": "Gap",
-          "group": "overrides",
-          "description": "Gap override by density.",
-          "usage": "Compact stacked layouts.",
-          "preview": "spacing",
-          "values": {
-            "comfortable": "12px",
-            "compact": "8px"
-          }
-        },
-        {
-          "id": "density-row-height",
-          "name": "--density-row-height",
-          "label": "Row Height",
-          "group": "overrides",
-          "description": "Row height override by density.",
-          "usage": "DataTable and other dense lists.",
-          "preview": "generic",
-          "values": {
-            "comfortable": "48px",
-            "compact": "36px"
-          }
-        },
-        {
-          "id": "density-card-padding",
-          "name": "--density-card-padding",
-          "label": "Card Padding",
-          "group": "overrides",
-          "description": "Card padding override by density.",
-          "usage": "Compact cards and repeated surfaces.",
-          "preview": "spacing",
-          "values": {
-            "comfortable": "24px",
-            "compact": "16px"
           }
         }
       ]

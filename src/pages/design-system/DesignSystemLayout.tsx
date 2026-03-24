@@ -18,12 +18,10 @@ const TAB_LINKS = [
 
 export default function DesignSystemLayout() {
   const { theme, setTheme } = useTheme();
-  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
 
   return (
     <div
-      data-density={density}
       className="st-ds-layout"
       style={{
         background: 'var(--color-bg)',
@@ -49,7 +47,7 @@ export default function DesignSystemLayout() {
       </header>
 
       <div className="st-ds-main">
-        <Outlet context={{ density, viewport }} />
+        <Outlet context={{ viewport }} />
       </div>
 
       <footer className="st-ds-footer">
@@ -63,19 +61,6 @@ export default function DesignSystemLayout() {
               className={['st-ds-footer__btn', theme === t && 'is-active'].filter(Boolean).join(' ')}
             >
               {THEME_LABELS[t]}
-            </button>
-          ))}
-        </div>
-        <div className="st-ds-footer__group">
-          <span className="st-ds-footer__label">Density</span>
-          {(['comfortable', 'compact'] as const).map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setDensity(d)}
-              className={['st-ds-footer__btn', density === d && 'is-active'].filter(Boolean).join(' ')}
-            >
-              {d}
             </button>
           ))}
         </div>

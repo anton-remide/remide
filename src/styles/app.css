@@ -495,7 +495,7 @@ ul {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--density-card-padding, 24px);
+  padding: var(--space-6);
   text-align: center;
   user-select: none;
   box-shadow: var(--shadow-sm);
@@ -543,7 +543,7 @@ ul {
 .st-stat-card__label {
   display: block;
   font-family: var(--font-body);
-  font-size: var(--density-font-caption, var(--type-caption));
+  font-size: var(--type-caption);
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-top: 12px;
@@ -573,9 +573,9 @@ ul {
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: var(--density-padding-y, 16px) 0;
+  padding: var(--space-4) 0;
   font-family: var(--font-body);
-  font-size: var(--density-font-body, var(--type-body));
+  font-size: var(--type-body);
   font-weight: 600;
   color: var(--color-text-main);
   background: none;
@@ -612,8 +612,8 @@ ul {
 }
 
 .st-accordion-item__body {
-  padding: 0 0 var(--density-padding-y, 16px);
-  font-size: var(--density-font-body, var(--type-body));
+  padding: 0 0 var(--space-4);
+  font-size: var(--type-body);
   color: var(--color-text-secondary);
   line-height: 1.6;
 }
@@ -662,7 +662,7 @@ a.st-content-card:hover {
 }
 
 .st-content-card__body {
-  padding: var(--density-card-padding, 20px);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -2,7 +2,6 @@ export interface FoundationMeta {
   version: string;
   updatedAt: string;
   defaultTheme: string;
-  defaultDensity: string;
   description: string;
 }
 
@@ -113,7 +112,6 @@ export function validateFoundationRegistry(value: unknown): FoundationValidation
     validateString(value.meta.version, 'meta.version', issues);
     validateString(value.meta.updatedAt, 'meta.updatedAt', issues);
     validateString(value.meta.defaultTheme, 'meta.defaultTheme', issues);
-    validateString(value.meta.defaultDensity, 'meta.defaultDensity', issues);
     validateString(value.meta.description, 'meta.description', issues);
   }
 
@@ -313,7 +311,6 @@ export function generateFoundationCss(registry: FoundationRegistry) {
   const spacing = getTokenCollection(registry, 'spacing');
   const radii = getTokenCollection(registry, 'radii');
   const shadows = getTokenCollection(registry, 'shadows');
-  const density = getTokenCollection(registry, 'density');
   const typographyRules = getRuleCollection(registry, 'typography-rules');
 
   const rootLines = [
@@ -323,7 +320,6 @@ export function generateFoundationCss(registry: FoundationRegistry) {
     ...cssVarLines(spacing.tokens, 'base'),
     ...cssVarLines(radii.tokens, 'base'),
     ...cssVarLines(shadows.tokens, registry.meta.defaultTheme),
-    ...cssVarLines(density.tokens, registry.meta.defaultDensity),
     ...buildTypographyRuleLines(typographyRules),
   ];
 
@@ -335,11 +331,6 @@ export function generateFoundationCss(registry: FoundationRegistry) {
       ];
       return `[data-theme="${mode}"] {\n${lines.join('\n')}\n}`;
     })
-    .join('\n\n');
-
-  const densityBlocks = density.modes
-    .filter((mode) => mode !== registry.meta.defaultDensity)
-    .map((mode) => `[data-density="${mode}"] {\n${cssVarLines(density.tokens, mode).join('\n')}\n}`)
     .join('\n\n');
 
   return `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
@@ -366,7 +357,5 @@ ${rootLines.join('\n')}
 }
 
 ${themeBlocks}
-
-${densityBlocks}
 `;
 }

@@ -22,14 +22,13 @@ describe('foundation registry', () => {
     expect(validateFoundationRegistry(registry)).toEqual([]);
   });
 
-  it('generates runtime CSS for themes, density, and typography rules', () => {
+  it('generates runtime CSS for themes and typography rules', () => {
     const registry = loadRegistry() as FoundationRegistry;
     const css = generateFoundationCss(registry);
 
     expect(css).toContain('--font-body:');
     expect(css).toContain('--color-bg: #F6F2EE;');
     expect(css).toContain('[data-theme="darkgray"]');
-    expect(css).toContain('[data-density="compact"]');
     expect(css).toContain('--rule-heading-1-font:');
   });
 
