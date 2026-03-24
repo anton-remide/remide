@@ -19,9 +19,22 @@ import {
 const FOUNDATION_ENDPOINT = '/__internal/foundations';
 const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
-const TYPOGRAPHY_SECTION_IDS = new Set(['fonts', 'typography-scale', 'typography-rules']);
+const FONTS_SECTION_ID = 'fonts';
+const TYPOGRAPHY_RULES_SECTION_ID = 'typography-rules';
+const HIDDEN_SECTION_IDS = new Set([FONTS_SECTION_ID]);
+const TYPOGRAPHY_SECTION_IDS = new Set(['typography-scale', TYPOGRAPHY_RULES_SECTION_ID]);
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+type DisplayFoundationItem =
+  | { kind: 'token'; sectionId: string; item: FoundationToken; mode: string }
+  | { kind: 'rule'; sectionId: string; item: FoundationRuleItem };
+
+interface DisplayFoundationGroup {
+  id: string;
+  label: string;
+  layout: 'token' | 'rule';
+  items: DisplayFoundationItem[];
+}
 
 function cloneRegistry(registry: FoundationRegistry) {
   return JSON.parse(JSON.stringify(registry)) as FoundationRegistry;
@@ -29,10 +42,6 @@ function cloneRegistry(registry: FoundationRegistry) {
 
 function isTokenSection(section: FoundationSection): section is FoundationTokenCollection {
   return section.kind === 'token';
-}
-
-function getSectionItems(section: FoundationSection) {
-  return isTokenSection(section) ? section.tokens : section.items;
 }
 
 function applyFoundationRegistry(registry: FoundationRegistry) {
@@ -202,28 +211,36 @@ export default function DesignSystemFoundationsPage() {
 
   const activeRegistry = draftRegistry ?? savedRegistry;
   const sections = useMemo(() => (activeRegistry ? getFoundationSections(activeRegistry) : []), [activeRegistry]);
-  const primaryNavSections = useMemo(
-    () => sections.filter((section) => !TYPOGRAPHY_SECTION_IDS.has(section.id)),
+  const visibleSections = useMemo(
+    () => sections.filter((section) => !HIDDEN_SECTION_IDS.has(section.id)),
     [sections],
   );
+  const fontsSection = useMemo(
+    () => activeRegistry?.collections.find((entry) => entry.id === FONTS_SECTION_ID) ?? null,
+    [activeRegistry],
+  );
+  const primaryNavSections = useMemo(
+    () => visibleSections.filter((section) => !TYPOGRAPHY_SECTION_IDS.has(section.id)),
+    [visibleSections],
+  );
   const typographyNavSections = useMemo(
-    () => sections.filter((section) => TYPOGRAPHY_SECTION_IDS.has(section.id)),
-    [sections],
+    () => visibleSections.filter((section) => TYPOGRAPHY_SECTION_IDS.has(section.id)),
+    [visibleSections],
   );
 
   useEffect(() => {
-    if (sections.length === 0) {
+    if (visibleSections.length === 0) {
       return;
     }
 
-    if (!selectedSectionId || !sections.some((section) => section.id === selectedSectionId)) {
-      setSelectedSectionId(sections[0].id);
+    if (!selectedSectionId || !visibleSections.some((section) => section.id === selectedSectionId)) {
+      setSelectedSectionId(visibleSections[0].id);
     }
-  }, [sections, selectedSectionId]);
+  }, [selectedSectionId, visibleSections]);
 
   const activeSection = useMemo(
-    () => sections.find((section) => section.id === selectedSectionId) ?? sections[0] ?? null,
-    [sections, selectedSectionId],
+    () => visibleSections.find((section) => section.id === selectedSectionId) ?? visibleSections[0] ?? null,
+    [selectedSectionId, visibleSections],
   );
 
   useEffect(() => {
@@ -269,6 +286,65 @@ export default function DesignSystemFoundationsPage() {
   const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
   const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
   const dirtyItemCount = dirtyEntries.itemKeys.length;
+
+  const groupedItems = useMemo<DisplayFoundationGroup[]>(() => {
+    if (!activeSection) {
+      return [];
+    }
+
+    if (activeSection.id === TYPOGRAPHY_RULES_SECTION_ID && !isTokenSection(activeSection) && fontsSection) {
+      const fontMode = fontsSection.modes[0] ?? 'base';
+      const fontGroups = fontsSection.groups.map((group) => ({
+        id: `${fontsSection.id}-${group.id}`,
+        label: group.label,
+        layout: 'token' as const,
+        items: fontsSection.tokens
+          .filter((item) => item.group === group.id)
+          .map((item) => ({ kind: 'token' as const, sectionId: fontsSection.id, item, mode: fontMode })),
+      }));
+
+      const ruleGroups = activeSection.groups.map((group) => ({
+        id: `${activeSection.id}-${group.id}`,
+        label: group.label,
+        layout: 'rule' as const,
+        items: activeSection.items
+          .filter((item) => item.group === group.id)
+          .map((item) => ({ kind: 'rule' as const, sectionId: activeSection.id, item })),
+      }));
+
+      return [...fontGroups, ...ruleGroups].filter((group) => group.items.length > 0);
+    }
+
+    if (isTokenSection(activeSection)) {
+      const mode = activeMode ?? activeSection.modes[0];
+
+      return activeSection.groups.map((group) => ({
+        id: `${activeSection.id}-${group.id}`,
+        label: group.label,
+        layout: 'token' as const,
+        items: activeSection.tokens
+          .filter((item) => item.group === group.id)
+          .map((item) => ({ kind: 'token' as const, sectionId: activeSection.id, item, mode })),
+      })).filter((group) => group.items.length > 0);
+    }
+
+    return activeSection.groups.map((group) => ({
+      id: `${activeSection.id}-${group.id}`,
+      label: group.label,
+      layout: 'rule' as const,
+      items: activeSection.items
+        .filter((item) => item.group === group.id)
+        .map((item) => ({ kind: 'rule' as const, sectionId: activeSection.id, item })),
+    })).filter((group) => group.items.length > 0);
+  }, [activeMode, activeSection, fontsSection]);
+
+  function isSectionDirty(sectionId: string) {
+    if (sectionId === TYPOGRAPHY_RULES_SECTION_ID) {
+      return dirtySectionIds.has(sectionId) || dirtySectionIds.has(FONTS_SECTION_ID);
+    }
+
+    return dirtySectionIds.has(sectionId);
+  }
 
   useEffect(() => {
     if (!dirty) {
@@ -377,11 +453,6 @@ export default function DesignSystemFoundationsPage() {
     );
   }
 
-  const groupedItems = activeSection.groups.map((group) => ({
-    ...group,
-    items: getSectionItems(activeSection).filter((item) => item.group === group.id),
-  })).filter((group) => group.items.length > 0);
-
   function renderNavButton(section: FoundationSection) {
     return (
       <button
@@ -392,7 +463,7 @@ export default function DesignSystemFoundationsPage() {
       >
         <span className="st-ds-foundations-nav__title">
           {section.label}
-          {dirtySectionIds.has(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
+          {isSectionDirty(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
         </span>
       </button>
     );
@@ -488,13 +559,14 @@ export default function DesignSystemFoundationsPage() {
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
                   <div className="st-ds-foundations-group__title">{group.label}</div>
-                  <div className={['st-ds-foundations-list', isTokenSection(activeSection) ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
-                    {group.items.map((item) => {
-                      const itemKey = getFoundationItemKey(activeSection.id, item.id);
+                  <div className={['st-ds-foundations-list', group.layout === 'token' ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
+                    {group.items.map((entry) => {
+                      const itemKey = getFoundationItemKey(entry.sectionId, entry.item.id);
                       const isDirty = dirtyItemKeys.has(itemKey);
 
-                    if (isTokenSection(activeSection) && activeMode) {
-                      const token = item as FoundationToken;
+                    if (entry.kind === 'token') {
+                      const token = entry.item;
+                      const tokenMode = entry.mode;
                       const tokenLocked = token.editable === false;
 
                       return (
@@ -517,13 +589,13 @@ export default function DesignSystemFoundationsPage() {
                             </div>
 
                             <label className="st-ds-foundations-inline-field">
-                              <span className="sr-only">Value ({activeMode})</span>
+                              <span className="sr-only">Value ({tokenMode})</span>
                               <input
                                 className="st-ds-foundations-input st-ds-foundations-input--inline"
-                                aria-label={`${token.label} value (${activeMode})`}
-                                value={token.values[activeMode] ?? ''}
+                                aria-label={`${token.label} value (${tokenMode})`}
+                                value={token.values[tokenMode] ?? ''}
                                 readOnly={tokenLocked}
-                                onChange={(event) => updateTokenValue(activeSection.id, token.id, activeMode, event.target.value)}
+                                onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
                               />
                             </label>
                           </div>
@@ -541,12 +613,12 @@ export default function DesignSystemFoundationsPage() {
                                   token.preview === 'spacing' && 'is-spacing',
                                   token.preview === 'font' && 'is-font',
                                 ].filter(Boolean).join(' ')}
-                                style={tokenPreviewStyle(token, activeMode)}
+                                style={tokenPreviewStyle(token, tokenMode)}
                               >
                                 {token.preview === 'color' && token.label}
                                 {token.preview === 'font' && 'Sphinx of black quartz.'}
                                 {token.preview === 'text' && 'Type'}
-                                {token.preview === 'generic' && (token.values[activeMode] ?? 'Value')}
+                                {token.preview === 'generic' && (token.values[tokenMode] ?? 'Value')}
                               </div>
                             </div>
                           </div>
@@ -554,7 +626,7 @@ export default function DesignSystemFoundationsPage() {
                       );
                     }
 
-                    const rule = item as FoundationRuleItem;
+                    const rule = entry.item;
 
                     return (
                       <article
@@ -583,7 +655,7 @@ export default function DesignSystemFoundationsPage() {
                               <input
                                 className="st-ds-foundations-input"
                                 value={value}
-                                onChange={(event) => updateRuleProperty(activeSection.id, rule.id, property, event.target.value)}
+                                onChange={(event) => updateRuleProperty(entry.sectionId, rule.id, property, event.target.value)}
                               />
                             </label>
                           ))}
