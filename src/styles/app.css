@@ -10251,6 +10251,7 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-foundations-card__bottom--rule {
   gap: 0;
+  margin-top: 24px;
 }
 
 .st-ds-foundations-card__notes {
