@@ -453,7 +453,7 @@ export default function DesignSystemFoundationsPage() {
               )}
             </div>
 
-            {isTokenSection(activeSection) && (
+            {isTokenSection(activeSection) && activeSection.modes.length > 1 && (
               <div className="st-ds-foundations-modes" role="tablist" aria-label={`${activeSection.label} modes`}>
                 {activeSection.modes.map((entry) => (
                   <button
