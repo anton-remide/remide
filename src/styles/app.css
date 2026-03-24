@@ -10062,7 +10062,7 @@ article.st-page:has(.st-floating-cta) {
 .st-ds-foundations-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-1);
   padding: 0;
 }
 
@@ -10073,7 +10073,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-foundations-nav__group--secondary {
-  padding-top: var(--space-4);
+  padding-top: 0;
 }
 
 .st-ds-foundations-nav__item {
