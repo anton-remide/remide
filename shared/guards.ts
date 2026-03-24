@@ -22,11 +22,11 @@ const LOCK_DIR = join(process.cwd(), '.locks');
 
 export const SYSTEM_LIMITS = {
   /** Max entities per enrichment batch */
-  ENRICHMENT_MAX_BATCH: 10_000,
+  ENRICHMENT_MAX_BATCH: 50_000,
   /** Max entities per quality worker batch */
-  QUALITY_MAX_BATCH: 10_000,
+  QUALITY_MAX_BATCH: 50_000,
   /** Max entities per verify worker batch */
-  VERIFY_MAX_BATCH: 2_000,
+  VERIFY_MAX_BATCH: 20_000,
   /** Supabase write batch size (rows per upsert) */
   SUPABASE_WRITE_BATCH: 50,
   /** Max retry attempts for Supabase operations */

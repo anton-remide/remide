@@ -9,7 +9,7 @@ on:
       limit:
         description: 'Max brands to check'
         required: false
-        default: '200'
+        default: '1000'
       dry_run:
         description: 'Dry run (no DB writes)'
         type: boolean
@@ -18,7 +18,7 @@ on:
 jobs:
   brand-coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          ARGS="--limit ${{ inputs.limit || '200' }}"
+          ARGS="--limit ${{ inputs.limit || '1000' }}"
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             ARGS="$ARGS --dry-run"
           fi

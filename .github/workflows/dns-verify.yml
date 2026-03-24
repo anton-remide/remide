@@ -7,14 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       limit:
-        description: 'Max entities to check per run'
+        description: 'Max entities to check (0 = all remaining)'
         required: false
-        default: '2000'
+        default: '20000'
 
 jobs:
   dns-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          LIMIT="${{ inputs.limit || '2000' }}"
+          LIMIT="${{ inputs.limit || '20000' }}"
           echo "Running DNS verify: limit=$LIMIT"
           npx tsx workers/verify/run.ts --limit "$LIMIT"
 

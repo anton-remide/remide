@@ -1,30 +1,28 @@
-name: Quality Worker
+name: Site Scraper (Cheerio)
 
 on:
   schedule:
-    # Mon at 07:30 UTC — runs after parsers (06:00) complete
-    - cron: '30 7 * * 1'
-    # Daily at 05:00 UTC — process any new entities from enrichment (04:00)
-    - cron: '0 5 * * *'
+    # Daily at 06:00 UTC — runs AFTER enrichment (04:00), catches what Firecrawl missed
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
-      country:
-        description: 'Country code (e.g. DE, CA, or leave empty for all)'
-        required: false
-        default: ''
       limit:
-        description: 'Max entities to process (0 = all)'
+        description: 'Max entities to process (0 = all remaining)'
         required: false
         default: '50000'
+      country:
+        description: 'Country code (e.g. PL, CA, or leave empty for all)'
+        required: false
+        default: ''
       force:
-        description: 'Re-process all entities (ignore last_quality_at)'
+        description: 'Re-scrape already enriched entities'
         type: boolean
         default: false
 
 jobs:
-  quality:
+  scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 300
 
     steps:
       - uses: actions/checkout@v4
@@ -36,24 +34,23 @@ jobs:
 
       - run: npm ci --force
 
-      - name: Run quality worker
+      - name: Run site scraper worker
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          ARGS=""
+          ARGS="--limit ${{ inputs.limit || '50000' }}"
           if [ -n "${{ inputs.country }}" ]; then
             ARGS="$ARGS --country ${{ inputs.country }}"
           fi
-          ARGS="$ARGS --limit ${{ inputs.limit || '50000' }}"
           if [ "${{ inputs.force }}" = "true" ]; then
             ARGS="$ARGS --force"
           fi
-          echo "Running quality worker: $ARGS"
-          npx tsx workers/quality/run.ts $ARGS
+          echo "Running site scraper: $ARGS"
+          npx tsx workers/site-scraper/run.ts $ARGS
 
       - name: Summary
         if: always()
-        run: echo "Quality run completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+        run: echo "Site scraper completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

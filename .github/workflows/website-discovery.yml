@@ -1,0 +1,63 @@
+name: Website Discovery
+
+on:
+  schedule:
+    # Daily at 02:00 UTC — runs BEFORE dns-verify (03:00) and enrichment (04:00)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max entities to process (0 = all remaining)'
+        required: false
+        default: '50000'
+      country:
+        description: 'Country code (e.g. PL, CA, or leave empty for all)'
+        required: false
+        default: ''
+      phase:
+        description: 'Phase to run (brand, search, or leave empty for both)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (no DB writes)'
+        type: boolean
+        default: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci --force
+
+      - name: Run website discovery worker
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          ARGS="--limit ${{ inputs.limit || '50000' }}"
+          if [ -n "${{ inputs.country }}" ]; then
+            ARGS="$ARGS --country ${{ inputs.country }}"
+          fi
+          if [ -n "${{ inputs.phase }}" ]; then
+            ARGS="$ARGS --phase ${{ inputs.phase }}"
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          echo "Running website discovery: $ARGS"
+          npx tsx workers/website-discovery/run.ts $ARGS
+
+      - name: Summary
+        if: always()
+        run: echo "Website discovery completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
