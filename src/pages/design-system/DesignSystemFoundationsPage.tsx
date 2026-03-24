@@ -377,38 +377,30 @@ export default function DesignSystemFoundationsPage() {
 
   return (
     <div className="st-ds-content st-ds-foundations">
-      <div className="st-ds-foundations-toolbar">
-        <div className="st-ds-foundations-toolbar__summary">
-          <Text size="sm" color="secondary">
-            Values live inside each card. The editor shows only what matters: token values and rule properties.
-          </Text>
+      {dirty && (
+        <div className="st-ds-foundations-toolbar__actions" role="group" aria-label="Unsaved foundation changes">
+          <span className="st-ds-foundations-toolbar__status">
+            Unsaved changes
+            {dirtyItemCount > 0 ? ` · ${dirtyItemCount} ${dirtyItemCount === 1 ? 'item' : 'items'}` : ''}
+          </span>
+          <button
+            type="button"
+            className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+            onClick={handleReset}
+            disabled={saveState === 'saving'}
+          >
+            Discard
+          </button>
+          <button
+            type="button"
+            className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+            onClick={handleSave}
+            disabled={saveState === 'saving' || validationIssues.length > 0}
+          >
+            {saveState === 'saving' ? 'Saving…' : 'Save'}
+          </button>
         </div>
-
-        {dirty && (
-          <div className="st-ds-foundations-toolbar__actions" role="group" aria-label="Unsaved foundation changes">
-            <span className="st-ds-foundations-toolbar__status">
-              Unsaved changes
-              {dirtyItemCount > 0 ? ` · ${dirtyItemCount} ${dirtyItemCount === 1 ? 'item' : 'items'}` : ''}
-            </span>
-            <button
-              type="button"
-              className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
-              onClick={handleReset}
-              disabled={saveState === 'saving'}
-            >
-              Discard
-            </button>
-            <button
-              type="button"
-              className="st-ds-foundations-btn st-ds-foundations-btn--primary"
-              onClick={handleSave}
-              disabled={saveState === 'saving' || validationIssues.length > 0}
-            >
-              {saveState === 'saving' ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
       {saveMessage && (
         <div
