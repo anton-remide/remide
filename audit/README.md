@@ -11,7 +11,7 @@
 | Phase 1 | [`route-map.md`](./route-map.md) | 12 routes inventoried, desktop/tablet/mobile snapshots, 6 bugs found |
 | Phase 2 | [`audit-report.md`](./audit-report.md) | 47 findings: accessibility, design tokens, responsive, error states, code quality |
 | Phase 3 | [`journey-report.md`](./journey-report.md) | 10 customer journeys tested, 23 issues found, cross-navigation matrix |
-| Phase 4 | [`space-utilization.md`](./space-utilization.md) | 5 findings: viewport waste, data density, layout efficiency |
+| Phase 4 | [`space-utilization.md`](./space-utilization.md) | 5 findings: viewport waste, information load, layout efficiency |
 
 ## Total Findings: 75
 

@@ -18,7 +18,6 @@ This file is the only source of truth for:
 - spacing
 - radii
 - shadows
-- density tokens
 - typography rules and other foundation-level contracts
 
 Runtime CSS is generated from that registry into:
@@ -64,12 +63,10 @@ Variable-like data:
 - `spacing`
 - `radii`
 - `shadows`
-- `density`
 
 Each collection can expose one or more modes:
 
 - themes: `beige`, `darkgray`, `nearblack`
-- density: `comfortable`, `compact`
 - base collections: `base`
 
 ### `rules`

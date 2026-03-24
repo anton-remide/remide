@@ -217,9 +217,3 @@
 - **Decision:** Remove the global `View/Edit` dichotomy and remove the right-side inspector. Editing happens directly inside each card: token cards expose the active mode value in the top-right corner with a compact preview in the lower-right corner, rule cards expose their properties inline, and `Save`/`Discard` appear only after the draft becomes dirty.
 - **Impact:** `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/design-system/foundations.ts`, `src/design-system/foundations.test.ts`, and `src/styles/app.css` now follow a card-first editing model with unsaved-change protection (`beforeunload`), inline dirty markers, and no visible `description` / `usage` editing surface in the main UX.
 
-## DS-003: Remove Density From Design-System Runtime
-- **Category:** Architecture
-- **Date:** 2026-03-24
-- **Context:** The `/ui` design-system shell still exposed `density` as a footer control and foundations axis, even though the current product no longer needs a density mode and runtime CSS already had stable fallback values for the affected primitives.
-- **Decision:** Remove `density` from the `/ui` layout controls, remove the `density` token collection and `defaultDensity` metadata from the foundations registry/runtime generator, and replace remaining `--density-*` runtime references with fixed tokens or static values.
-- **Impact:** `/ui` no longer shows density in the footer or foundations navigation, generated `src/styles/tokens.css` contains no density block, and runtime code no longer references `density` outside historical docs.

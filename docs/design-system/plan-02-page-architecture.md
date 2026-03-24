@@ -9,7 +9,7 @@
 Everything lives in a single file:
 - `src/pages/DesignSystemPage.tsx` (~1315 lines)
 - Route: `/ui` and `/ui/*` in `App.tsx` (lines 71-72)
-- Theme/density controls in a sticky toolbar at the top
+- Theme controls in a sticky toolbar at the top
 - Left sidebar with anchor links to sections
 
 ## Target State
@@ -47,7 +47,7 @@ This is the shared wrapper for all /ui/* pages. It provides:
 1. **Header bar** — branding + tab navigation
 2. **Sidebar** — section anchors (different per page, passed as prop)
 3. **Content area** — renders child route via `<Outlet />`
-4. **Sticky footer** — theme + density + viewport controls
+4. **Sticky footer** — theme + viewport controls
 
 ### Structure
 
@@ -71,11 +71,10 @@ const TAB_LINKS = [
 
 export default function DesignSystemLayout() {
   const { theme, setTheme } = useTheme();
-  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
 
   return (
-    <div data-density={density} style={{ /* same wrapper styles as current */ }}>
+    <div style={{ /* same wrapper styles as current */ }}>
 
       {/* ── Header ── */}
       <div className="st-ds-header">
@@ -98,7 +97,7 @@ export default function DesignSystemLayout() {
       {/* ── Main area: sidebar + content ── */}
       <div className="st-ds-main">
         {/* Sidebar is rendered by each child page via context or prop */}
-        <Outlet context={{ density, viewport }} />
+        <Outlet context={{ viewport }} />
       </div>
 
       {/* ── Sticky Footer ── */}
@@ -113,21 +112,6 @@ export default function DesignSystemLayout() {
               className={['st-ds-footer__btn', theme === t && 'is-active'].filter(Boolean).join(' ')}
             >
               {THEME_LABELS[t]}
-            </button>
-          ))}
-        </div>
-
-        {/* Density */}
-        <div className="st-ds-footer__group">
-          <span className="st-ds-footer__label">Density</span>
-          {(['comfortable', 'compact'] as const).map(d => (
-            <button
-              key={d}
-              onClick={() => setDensity(d)}
-              className={['st-ds-footer__btn', density === d && 'is-active'].filter(Boolean).join(' ')}
-              disabled={d === 'compact'}  // placeholder — compact not yet implemented
-            >
-              {d}
             </button>
           ))}
         </div>
@@ -522,9 +506,9 @@ export default function DesignSystemTemplatesPage() {
 
 6. **Theme persistence** — Handled by `ThemeProvider` (writes to localStorage). The footer controls just call `setTheme()` from `useTheme()` hook.
 
-7. **Current phase: Desktop + Comfortable only.** The Compact and Mobile buttons in the footer should be visible but `disabled`. They exist as placeholders for future work.
+7. **Current phase: Desktop only.** The Mobile button in the footer should be visible but `disabled`. It exists as a placeholder for future work.
 
-8. **Layout primitives are density-agnostic.** The layout shell, Section spacing, Container widths, and Stack gaps do NOT change with the density toggle. Density affects content-level components (cards, tables, inputs) only. This is a deliberate decision — layout coordinates are page-level concerns, not content-level.
+8. **Layout primitives are mode-agnostic.** The layout shell, Section spacing, Container widths, and Stack gaps do NOT change with runtime toggles. This is a deliberate decision — layout coordinates are page-level concerns, not content-level.
 
 9. **CSS `@layer` is NOT introduced in this sprint.** The token-spec references `@layer reset, vendor, tokens, components, pages, utilities` but the current `app.css` (~9500 lines) doesn't use layers. Introducing layers reorders the cascade and can break specificity assumptions silently. This is a separate work package with its own audit.
 

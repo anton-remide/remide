@@ -73,7 +73,7 @@ Rationale:
 
 **The principle:**
 - **Atoms are law.** Button, Badge, Input, Heading, Avatar — these are rigid building blocks with defined props, variants, sizes, and theme behavior. No creative interpretation. A Button is a Button everywhere.
-- **Composition is creative territory.** When you assemble a page — deciding section order, spacing rhythm, visual hierarchy, content density, where to put a CTA — that's design work. A library of preset layouts kills exactly the creative judgment that makes pages good.
+- **Composition is creative territory.** When you assemble a page — deciding section order, spacing rhythm, visual hierarchy, and where to put a CTA — that's design work. A library of preset layouts kills exactly the creative judgment that makes pages good.
 - **Plan 03 (Composition page) is a reference guide, not a rulebook.** It documents the spacing scale, typography pairing defaults, surface hierarchy, and grid system so developers have a shared vocabulary. But these are *recommended defaults*, not constraints. A developer building a landing page should feel free to break the "standard section rhythm" if the content demands it.
 
 **Why this matters:**
@@ -199,7 +199,7 @@ Explicitly deferred with rationale:
 
 **Section `surface="inverse"` for dark hero sections.** Cycle 3 simulation revealed that building a dark hero on a light page requires scoped token resolution. `surface="inverse"` sets `data-theme="nearblack"` on the section element, making all child tokens resolve against the dark palette. No inline color overrides needed.
 
-**Layout primitives are density-agnostic.** Section spacing, Container widths, and Stack gaps do NOT change with density toggle. Density affects content-level components (cards, tables, inputs) only.
+**Layout primitives are mode-agnostic.** Section spacing, Container widths, and Stack gaps do NOT change with runtime toggles.
 
 ### Existing Component Patches (from Cycle 3)
 
@@ -234,7 +234,7 @@ Explicitly deferred with rationale:
 
 - **Header:** "RemiDe UI" brand + NavLink tabs (Components, Composition, Templates)
 - **Main:** Flex container with per-page sidebar + content via `<Outlet />`
-- **Footer (sticky):** Theme + Density + Viewport toggles. Compact and Mobile are placeholder-disabled.
+- **Footer (sticky):** Theme + Viewport toggles. Mobile is placeholder-disabled.
 
 ### Per-Component Reference Pages (Tailwind-style)
 

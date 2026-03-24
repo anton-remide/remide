@@ -790,7 +790,7 @@ export interface StackProps {
 - Gap is applied via `style={{ gap: 'var(--space-{n})' }}` using the numeric `gap` prop mapped to the spacing token
 - Default: `direction="column"`, `gap={4}`, `align="stretch"`
 - Renders `<div>` by default, `as` prop allows semantic element override
-- **Density-agnostic:** Stack does NOT respond to density changes. Gap is always what you set.
+- **Layout-agnostic spacing:** Stack does NOT respond to mode toggles. Gap is always what you set.
 
 ---
 
@@ -885,7 +885,7 @@ export interface SectionProps {
 - If `paddingBlock` is provided, use it as `padding-block` on the wrapper even when `spacing="flush"`. This handles the hero pattern: full-bleed + flush external spacing + internal vertical padding.
 - `title` prop renders `<Heading level={2}>` internally. If you need a different level, omit `title` and render your own `<Heading>` as a child.
 - `bleed` + `maxWidth="full"` conflict: `bleed` ALWAYS creates a constrained `.st-section__inner`. If you want viewport-width content inside a bleed, use `maxWidth="wide"` (100% with padding-inline). `maxWidth="full"` removes padding-inline and is incompatible with `bleed`. Emit `console.warn` in dev mode if both are set.
-- **Density-agnostic:** Section spacing does NOT change with density. It's a layout coordinate, not a content property.
+- **Layout-agnostic spacing:** Section spacing does NOT change with mode toggles. It's a layout coordinate, not a content property.
 - The `scroll-margin-top` accounts for the site header + DS header. This value is set via CSS, not inline style.
 
 ---
