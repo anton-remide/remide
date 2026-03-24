@@ -9,13 +9,18 @@ import type {
   FoundationToken,
   FoundationTokenCollection,
 } from '../../design-system/foundations';
-import { generateFoundationCss, getFoundationSections, validateFoundationRegistry } from '../../design-system/foundations';
+import {
+  generateFoundationCss,
+  getDirtyFoundationEntries,
+  getFoundationItemKey,
+  getFoundationSections,
+  validateFoundationRegistry,
+} from '../../design-system/foundations';
 
 const FOUNDATION_ENDPOINT = '/__internal/foundations';
 const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
 
-type FoundationsMode = 'view' | 'edit';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 function cloneRegistry(registry: FoundationRegistry) {
@@ -163,7 +168,6 @@ function valueSummary(section: FoundationSection, itemId: string, mode?: string)
 }
 
 export default function DesignSystemFoundationsPage() {
-  const [mode, setMode] = useState<FoundationsMode>('view');
   const [savedRegistry, setSavedRegistry] = useState<FoundationRegistry | null>(null);
   const [draftRegistry, setDraftRegistry] = useState<FoundationRegistry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -286,6 +290,29 @@ export default function DesignSystemFoundationsPage() {
     return JSON.stringify(savedRegistry) !== JSON.stringify(draftRegistry);
   }, [draftRegistry, savedRegistry]);
 
+  const dirtyEntries = useMemo(
+    () => (savedRegistry && draftRegistry ? getDirtyFoundationEntries(savedRegistry, draftRegistry) : { sectionIds: [], itemKeys: [] }),
+    [draftRegistry, savedRegistry],
+  );
+
+  const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
+  const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
+  const dirtyItemCount = dirtyEntries.itemKeys.length;
+
+  useEffect(() => {
+    if (!dirty) {
+      return undefined;
+    }
+
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [dirty]);
+
   function updateDraft(mutator: (next: FoundationRegistry) => void) {
     if (!draftRegistry) {
       return;
@@ -377,7 +404,6 @@ export default function DesignSystemFoundationsPage() {
       setDraftRegistry(cloneRegistry(saved));
       setSaveState('saved');
       setSaveMessage(`Saved locally at ${formatTimestamp(saved.meta.updatedAt)}.`);
-      setMode('view');
     } catch (error) {
       setSaveState('error');
       setSaveMessage(error instanceof Error ? error.message : 'Failed to save foundations.');
@@ -422,6 +448,7 @@ export default function DesignSystemFoundationsPage() {
   const selectedToken = isTokenSection(activeSection) ? selectedItem as FoundationToken : null;
   const selectedRule = isTokenSection(activeSection) ? null : selectedItem as FoundationRuleItem;
   const selectedTokenLocked = selectedToken?.editable === false;
+  const selectedItemDirty = dirtyItemKeys.has(getFoundationItemKey(activeSection.id, selectedItem.id));
 
   return (
     <div className="st-ds-content st-ds-foundations">
@@ -442,50 +469,49 @@ export default function DesignSystemFoundationsPage() {
       </div>
 
       <div className="st-ds-foundations-toolbar">
-        <div className="st-ds-foundations-toggle" role="tablist" aria-label="Foundations mode">
-          {(['view', 'edit'] as const).map((entry) => (
-            <button
-              key={entry}
-              type="button"
-              className={['st-ds-foundations-toggle__btn', mode === entry && 'is-active'].filter(Boolean).join(' ')}
-              onClick={() => setMode(entry)}
-            >
-              {entry === 'view' ? 'View' : 'Edit'}
-            </button>
-          ))}
+        <div className="st-ds-foundations-toolbar__summary">
+          <Text size="sm" color="secondary">
+            Select any token or rule and edit it directly. Save appears only after the draft changes.
+          </Text>
         </div>
 
-        <div className="st-ds-foundations-toolbar__actions">
-          {mode === 'edit' && (
-            <>
-              <button
-                type="button"
-                className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
-                onClick={handleReset}
-                disabled={!dirty}
-              >
-                Reset Draft
-              </button>
-              <button
-                type="button"
-                className="st-ds-foundations-btn st-ds-foundations-btn--primary"
-                onClick={handleSave}
-                disabled={!dirty || saveState === 'saving' || validationIssues.length > 0}
-              >
-                {saveState === 'saving' ? 'Saving…' : 'Save'}
-              </button>
-            </>
-          )}
-        </div>
+        {dirty && (
+          <div className="st-ds-foundations-toolbar__actions" role="group" aria-label="Unsaved foundation changes">
+            <span className="st-ds-foundations-toolbar__status">
+              Unsaved changes
+              {dirtyItemCount > 0 ? ` · ${dirtyItemCount} ${dirtyItemCount === 1 ? 'item' : 'items'}` : ''}
+            </span>
+            <button
+              type="button"
+              className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+              onClick={handleReset}
+              disabled={saveState === 'saving'}
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+              onClick={handleSave}
+              disabled={saveState === 'saving' || validationIssues.length > 0}
+            >
+              {saveState === 'saving' ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        )}
       </div>
 
       {saveMessage && (
-        <div className={['st-ds-foundations-alert', saveState === 'error' && 'st-ds-foundations-alert--error'].filter(Boolean).join(' ')}>
+        <div
+          className={['st-ds-foundations-alert', saveState === 'error' && 'st-ds-foundations-alert--error'].filter(Boolean).join(' ')}
+          role={saveState === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+        >
           {saveMessage}
         </div>
       )}
 
-      {validationIssues.length > 0 && mode === 'edit' && (
+      {validationIssues.length > 0 && (
         <div className="st-ds-foundations-alert st-ds-foundations-alert--error">
           <strong>{validationIssues.length}</strong> validation issue(s) block Save.
           <ul className="st-ds-foundations-issues">
@@ -511,7 +537,10 @@ export default function DesignSystemFoundationsPage() {
                 onClick={() => setSelectedSectionId(section.id)}
                 className={['st-ds-foundations-nav__item', activeSection.id === section.id && 'is-active'].filter(Boolean).join(' ')}
               >
-                <span className="st-ds-foundations-nav__title">{section.label}</span>
+                <span className="st-ds-foundations-nav__title">
+                  {section.label}
+                  {dirtySectionIds.has(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
+                </span>
                 <span className="st-ds-foundations-nav__meta">{section.kind === 'token' ? 'Variables' : 'Rules'}</span>
                 {section.description && (
                   <span className="st-ds-foundations-nav__desc">{section.description}</span>
@@ -523,10 +552,10 @@ export default function DesignSystemFoundationsPage() {
 
         <section className="st-ds-foundations-panel st-ds-foundations-panel--main">
           <div className="st-ds-foundations-panel__header st-ds-foundations-panel__header--stack">
-            <div>
+            <div className="st-ds-foundations-panel__header-copy">
               <Heading level={2}>{activeSection.label}</Heading>
               {activeSection.description && (
-                <Text color="secondary">{activeSection.description}</Text>
+                <Text size="sm" color="secondary">{activeSection.description}</Text>
               )}
             </div>
 
@@ -557,13 +586,25 @@ export default function DesignSystemFoundationsPage() {
                       <button
                         key={item.id}
                         type="button"
-                        className={['st-ds-foundations-list__item', isSelected && 'is-active'].filter(Boolean).join(' ')}
+                        className={[
+                          'st-ds-foundations-list__item',
+                          isSelected && 'is-active',
+                          dirtyItemKeys.has(getFoundationItemKey(activeSection.id, item.id)) && 'is-dirty',
+                        ].filter(Boolean).join(' ')}
                         onClick={() => setSelectedItemIds((current) => ({ ...current, [activeSection.id]: item.id }))}
                       >
-                        <span className="st-ds-foundations-list__label">{item.label}</span>
+                        <span className="st-ds-foundations-list__row">
+                          <span className="st-ds-foundations-list__label">{item.label}</span>
+                          {dirtyItemKeys.has(getFoundationItemKey(activeSection.id, item.id)) && (
+                            <span className="st-ds-foundations-list__badge">Edited</span>
+                          )}
+                        </span>
                         <code className="st-ds-foundations-list__code">
                           {isTokenSection(activeSection) ? (item as FoundationToken).name : item.id}
                         </code>
+                        <span className="st-ds-foundations-list__value-label">
+                          {isTokenSection(activeSection) ? 'Current value' : 'Rule summary'}
+                        </span>
                         <span className="st-ds-foundations-list__value">
                           {valueSummary(activeSection, item.id, activeMode)}
                         </span>
@@ -578,8 +619,15 @@ export default function DesignSystemFoundationsPage() {
         </section>
 
         <aside className="st-ds-foundations-panel st-ds-foundations-panel--inspector">
-          <div className="st-ds-foundations-panel__header">
-            <Text size="caption" color="secondary">Inspector</Text>
+          <div className="st-ds-foundations-panel__header st-ds-foundations-panel__header--inspector">
+            <div className="st-ds-foundations-panel__header-copy">
+              <Text size="caption" color="secondary">Inspector</Text>
+              <Heading level={3}>{selectedItem.label}</Heading>
+            </div>
+            <div className="st-ds-foundations-panel__header-meta">
+              {selectedItemDirty && <span className="st-ds-foundations-chip is-dirty">Unsaved</span>}
+              {selectedTokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
+            </div>
           </div>
 
           {selectedToken && activeMode && (
@@ -594,7 +642,7 @@ export default function DesignSystemFoundationsPage() {
                 <input
                   className="st-ds-foundations-input"
                   value={selectedToken.label}
-                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  readOnly={selectedTokenLocked}
                   onChange={(event) => updateTokenField(activeSection.id, selectedToken.id, 'label', event.target.value)}
                 />
               </label>
@@ -604,7 +652,7 @@ export default function DesignSystemFoundationsPage() {
                 <textarea
                   className="st-ds-foundations-textarea"
                   value={selectedToken.description}
-                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  readOnly={selectedTokenLocked}
                   onChange={(event) => updateTokenField(activeSection.id, selectedToken.id, 'description', event.target.value)}
                 />
               </label>
@@ -614,7 +662,7 @@ export default function DesignSystemFoundationsPage() {
                 <textarea
                   className="st-ds-foundations-textarea"
                   value={selectedToken.usage ?? ''}
-                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  readOnly={selectedTokenLocked}
                   onChange={(event) => updateTokenField(activeSection.id, selectedToken.id, 'usage', event.target.value)}
                 />
               </label>
@@ -624,7 +672,7 @@ export default function DesignSystemFoundationsPage() {
                 <input
                   className="st-ds-foundations-input"
                   value={selectedToken.values[activeMode] ?? ''}
-                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  readOnly={selectedTokenLocked}
                   onChange={(event) => updateTokenValue(activeSection.id, selectedToken.id, activeMode, event.target.value)}
                 />
               </label>
@@ -666,7 +714,6 @@ export default function DesignSystemFoundationsPage() {
                 <input
                   className="st-ds-foundations-input"
                   value={selectedRule.label}
-                  readOnly={mode !== 'edit'}
                   onChange={(event) => updateRuleField(activeSection.id, selectedRule.id, 'label', event.target.value)}
                 />
               </label>
@@ -676,7 +723,6 @@ export default function DesignSystemFoundationsPage() {
                 <textarea
                   className="st-ds-foundations-textarea"
                   value={selectedRule.description}
-                  readOnly={mode !== 'edit'}
                   onChange={(event) => updateRuleField(activeSection.id, selectedRule.id, 'description', event.target.value)}
                 />
               </label>
@@ -686,7 +732,6 @@ export default function DesignSystemFoundationsPage() {
                 <textarea
                   className="st-ds-foundations-textarea"
                   value={selectedRule.previewText ?? ''}
-                  readOnly={mode !== 'edit'}
                   onChange={(event) => updateRuleField(activeSection.id, selectedRule.id, 'previewText', event.target.value)}
                 />
               </label>
@@ -698,7 +743,6 @@ export default function DesignSystemFoundationsPage() {
                     <input
                       className="st-ds-foundations-input"
                       value={value}
-                      readOnly={mode !== 'edit'}
                       onChange={(event) => updateRuleProperty(activeSection.id, selectedRule.id, property, event.target.value)}
                     />
                   </label>

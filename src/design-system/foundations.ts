@@ -63,10 +63,19 @@ export interface FoundationValidationIssue {
   message: string;
 }
 
+export interface DirtyFoundationEntries {
+  sectionIds: string[];
+  itemKeys: string[];
+}
+
 export type FoundationSection = FoundationTokenCollection | FoundationRuleCollection;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isTokenCollectionSection(section: FoundationSection): section is FoundationTokenCollection {
+  return section.kind === 'token';
 }
 
 function pushIssue(issues: FoundationValidationIssue[], path: string, message: string) {
@@ -210,6 +219,54 @@ export function validateFoundationRegistry(value: unknown): FoundationValidation
 
 export function getFoundationSections(registry: FoundationRegistry): FoundationSection[] {
   return [...registry.collections, ...registry.rules];
+}
+
+export function getFoundationItemKey(sectionId: string, itemId: string) {
+  return `${sectionId}::${itemId}`;
+}
+
+function getSectionItemMap(section: FoundationSection) {
+  const entries = isTokenCollectionSection(section) ? section.tokens : section.items;
+  return new Map(entries.map((entry) => [entry.id, JSON.stringify(entry)]));
+}
+
+export function getDirtyFoundationEntries(saved: FoundationRegistry, draft: FoundationRegistry): DirtyFoundationEntries {
+  const savedSections = new Map(getFoundationSections(saved).map((section) => [section.id, section]));
+  const draftSections = new Map(getFoundationSections(draft).map((section) => [section.id, section]));
+  const sectionIds = new Set<string>();
+  const itemKeys = new Set<string>();
+
+  for (const sectionId of new Set([...savedSections.keys(), ...draftSections.keys()])) {
+    const savedSection = savedSections.get(sectionId);
+    const draftSection = draftSections.get(sectionId);
+
+    if (!savedSection || !draftSection) {
+      sectionIds.add(sectionId);
+      const section = draftSection ?? savedSection;
+      if (section) {
+        const entries = isTokenCollectionSection(section) ? section.tokens : section.items;
+        for (const entry of entries) {
+          itemKeys.add(getFoundationItemKey(sectionId, entry.id));
+        }
+      }
+      continue;
+    }
+
+    const savedItems = getSectionItemMap(savedSection);
+    const draftItems = getSectionItemMap(draftSection);
+
+    for (const itemId of new Set([...savedItems.keys(), ...draftItems.keys()])) {
+      if (savedItems.get(itemId) !== draftItems.get(itemId)) {
+        sectionIds.add(sectionId);
+        itemKeys.add(getFoundationItemKey(sectionId, itemId));
+      }
+    }
+  }
+
+  return {
+    sectionIds: [...sectionIds],
+    itemKeys: [...itemKeys],
+  };
 }
 
 export function getTokenCollection(registry: FoundationRegistry, id: string): FoundationTokenCollection {
