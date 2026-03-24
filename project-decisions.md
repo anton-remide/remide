@@ -210,9 +210,9 @@
 - **Decision:** Remove `--font1` and `--font2` from the foundation registry, migrate runtime usage to `--font-body` / `--font-heading`, and keep typography API limited to the three canonical roles: `--font-body`, `--font-heading`, `--font-mono`.
 - **Impact:** `public/design-system/foundation.registry.json`, generated `src/styles/tokens.css`, `src/styles/app.css`, `src/components/ui/MermaidDiagram.tsx`, runtime page styles, and current design-system docs now align on role-based typography only.
 
-## DS-002: Foundations Editor Uses Dirty-State Save/Discard Instead of View/Edit Mode
+## DS-002: Foundations Editor Uses Card-First Editing With Dirty-State Save/Discard
 - **Category:** UX-UI
 - **Date:** 2026-03-24
 - **Context:** The foundations editor hid editability behind a global `View/Edit` toggle, which made the selected token/rule card read like a static reference panel and made save affordances feel disconnected from the actual act of editing.
-- **Decision:** Remove the global `View/Edit` dichotomy. The inspector stays directly editable for all mutable fields, `Save`/`Discard` appear only after the draft becomes dirty, and edited sections/items surface their state inline in navigation and list cards.
-- **Impact:** `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/design-system/foundations.ts`, `src/design-system/foundations.test.ts`, and `src/styles/app.css` now follow a live-draft model with unsaved-change protection (`beforeunload`), clearer selected-card hierarchy, and contextual save actions.
+- **Decision:** Remove the global `View/Edit` dichotomy and remove the right-side inspector. Editing happens directly inside each card: token cards expose the active mode value in the top-right corner with a compact preview in the lower-right corner, rule cards expose their properties inline, and `Save`/`Discard` appear only after the draft becomes dirty.
+- **Impact:** `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/design-system/foundations.ts`, `src/design-system/foundations.test.ts`, and `src/styles/app.css` now follow a card-first editing model with unsaved-change protection (`beforeunload`), inline dirty markers, and no visible `description` / `usage` editing surface in the main UX.
