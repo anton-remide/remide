@@ -10188,7 +10188,7 @@ article.st-page:has(.st-floating-cta) {
 .st-ds-foundations-list__item.is-token-card {
   min-height: 196px;
   align-content: start;
-  gap: var(--space-5);
+  gap: var(--space-6);
 }
 
 .st-ds-foundations-list__item.is-rule-card {
@@ -10246,7 +10246,7 @@ article.st-page:has(.st-floating-cta) {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
   align-items: start;
-  padding-top: var(--space-1);
+  padding-top: 0;
 }
 
 .st-ds-foundations-card__bottom--rule {
