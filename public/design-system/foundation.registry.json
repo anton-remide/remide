@@ -877,7 +877,7 @@
             "size": "var(--type-display)",
             "line-height": "1.08",
             "weight": "700",
-            "letter-spacing": "-0.03em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -891,7 +891,7 @@
             "size": "var(--type-heading-1)",
             "line-height": "1.08",
             "weight": "700",
-            "letter-spacing": "-0.03em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -905,7 +905,7 @@
             "size": "var(--type-heading-2)",
             "line-height": "1.15",
             "weight": "600",
-            "letter-spacing": "-0.02em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -919,7 +919,7 @@
             "size": "var(--type-heading-3)",
             "line-height": "1.25",
             "weight": "600",
-            "letter-spacing": "-0.01em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -933,7 +933,7 @@
             "size": "var(--type-body-lg)",
             "line-height": "1.35",
             "weight": "600",
-            "letter-spacing": "-0.01em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -947,7 +947,7 @@
             "size": "var(--type-body)",
             "line-height": "1.4",
             "weight": "600",
-            "letter-spacing": "-0.01em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -961,7 +961,7 @@
             "size": "var(--type-body-sm)",
             "line-height": "1.4",
             "weight": "600",
-            "letter-spacing": "0.04em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -1031,7 +1031,7 @@
             "size": "var(--type-micro)",
             "line-height": "1.45",
             "weight": "500",
-            "letter-spacing": "0.02em"
+            "letter-spacing": "0"
           }
         },
         {
@@ -1045,7 +1045,7 @@
             "size": "var(--type-micro)",
             "line-height": "1",
             "weight": "600",
-            "letter-spacing": "0.08em"
+            "letter-spacing": "0"
           }
         }
       ]

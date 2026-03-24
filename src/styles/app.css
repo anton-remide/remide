@@ -9880,6 +9880,12 @@ article.st-page:has(.st-floating-cta) {
   color: var(--color-accent);
 }
 
+.st-ds-foundations-chip.is-warning {
+  background: color-mix(in srgb, var(--color-warning-subtle) 72%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-warning) 24%, transparent);
+  color: var(--color-warning);
+}
+
 .st-ds-foundations-toolbar {
   display: flex;
   align-items: center;
@@ -10005,6 +10011,7 @@ article.st-page:has(.st-floating-cta) {
   width: 100%;
   grid-template-columns: 240px minmax(0, 700px);
   gap: var(--space-8);
+  padding-bottom: 64px;
   justify-content: center;
   align-items: flex-start;
 }
@@ -10191,13 +10198,26 @@ article.st-page:has(.st-floating-cta) {
   gap: var(--space-6);
 }
 
+.st-ds-foundations-list__item.is-font-role-card,
+.st-ds-foundations-list__item.is-font-role-card.is-token-card--compact {
+  min-height: 0;
+}
+
 .st-ds-foundations-list__item.is-token-card.is-token-card--compact {
   min-height: 0;
   gap: var(--space-3);
 }
 
+.st-ds-foundations-list__item.is-font-role-card.is-token-card--compact {
+  gap: var(--space-6);
+}
+
 .st-ds-foundations-list__item.is-rule-card {
-  gap: var(--space-5);
+  gap: 6px;
+}
+
+.st-ds-foundations-list__item.is-rule-card .st-ds-foundations-card__meta {
+  gap: 6px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -10244,6 +10264,14 @@ article.st-page:has(.st-floating-cta) {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.st-ds-foundations-font-role__badges {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .st-ds-foundations-card__bottom {
@@ -10380,6 +10408,16 @@ article.st-page:has(.st-floating-cta) {
     border-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1),
     background 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+select.st-ds-foundations-input {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 44px;
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px 12px;
 }
 
 .st-ds-foundations-input--inline {

@@ -20,8 +20,19 @@ const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundati
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
 const FONTS_SECTION_ID = 'fonts';
 const TYPOGRAPHY_RULES_SECTION_ID = 'typography-rules';
-const HIDDEN_SECTION_IDS = new Set([FONTS_SECTION_ID]);
-const TYPOGRAPHY_SECTION_IDS = new Set(['typography-scale', TYPOGRAPHY_RULES_SECTION_ID]);
+const TYPOGRAPHY_SCALE_SECTION_ID = 'typography-scale';
+const TYPOGRAPHY_SECTION_IDS = new Set([TYPOGRAPHY_SCALE_SECTION_ID, TYPOGRAPHY_RULES_SECTION_ID]);
+const SECTION_NAV_ORDER = [
+  'colors',
+  'spacing',
+  'radii',
+  'shadows',
+  FONTS_SECTION_ID,
+  TYPOGRAPHY_SCALE_SECTION_ID,
+  TYPOGRAPHY_RULES_SECTION_ID,
+];
+type ProjectFontCategory = 'sans' | 'serif' | 'mono';
+type ProjectFontSource = 'google' | 'local';
 type DisplayFoundationItem =
   | { kind: 'token'; sectionId: string; item: FoundationToken; mode: string }
   | { kind: 'rule'; sectionId: string; item: FoundationRuleItem };
@@ -32,6 +43,34 @@ interface DisplayFoundationGroup {
   layout: 'token' | 'rule';
   items: DisplayFoundationItem[];
 }
+
+interface ProjectFontOption {
+  value: string;
+  label: string;
+  category: ProjectFontCategory;
+  source: ProjectFontSource;
+}
+
+const PROJECT_FONT_OPTIONS: ProjectFontOption[] = [
+  {
+    value: "'Geist', sans-serif",
+    label: 'Geist',
+    category: 'sans',
+    source: 'google',
+  },
+  {
+    value: "'Satoshi Variable', sans-serif",
+    label: 'Satoshi Variable',
+    category: 'sans',
+    source: 'local',
+  },
+  {
+    value: "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    label: 'Geist Mono',
+    category: 'mono',
+    source: 'google',
+  },
+];
 
 function cloneRegistry(registry: FoundationRegistry) {
   return JSON.parse(JSON.stringify(registry)) as FoundationRegistry;
@@ -200,6 +239,30 @@ function splitFoundationItemKey(itemKey: string) {
   };
 }
 
+function getFontOptionSourceLabel(source: ProjectFontSource) {
+  switch (source) {
+    case 'google':
+      return 'Google';
+    case 'local':
+      return 'Local';
+    default:
+      return 'Bundled';
+  }
+}
+
+function getFontRoleCategories(tokenId: string): ProjectFontCategory[] {
+  if (tokenId === 'font-mono') {
+    return ['mono'];
+  }
+
+  return ['sans', 'serif'];
+}
+
+function getFontRoleOptions(tokenId: string) {
+  const categories = getFontRoleCategories(tokenId);
+  return PROJECT_FONT_OPTIONS.filter((option) => categories.includes(option.category));
+}
+
 export default function DesignSystemFoundationsPage() {
   const [savedRegistry, setSavedRegistry] = useState<FoundationRegistry | null>(null);
   const [draftRegistry, setDraftRegistry] = useState<FoundationRegistry | null>(null);
@@ -246,14 +309,20 @@ export default function DesignSystemFoundationsPage() {
 
   const activeRegistry = draftRegistry ?? savedRegistry;
   const sections = useMemo(() => (activeRegistry ? getFoundationSections(activeRegistry) : []), [activeRegistry]);
-  const visibleSections = useMemo(
-    () => sections.filter((section) => !HIDDEN_SECTION_IDS.has(section.id)),
-    [sections],
-  );
-  const fontsSection = useMemo(
-    () => activeRegistry?.collections.find((entry) => entry.id === FONTS_SECTION_ID) ?? null,
-    [activeRegistry],
-  );
+  const visibleSections = useMemo(() => {
+    const sectionOrder = new Map(SECTION_NAV_ORDER.map((sectionId, index) => [sectionId, index]));
+
+    return [...sections].sort((left, right) => {
+      const leftRank = sectionOrder.get(left.id) ?? Number.MAX_SAFE_INTEGER;
+      const rightRank = sectionOrder.get(right.id) ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftRank !== rightRank) {
+        return leftRank - rightRank;
+      }
+
+      return sections.indexOf(left) - sections.indexOf(right);
+    });
+  }, [sections]);
   const primaryNavSections = useMemo(
     () => visibleSections.filter((section) => !TYPOGRAPHY_SECTION_IDS.has(section.id)),
     [visibleSections],
@@ -321,29 +390,6 @@ export default function DesignSystemFoundationsPage() {
       return [];
     }
 
-    if (activeSection.id === TYPOGRAPHY_RULES_SECTION_ID && !isTokenSection(activeSection) && fontsSection) {
-      const fontMode = fontsSection.modes[0] ?? 'base';
-      const fontGroups = fontsSection.groups.map((group) => ({
-        id: `${fontsSection.id}-${group.id}`,
-        label: group.label,
-        layout: 'token' as const,
-        items: fontsSection.tokens
-          .filter((item) => item.group === group.id)
-          .map((item) => ({ kind: 'token' as const, sectionId: fontsSection.id, item, mode: fontMode })),
-      }));
-
-      const ruleGroups = activeSection.groups.map((group) => ({
-        id: `${activeSection.id}-${group.id}`,
-        label: group.label,
-        layout: 'rule' as const,
-        items: activeSection.items
-          .filter((item) => item.group === group.id)
-          .map((item) => ({ kind: 'rule' as const, sectionId: activeSection.id, item })),
-      }));
-
-      return [...fontGroups, ...ruleGroups].filter((group) => group.items.length > 0);
-    }
-
     if (isTokenSection(activeSection)) {
       const mode = activeMode ?? activeSection.modes[0];
 
@@ -365,13 +411,9 @@ export default function DesignSystemFoundationsPage() {
         .filter((item) => item.group === group.id)
         .map((item) => ({ kind: 'rule' as const, sectionId: activeSection.id, item })),
     })).filter((group) => group.items.length > 0);
-  }, [activeMode, activeSection, fontsSection]);
+  }, [activeMode, activeSection]);
 
   function isSectionDirty(sectionId: string) {
-    if (sectionId === TYPOGRAPHY_RULES_SECTION_ID) {
-      return dirtySectionIds.has(sectionId) || dirtySectionIds.has(FONTS_SECTION_ID);
-    }
-
     return dirtySectionIds.has(sectionId);
   }
 
@@ -582,8 +624,13 @@ export default function DesignSystemFoundationsPage() {
                       const token = entry.item;
                       const tokenMode = entry.mode;
                       const tokenLocked = token.editable === false;
-                      const showTokenPreview = entry.sectionId !== FONTS_SECTION_ID;
+                      const isFontRoleCard = entry.sectionId === FONTS_SECTION_ID;
+                      const fontRoleOptions = isFontRoleCard ? getFontRoleOptions(token.id) : [];
+                      const selectedFontOption = fontRoleOptions.find((option) => option.value === (token.values[tokenMode] ?? '')) ?? null;
+                      const showTokenPreview = !isFontRoleCard;
                       const hasTokenFooter = tokenLocked || showTokenPreview || isDirty;
+                      const canSaveItem = savingItemKey === null && (!isFontRoleCard || selectedFontOption !== null);
+                      const fontRoleStatusLabel = selectedFontOption ? getFontOptionSourceLabel(selectedFontOption.source) : 'Not Bundled';
 
                       return (
                         <article
@@ -591,6 +638,7 @@ export default function DesignSystemFoundationsPage() {
                           className={[
                             'st-ds-foundations-list__item',
                             'is-token-card',
+                            isFontRoleCard && 'is-font-role-card',
                             !hasTokenFooter && 'is-token-card--compact',
                             'clip-lg',
                             isDirty && 'is-dirty',
@@ -600,21 +648,48 @@ export default function DesignSystemFoundationsPage() {
                             <div className="st-ds-foundations-card__meta">
                               <div className="st-ds-foundations-list__row">
                                 <span className="st-ds-foundations-list__label">{token.label}</span>
-                                {isDirty && <span className="st-ds-foundations-list__badge">Edited</span>}
+                                <span className="st-ds-foundations-font-role__badges">
+                                  {isFontRoleCard && (
+                                    <span className={['st-ds-foundations-chip', !selectedFontOption && 'is-warning'].filter(Boolean).join(' ')}>
+                                      {fontRoleStatusLabel}
+                                    </span>
+                                  )}
+                                  {isDirty && <span className="st-ds-foundations-list__badge">Edited</span>}
+                                </span>
                               </div>
                               <code className="st-ds-foundations-list__code">{token.name}</code>
                             </div>
 
-                            <label className="st-ds-foundations-inline-field">
-                              <span className="sr-only">Value ({tokenMode})</span>
-                              <input
-                                className="st-ds-foundations-input st-ds-foundations-input--inline"
-                                aria-label={`${token.label} value (${tokenMode})`}
-                                value={token.values[tokenMode] ?? ''}
-                                readOnly={tokenLocked}
-                                onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
-                              />
-                            </label>
+                            {isFontRoleCard ? (
+                              <label className="st-ds-foundations-inline-field">
+                                <span className="sr-only">Project Font</span>
+                                <select
+                                  className="st-ds-foundations-input"
+                                  aria-label={`${token.label} project font`}
+                                  value={selectedFontOption?.value ?? ''}
+                                  disabled={tokenLocked}
+                                  onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
+                                >
+                                  {!selectedFontOption && <option value="">Unsupported Current Stack</option>}
+                                  {fontRoleOptions.map((option) => (
+                                    <option key={`${token.id}-${option.value}`} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            ) : (
+                              <label className="st-ds-foundations-inline-field">
+                                <span className="sr-only">Value ({tokenMode})</span>
+                                <input
+                                  className="st-ds-foundations-input st-ds-foundations-input--inline"
+                                  aria-label={`${token.label} value (${tokenMode})`}
+                                  value={token.values[tokenMode] ?? ''}
+                                  readOnly={tokenLocked}
+                                  onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
+                                />
+                              </label>
+                            )}
                           </div>
 
                           {hasTokenFooter && (
@@ -657,7 +732,7 @@ export default function DesignSystemFoundationsPage() {
                                       type="button"
                                       className="st-ds-foundations-btn st-ds-foundations-btn--primary"
                                       onClick={() => handleSaveItem(entry.sectionId, token.id, itemKey)}
-                                      disabled={actionsDisabled}
+                                      disabled={actionsDisabled || !canSaveItem}
                                     >
                                       {isSavingItem ? 'Saving…' : 'Save'}
                                     </button>
