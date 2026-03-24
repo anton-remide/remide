@@ -202,3 +202,14 @@
   5. `version-guard.mdc` — auto-check CLAUDE.md when infra files change
   6. `project-structure.mdc` — import boundaries, naming, ownership
 - **Impact:** .cursor/rules/ created, CLAUDE.md updated, all future sessions auto-load these rules.
+
+## UI-001: Landing Hero Uses Local Paper-Style Dithering Canvas
+- **Category:** UX-UI
+- **Date:** 2026-03-24
+- **Context:** Нужно было воспроизвести Paper `Dithering` animation на landing hero без добавления одноразовой shader runtime-зависимости в production bundle. Текущий `HeroWorldMapCanvas` уже не участвовал в рендере, потому что wrapper был скрыт через CSS.
+- **Alternatives:**
+  - A) Подключить `@paper-design/shaders-react` напрямую (rejected: лишняя runtime-зависимость ради одного эффекта, слабее контроль над reduced motion и theme tokens)
+  - B) Вернуть старый world-map canvas (rejected: не совпадает с визуальным референсом)
+  - C) Пересобрать эффект локально через canvas + Bayer 4x4 dithering + warp field (chosen)
+- **Decision:** Добавлен `HeroDitheringCanvas` с локальной реализацией warp-dithering, reduced-motion fallback и theme-aware цветами. Компонент встроен в `LandingPage` как отдельная hero-panel под размеры и палитру Paper-референса.
+- **Impact:** Новый файл `src/components/ui/HeroDitheringCanvas.tsx`; обновлены `src/pages/LandingPage.tsx` и `src/styles/app.css`; новых npm-зависимостей не добавлено.

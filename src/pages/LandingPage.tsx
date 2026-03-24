@@ -8,7 +8,7 @@ import { useSupabaseQuery } from '../hooks/useSupabaseQuery';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { usePaywall } from '../hooks/usePaywall';
 import { trackEvent } from '../utils/analytics';
-import HeroWorldMapCanvas from '../components/ui/HeroWorldMapCanvas';
+import HeroDitheringCanvas from '../components/ui/HeroDitheringCanvas';
 
 type StatIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -202,14 +202,14 @@ export default function LandingPage() {
     <div ref={revealRef} className="st-landing-v2">
       {/* Hero */}
       <section className="st-hero">
-        <div className="st-hero-map-wrap">
-          <HeroWorldMapCanvas />
-        </div>
         <div className="st-hero-inner">
           <div className="st-hero-content">
             <h1 className="reveal st-landing-hero-title">
               <span>Stablecoin Intelligence</span>
             </h1>
+            <div className="st-hero-dither-wrap clip-lg reveal" aria-hidden="true">
+              <HeroDitheringCanvas />
+            </div>
             {/* Audience split */}
             <div className="st-audience-grid st-audience-grid--hero reveal">
               <div className="st-audience-card clip-lg">
