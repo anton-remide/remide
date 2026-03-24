@@ -479,12 +479,12 @@ export default function DesignSystemFoundationsPage() {
 
           <div className="st-ds-foundations-groups">
             {groupedItems.map((group) => (
-              <div key={group.id} className="st-ds-foundations-group">
-                <div className="st-ds-foundations-group__title">{group.label}</div>
-                <div className="st-ds-foundations-list">
-                  {group.items.map((item) => {
-                    const itemKey = getFoundationItemKey(activeSection.id, item.id);
-                    const isDirty = dirtyItemKeys.has(itemKey);
+                <div key={group.id} className="st-ds-foundations-group">
+                  <div className="st-ds-foundations-group__title">{group.label}</div>
+                  <div className={['st-ds-foundations-list', isTokenSection(activeSection) ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
+                    {group.items.map((item) => {
+                      const itemKey = getFoundationItemKey(activeSection.id, item.id);
+                      const isDirty = dirtyItemKeys.has(itemKey);
 
                     if (isTokenSection(activeSection) && activeMode) {
                       const token = item as FoundationToken;
@@ -495,6 +495,7 @@ export default function DesignSystemFoundationsPage() {
                           key={token.id}
                           className={[
                             'st-ds-foundations-list__item',
+                            'is-token-card',
                             'clip-lg',
                             isDirty && 'is-dirty',
                           ].filter(Boolean).join(' ')}
@@ -509,9 +510,10 @@ export default function DesignSystemFoundationsPage() {
                             </div>
 
                             <label className="st-ds-foundations-inline-field">
-                              <span className="st-ds-foundations-list__value-label">Value ({activeMode})</span>
+                              <span className="sr-only">Value ({activeMode})</span>
                               <input
                                 className="st-ds-foundations-input st-ds-foundations-input--inline"
+                                aria-label={`${token.label} value (${activeMode})`}
                                 value={token.values[activeMode] ?? ''}
                                 readOnly={tokenLocked}
                                 onChange={(event) => updateTokenValue(activeSection.id, token.id, activeMode, event.target.value)}
@@ -525,7 +527,6 @@ export default function DesignSystemFoundationsPage() {
                             </div>
 
                             <div className="st-ds-foundations-card__preview">
-                              <span className="st-ds-foundations-preview__label">Preview</span>
                               <div
                                 className={[
                                   'st-ds-foundations-preview__surface',
@@ -553,6 +554,7 @@ export default function DesignSystemFoundationsPage() {
                         key={rule.id}
                         className={[
                           'st-ds-foundations-list__item',
+                          'is-rule-card',
                           'clip-lg',
                           isDirty && 'is-dirty',
                         ].filter(Boolean).join(' ')}
@@ -582,7 +584,6 @@ export default function DesignSystemFoundationsPage() {
 
                         <div className="st-ds-foundations-card__bottom st-ds-foundations-card__bottom--rule">
                           <div className="st-ds-foundations-card__preview">
-                            <span className="st-ds-foundations-preview__label">Preview</span>
                             <div className="st-ds-foundations-preview__surface st-ds-foundations-preview__surface--card is-rule">
                               <span style={rulePreviewStyle(rule)}>
                                 {rule.previewText || rule.label}
