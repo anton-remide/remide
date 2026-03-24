@@ -10275,6 +10275,26 @@ article.st-page:has(.st-floating-cta) {
   min-width: 0;
 }
 
+.st-ds-foundations-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: 24px;
+}
+
+.st-ds-foundations-card__actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.st-ds-foundations-card__feedback {
+  font-size: var(--type-caption);
+  color: var(--color-danger);
+}
+
 .st-ds-foundations-inline-field {
   display: flex;
   flex-direction: column;

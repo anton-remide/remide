@@ -13,7 +13,6 @@ import {
   getDirtyFoundationEntries,
   getFoundationItemKey,
   getFoundationSections,
-  validateFoundationRegistry,
 } from '../../design-system/foundations';
 
 const FOUNDATION_ENDPOINT = '/__internal/foundations';
@@ -23,8 +22,6 @@ const FONTS_SECTION_ID = 'fonts';
 const TYPOGRAPHY_RULES_SECTION_ID = 'typography-rules';
 const HIDDEN_SECTION_IDS = new Set([FONTS_SECTION_ID]);
 const TYPOGRAPHY_SECTION_IDS = new Set(['typography-scale', TYPOGRAPHY_RULES_SECTION_ID]);
-
-type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 type DisplayFoundationItem =
   | { kind: 'token'; sectionId: string; item: FoundationToken; mode: string }
   | { kind: 'rule'; sectionId: string; item: FoundationRuleItem };
@@ -91,21 +88,6 @@ async function saveFoundationRegistry(registry: FoundationRegistry) {
   return payload as FoundationRegistry;
 }
 
-function formatTimestamp(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat('en', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
-
 function tokenPreviewStyle(token: FoundationToken, mode: string) {
   const value = token.values[mode] ?? '';
 
@@ -165,13 +147,66 @@ function rulePreviewStyle(item: FoundationRuleItem) {
   };
 }
 
+function cloneFoundationValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function copyFoundationItem(
+  sourceRegistry: FoundationRegistry,
+  targetRegistry: FoundationRegistry,
+  sectionId: string,
+  itemId: string,
+) {
+  const sourceTokenCollection = sourceRegistry.collections.find((entry) => entry.id === sectionId);
+  if (sourceTokenCollection) {
+    const sourceIndex = sourceTokenCollection.tokens.findIndex((entry) => entry.id === itemId);
+    const targetCollection = targetRegistry.collections.find((entry) => entry.id === sectionId);
+    const targetIndex = targetCollection?.tokens.findIndex((entry) => entry.id === itemId) ?? -1;
+
+    if (!targetCollection || sourceIndex === -1 || targetIndex === -1) {
+      return false;
+    }
+
+    targetCollection.tokens[targetIndex] = cloneFoundationValue(sourceTokenCollection.tokens[sourceIndex]);
+    return true;
+  }
+
+  const sourceRuleCollection = sourceRegistry.rules.find((entry) => entry.id === sectionId);
+  if (sourceRuleCollection) {
+    const sourceIndex = sourceRuleCollection.items.findIndex((entry) => entry.id === itemId);
+    const targetCollection = targetRegistry.rules.find((entry) => entry.id === sectionId);
+    const targetIndex = targetCollection?.items.findIndex((entry) => entry.id === itemId) ?? -1;
+
+    if (!targetCollection || sourceIndex === -1 || targetIndex === -1) {
+      return false;
+    }
+
+    targetCollection.items[targetIndex] = cloneFoundationValue(sourceRuleCollection.items[sourceIndex]);
+    return true;
+  }
+
+  return false;
+}
+
+function splitFoundationItemKey(itemKey: string) {
+  const separatorIndex = itemKey.indexOf('::');
+  if (separatorIndex === -1) {
+    return null;
+  }
+
+  return {
+    sectionId: itemKey.slice(0, separatorIndex),
+    itemId: itemKey.slice(separatorIndex + 2),
+  };
+}
+
 export default function DesignSystemFoundationsPage() {
   const [savedRegistry, setSavedRegistry] = useState<FoundationRegistry | null>(null);
   const [draftRegistry, setDraftRegistry] = useState<FoundationRegistry | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<SaveState>('idle');
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [savingItemKey, setSavingItemKey] = useState<string | null>(null);
+  const [itemErrorMessages, setItemErrorMessages] = useState<Record<string, string>>({});
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [selectedModes, setSelectedModes] = useState<Record<string, string>>({});
 
@@ -265,11 +300,6 @@ export default function DesignSystemFoundationsPage() {
     ? selectedModes[activeSection.id] ?? activeSection.modes[0]
     : undefined;
 
-  const validationIssues = useMemo(
-    () => (draftRegistry ? validateFoundationRegistry(draftRegistry) : []),
-    [draftRegistry],
-  );
-
   const dirty = useMemo(() => {
     if (!savedRegistry || !draftRegistry) {
       return false;
@@ -285,7 +315,6 @@ export default function DesignSystemFoundationsPage() {
 
   const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
   const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
-  const dirtyItemCount = dirtyEntries.itemKeys.length;
 
   const groupedItems = useMemo<DisplayFoundationGroup[]>(() => {
     if (!activeSection) {
@@ -368,11 +397,23 @@ export default function DesignSystemFoundationsPage() {
     const next = cloneRegistry(draftRegistry);
     mutator(next);
     setDraftRegistry(next);
-    setSaveState('idle');
-    setSaveMessage(null);
+  }
+
+  function clearItemError(itemKey: string) {
+    setItemErrorMessages((current) => {
+      if (!(itemKey in current)) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[itemKey];
+      return next;
+    });
   }
 
   function updateTokenValue(collectionId: string, tokenId: string, tokenMode: string, value: string) {
+    const itemKey = getFoundationItemKey(collectionId, tokenId);
+    clearItemError(itemKey);
     updateDraft((next) => {
       const collection = next.collections.find((entry) => entry.id === collectionId);
       const token = collection?.tokens.find((entry) => entry.id === tokenId);
@@ -385,6 +426,8 @@ export default function DesignSystemFoundationsPage() {
   }
 
   function updateRuleProperty(collectionId: string, itemId: string, property: string, value: string) {
+    const itemKey = getFoundationItemKey(collectionId, itemId);
+    clearItemError(itemKey);
     updateDraft((next) => {
       const collection = next.rules.find((entry) => entry.id === collectionId);
       const item = collection?.items.find((entry) => entry.id === itemId);
@@ -396,41 +439,57 @@ export default function DesignSystemFoundationsPage() {
     });
   }
 
-  async function handleSave() {
-    if (!draftRegistry) {
+  async function handleSaveItem(sectionId: string, itemId: string, itemKey: string) {
+    if (!savedRegistry || !draftRegistry || savingItemKey) {
       return;
     }
 
-    if (validationIssues.length > 0) {
-      setSaveState('error');
-      setSaveMessage('Fix validation issues before saving.');
+    const nextSavedRegistry = cloneRegistry(savedRegistry);
+    const copied = copyFoundationItem(draftRegistry, nextSavedRegistry, sectionId, itemId);
+    if (!copied) {
       return;
     }
 
-    setSaveState('saving');
-    setSaveMessage(null);
+    const previousDraft = cloneRegistry(draftRegistry);
+    const pendingItemKeys = dirtyEntries.itemKeys.filter((entryKey) => entryKey !== itemKey);
+    clearItemError(itemKey);
+    setSavingItemKey(itemKey);
 
     try {
-      const saved = await saveFoundationRegistry(draftRegistry);
+      const saved = await saveFoundationRegistry(nextSavedRegistry);
       applyFoundationRegistry(saved);
       setSavedRegistry(saved);
-      setDraftRegistry(cloneRegistry(saved));
-      setSaveState('saved');
-      setSaveMessage(`Saved locally at ${formatTimestamp(saved.meta.updatedAt)}.`);
+
+      const nextDraft = cloneRegistry(saved);
+      for (const pendingItemKey of pendingItemKeys) {
+        const parsedKey = splitFoundationItemKey(pendingItemKey);
+        if (!parsedKey) {
+          continue;
+        }
+
+        copyFoundationItem(previousDraft, nextDraft, parsedKey.sectionId, parsedKey.itemId);
+      }
+
+      setDraftRegistry(nextDraft);
     } catch (error) {
-      setSaveState('error');
-      setSaveMessage(error instanceof Error ? error.message : 'Failed to save foundations.');
+      setItemErrorMessages((current) => ({
+        ...current,
+        [itemKey]: error instanceof Error ? error.message : 'Failed to save this item.',
+      }));
+    } finally {
+      setSavingItemKey(null);
     }
   }
 
-  function handleReset() {
+  function handleDiscardItem(sectionId: string, itemId: string, itemKey: string) {
     if (!savedRegistry) {
       return;
     }
 
-    setDraftRegistry(cloneRegistry(savedRegistry));
-    setSaveState('idle');
-    setSaveMessage('Draft reset to last saved state.');
+    clearItemError(itemKey);
+    updateDraft((next) => {
+      copyFoundationItem(savedRegistry, next, sectionId, itemId);
+    });
   }
 
   if (loading) {
@@ -471,54 +530,6 @@ export default function DesignSystemFoundationsPage() {
 
   return (
     <div className="st-ds-content st-ds-foundations">
-      {dirty && (
-        <div className="st-ds-foundations-toolbar__actions" role="group" aria-label="Unsaved foundation changes">
-          <span className="st-ds-foundations-toolbar__status">
-            Unsaved changes
-            {dirtyItemCount > 0 ? ` · ${dirtyItemCount} ${dirtyItemCount === 1 ? 'item' : 'items'}` : ''}
-          </span>
-          <button
-            type="button"
-            className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
-            onClick={handleReset}
-            disabled={saveState === 'saving'}
-          >
-            Discard
-          </button>
-          <button
-            type="button"
-            className="st-ds-foundations-btn st-ds-foundations-btn--primary"
-            onClick={handleSave}
-            disabled={saveState === 'saving' || validationIssues.length > 0}
-          >
-            {saveState === 'saving' ? 'Saving…' : 'Save'}
-          </button>
-        </div>
-      )}
-
-      {saveMessage && (
-        <div
-          className={['st-ds-foundations-alert', saveState === 'error' && 'st-ds-foundations-alert--error'].filter(Boolean).join(' ')}
-          role={saveState === 'error' ? 'alert' : 'status'}
-          aria-live="polite"
-        >
-          {saveMessage}
-        </div>
-      )}
-
-      {validationIssues.length > 0 && (
-        <div className="st-ds-foundations-alert st-ds-foundations-alert--error">
-          <strong>{validationIssues.length}</strong> validation issue(s) block Save.
-          <ul className="st-ds-foundations-issues">
-            {validationIssues.slice(0, 8).map((issue) => (
-              <li key={`${issue.path}-${issue.message}`}>
-                <code>{issue.path}</code> — {issue.message}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       <div className="st-ds-foundations-workspace">
         <aside className="st-ds-foundations-panel st-ds-foundations-panel--sidebar">
           <div className="st-ds-foundations-nav">
@@ -563,13 +574,16 @@ export default function DesignSystemFoundationsPage() {
                     {group.items.map((entry) => {
                       const itemKey = getFoundationItemKey(entry.sectionId, entry.item.id);
                       const isDirty = dirtyItemKeys.has(itemKey);
+                      const isSavingItem = savingItemKey === itemKey;
+                      const itemError = itemErrorMessages[itemKey];
+                      const actionsDisabled = savingItemKey !== null;
 
                     if (entry.kind === 'token') {
                       const token = entry.item;
                       const tokenMode = entry.mode;
                       const tokenLocked = token.editable === false;
                       const showTokenPreview = entry.sectionId !== FONTS_SECTION_ID;
-                      const hasTokenFooter = tokenLocked || showTokenPreview;
+                      const hasTokenFooter = tokenLocked || showTokenPreview || isDirty;
 
                       return (
                         <article
@@ -627,6 +641,34 @@ export default function DesignSystemFoundationsPage() {
                                   </div>
                                 </div>
                               )}
+
+                              {isDirty && (
+                                <div className="st-ds-foundations-card__actions">
+                                  <div className="st-ds-foundations-card__actions-row" role="group" aria-label={`${token.label} unsaved changes`}>
+                                    <button
+                                      type="button"
+                                      className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+                                      onClick={() => handleDiscardItem(entry.sectionId, token.id, itemKey)}
+                                      disabled={actionsDisabled}
+                                    >
+                                      Discard
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+                                      onClick={() => handleSaveItem(entry.sectionId, token.id, itemKey)}
+                                      disabled={actionsDisabled}
+                                    >
+                                      {isSavingItem ? 'Saving…' : 'Save'}
+                                    </button>
+                                  </div>
+                                  {itemError && (
+                                    <div className="st-ds-foundations-card__feedback" role="alert">
+                                      {itemError}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </article>
@@ -676,6 +718,34 @@ export default function DesignSystemFoundationsPage() {
                               </span>
                             </div>
                           </div>
+
+                          {isDirty && (
+                            <div className="st-ds-foundations-card__actions">
+                              <div className="st-ds-foundations-card__actions-row" role="group" aria-label={`${rule.label} unsaved changes`}>
+                                <button
+                                  type="button"
+                                  className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+                                  onClick={() => handleDiscardItem(entry.sectionId, rule.id, itemKey)}
+                                  disabled={actionsDisabled}
+                                >
+                                  Discard
+                                </button>
+                                <button
+                                  type="button"
+                                  className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+                                  onClick={() => handleSaveItem(entry.sectionId, rule.id, itemKey)}
+                                  disabled={actionsDisabled}
+                                >
+                                  {isSavingItem ? 'Saving…' : 'Save'}
+                                </button>
+                              </div>
+                              {itemError && (
+                                <div className="st-ds-foundations-card__feedback" role="alert">
+                                  {itemError}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </article>
                     );
