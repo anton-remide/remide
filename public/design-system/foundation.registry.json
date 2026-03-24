@@ -1,0 +1,977 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "updatedAt": "2026-03-24T00:00:00.000Z",
+    "defaultTheme": "beige",
+    "defaultDensity": "comfortable",
+    "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
+  },
+  "collections": [
+    {
+      "id": "fonts",
+      "label": "Fonts",
+      "description": "Base font roles and legacy aliases used across the system.",
+      "kind": "token",
+      "modes": ["base"],
+      "groups": [
+        { "id": "roles", "label": "Roles" },
+        { "id": "aliases", "label": "Legacy Aliases" }
+      ],
+      "tokens": [
+        {
+          "id": "font-body",
+          "name": "--font-body",
+          "label": "Body",
+          "group": "roles",
+          "description": "Default UI and body copy font.",
+          "usage": "Paragraphs, controls, metadata, nav.",
+          "preview": "font",
+          "values": {
+            "base": "'Geist', sans-serif"
+          }
+        },
+        {
+          "id": "font-heading",
+          "name": "--font-heading",
+          "label": "Heading",
+          "group": "roles",
+          "description": "Display and heading font.",
+          "usage": "Page titles, section headings, emphasis.",
+          "preview": "font",
+          "values": {
+            "base": "'Satoshi Variable', sans-serif"
+          }
+        },
+        {
+          "id": "font-mono",
+          "name": "--font-mono",
+          "label": "Mono",
+          "group": "roles",
+          "description": "Monospace / utility font role.",
+          "usage": "Token names, code, diagnostics.",
+          "preview": "font",
+          "values": {
+            "base": "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+          }
+        },
+        {
+          "id": "font-legacy-body",
+          "name": "--font1",
+          "label": "Legacy Body Alias",
+          "group": "aliases",
+          "description": "Compatibility alias for existing UI components.",
+          "usage": "Legacy components still reading --font1.",
+          "preview": "generic",
+          "editable": false,
+          "values": {
+            "base": "var(--font-body)"
+          }
+        },
+        {
+          "id": "font-legacy-heading",
+          "name": "--font2",
+          "label": "Legacy Heading Alias",
+          "group": "aliases",
+          "description": "Compatibility alias for existing UI components.",
+          "usage": "Legacy components still reading --font2.",
+          "preview": "generic",
+          "editable": false,
+          "values": {
+            "base": "var(--font-heading)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "colors",
+      "label": "Colors",
+      "description": "Theme-aware surface, text, accent, and semantic colors.",
+      "kind": "token",
+      "modes": ["beige", "darkgray", "nearblack"],
+      "groups": [
+        { "id": "surfaces", "label": "Surfaces" },
+        { "id": "text", "label": "Text" },
+        { "id": "accent", "label": "Accent" },
+        { "id": "semantic", "label": "Semantic" }
+      ],
+      "tokens": [
+        {
+          "id": "color-primary",
+          "name": "--color-primary",
+          "label": "Primary Contrast",
+          "group": "text",
+          "description": "High-contrast base color used for ink/foreground aliases.",
+          "usage": "Derived text and icon aliases.",
+          "preview": "color",
+          "values": {
+            "beige": "#21201C",
+            "darkgray": "#EDEDEC",
+            "nearblack": "#EDEDEC"
+          }
+        },
+        {
+          "id": "color-bg",
+          "name": "--color-bg",
+          "label": "Background Primary",
+          "group": "surfaces",
+          "description": "Main page background.",
+          "usage": "Page canvas and large surfaces.",
+          "preview": "color",
+          "values": {
+            "beige": "#F6F2EE",
+            "darkgray": "#1E1E1C",
+            "nearblack": "#111110"
+          }
+        },
+        {
+          "id": "color-surface",
+          "name": "--color-surface",
+          "label": "Surface",
+          "group": "surfaces",
+          "description": "Primary card / panel surface.",
+          "usage": "Cards, panels, raised sections.",
+          "preview": "color",
+          "values": {
+            "beige": "#FFFFFF",
+            "darkgray": "#282826",
+            "nearblack": "#1C1C1A"
+          }
+        },
+        {
+          "id": "color-surface-raised",
+          "name": "--color-surface-raised",
+          "label": "Surface Raised",
+          "group": "surfaces",
+          "description": "Nested or overlay surface.",
+          "usage": "Dropdowns, inset cards, layered previews.",
+          "preview": "color",
+          "values": {
+            "beige": "#FAF9F6",
+            "darkgray": "#30302E",
+            "nearblack": "#242422"
+          }
+        },
+        {
+          "id": "color-text-main",
+          "name": "--color-text-main",
+          "label": "Text Main",
+          "group": "text",
+          "description": "Default body and heading ink.",
+          "usage": "Primary text, icons, emphasis.",
+          "preview": "color",
+          "values": {
+            "beige": "#21201C",
+            "darkgray": "#EDEDEC",
+            "nearblack": "#EDEDEC"
+          }
+        },
+        {
+          "id": "color-text-secondary",
+          "name": "--color-text-secondary",
+          "label": "Text Secondary",
+          "group": "text",
+          "description": "Secondary and supportive copy.",
+          "usage": "Captions, metadata, helper text.",
+          "preview": "color",
+          "values": {
+            "beige": "#63635E",
+            "darkgray": "#9B9B97",
+            "nearblack": "#8A8A86"
+          }
+        },
+        {
+          "id": "color-border",
+          "name": "--color-border",
+          "label": "Border",
+          "group": "surfaces",
+          "description": "Default border color.",
+          "usage": "Inputs, cards, dividers.",
+          "preview": "color",
+          "values": {
+            "beige": "rgba(33, 32, 28, 0.08)",
+            "darkgray": "rgba(255, 255, 250, 0.08)",
+            "nearblack": "rgba(255, 255, 250, 0.06)"
+          }
+        },
+        {
+          "id": "color-border-strong",
+          "name": "--color-border-strong",
+          "label": "Border Strong",
+          "group": "surfaces",
+          "description": "Higher-contrast border color.",
+          "usage": "NearBlack surfaces, emphasis borders.",
+          "preview": "color",
+          "values": {
+            "beige": "rgba(33, 32, 28, 0.15)",
+            "darkgray": "rgba(255, 255, 250, 0.14)",
+            "nearblack": "rgba(255, 255, 250, 0.10)"
+          }
+        },
+        {
+          "id": "color-accent",
+          "name": "--color-accent",
+          "label": "Accent Primary",
+          "group": "accent",
+          "description": "Brand action color.",
+          "usage": "Buttons, highlights, active states.",
+          "preview": "color",
+          "values": {
+            "beige": "#FF5F0F",
+            "darkgray": "#FF7A33",
+            "nearblack": "#FF7A33"
+          }
+        },
+        {
+          "id": "color-accent-hover",
+          "name": "--color-accent-hover",
+          "label": "Accent Hover",
+          "group": "accent",
+          "description": "Hover/focus accent step.",
+          "usage": "Interactive hover states.",
+          "preview": "color",
+          "values": {
+            "beige": "#E95A12",
+            "darkgray": "#FF8F52",
+            "nearblack": "#FF8F52"
+          }
+        },
+        {
+          "id": "color-accent-subtle",
+          "name": "--color-accent-subtle",
+          "label": "Accent Subtle",
+          "group": "accent",
+          "description": "Soft accent background.",
+          "usage": "Pills, callouts, lightweight emphasis.",
+          "preview": "color",
+          "values": {
+            "beige": "rgba(255, 95, 15, 0.08)",
+            "darkgray": "rgba(255, 95, 15, 0.12)",
+            "nearblack": "rgba(255, 95, 15, 0.15)"
+          }
+        },
+        {
+          "id": "color-success",
+          "name": "--color-success",
+          "label": "Success",
+          "group": "semantic",
+          "description": "Success foreground color.",
+          "usage": "Positive state text and icons.",
+          "preview": "color",
+          "values": {
+            "beige": "#2B7A4B",
+            "darkgray": "#3ECF71",
+            "nearblack": "#3ECF71"
+          }
+        },
+        {
+          "id": "color-success-subtle",
+          "name": "--color-success-subtle",
+          "label": "Success Subtle",
+          "group": "semantic",
+          "description": "Success background color.",
+          "usage": "Positive badges and soft backgrounds.",
+          "preview": "color",
+          "values": {
+            "beige": "#F0FDF4",
+            "darkgray": "rgba(62, 207, 113, 0.10)",
+            "nearblack": "rgba(62, 207, 113, 0.10)"
+          }
+        },
+        {
+          "id": "color-warning",
+          "name": "--color-warning",
+          "label": "Warning",
+          "group": "semantic",
+          "description": "Warning foreground color.",
+          "usage": "Warning badges, charts, notices.",
+          "preview": "color",
+          "values": {
+            "beige": "#92610B",
+            "darkgray": "#E8A317",
+            "nearblack": "#E8A317"
+          }
+        },
+        {
+          "id": "color-warning-subtle",
+          "name": "--color-warning-subtle",
+          "label": "Warning Subtle",
+          "group": "semantic",
+          "description": "Warning background color.",
+          "usage": "Warning surfaces and pills.",
+          "preview": "color",
+          "values": {
+            "beige": "#FFFBEB",
+            "darkgray": "rgba(232, 163, 23, 0.10)",
+            "nearblack": "rgba(232, 163, 23, 0.10)"
+          }
+        },
+        {
+          "id": "color-danger",
+          "name": "--color-danger",
+          "label": "Danger",
+          "group": "semantic",
+          "description": "Danger foreground color.",
+          "usage": "Errors, destructive states, warnings.",
+          "preview": "color",
+          "values": {
+            "beige": "#B91C1C",
+            "darkgray": "#EF5350",
+            "nearblack": "#EF5350"
+          }
+        },
+        {
+          "id": "color-danger-subtle",
+          "name": "--color-danger-subtle",
+          "label": "Danger Subtle",
+          "group": "semantic",
+          "description": "Danger background color.",
+          "usage": "Soft destructive state backgrounds.",
+          "preview": "color",
+          "values": {
+            "beige": "#FEF2F2",
+            "darkgray": "rgba(239, 83, 80, 0.10)",
+            "nearblack": "rgba(239, 83, 80, 0.10)"
+          }
+        },
+        {
+          "id": "color-info",
+          "name": "--color-info",
+          "label": "Info",
+          "group": "semantic",
+          "description": "Info foreground color.",
+          "usage": "Informational badges and helper highlights.",
+          "preview": "color",
+          "values": {
+            "beige": "#4338CA",
+            "darkgray": "#818CF8",
+            "nearblack": "#818CF8"
+          }
+        },
+        {
+          "id": "color-info-subtle",
+          "name": "--color-info-subtle",
+          "label": "Info Subtle",
+          "group": "semantic",
+          "description": "Info background color.",
+          "usage": "Info callouts and lightweight panels.",
+          "preview": "color",
+          "values": {
+            "beige": "#EEF2FF",
+            "darkgray": "rgba(129, 140, 248, 0.10)",
+            "nearblack": "rgba(129, 140, 248, 0.10)"
+          }
+        },
+        {
+          "id": "color-neutral",
+          "name": "--color-neutral",
+          "label": "Neutral",
+          "group": "semantic",
+          "description": "Neutral foreground color.",
+          "usage": "Low-priority state labels and badges.",
+          "preview": "color",
+          "values": {
+            "beige": "#63635E",
+            "darkgray": "#9B9B97",
+            "nearblack": "#9B9B97"
+          }
+        },
+        {
+          "id": "color-neutral-subtle",
+          "name": "--color-neutral-subtle",
+          "label": "Neutral Subtle",
+          "group": "semantic",
+          "description": "Neutral background color.",
+          "usage": "Neutral pills, subtle containers.",
+          "preview": "color",
+          "values": {
+            "beige": "#F1F5F9",
+            "darkgray": "rgba(155, 155, 151, 0.08)",
+            "nearblack": "rgba(155, 155, 151, 0.08)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "typography-scale",
+      "label": "Typography Scale",
+      "description": "Type scale tokens used across headings, text, labels, and metadata.",
+      "kind": "token",
+      "modes": ["base"],
+      "groups": [
+        { "id": "display", "label": "Display" },
+        { "id": "body", "label": "Body" }
+      ],
+      "tokens": [
+        {
+          "id": "type-display",
+          "name": "--type-display",
+          "label": "Display",
+          "group": "display",
+          "description": "Largest display size for hero and top-level emphasis.",
+          "usage": "Hero and page-opening headlines.",
+          "preview": "text",
+          "values": {
+            "base": "clamp(36px, 5vw, 56px)"
+          }
+        },
+        {
+          "id": "type-heading-1",
+          "name": "--type-heading-1",
+          "label": "Heading 1",
+          "group": "display",
+          "description": "Primary section and page heading size.",
+          "usage": "Page titles and strong section headings.",
+          "preview": "text",
+          "values": {
+            "base": "clamp(26px, 3.5vw, 36px)"
+          }
+        },
+        {
+          "id": "type-heading-2",
+          "name": "--type-heading-2",
+          "label": "Heading 2",
+          "group": "display",
+          "description": "Secondary heading size.",
+          "usage": "Section headers and grouped content.",
+          "preview": "text",
+          "values": {
+            "base": "22px"
+          }
+        },
+        {
+          "id": "type-heading-3",
+          "name": "--type-heading-3",
+          "label": "Heading 3",
+          "group": "display",
+          "description": "Compact heading size.",
+          "usage": "Cards, subsections, concise headings.",
+          "preview": "text",
+          "values": {
+            "base": "18px"
+          }
+        },
+        {
+          "id": "type-body-lg",
+          "name": "--type-body-lg",
+          "label": "Body Large",
+          "group": "body",
+          "description": "Large body size.",
+          "usage": "Introductions, long-form paragraphs.",
+          "preview": "text",
+          "values": {
+            "base": "16px"
+          }
+        },
+        {
+          "id": "type-body",
+          "name": "--type-body",
+          "label": "Body",
+          "group": "body",
+          "description": "Default body size.",
+          "usage": "General copy, table cells, secondary content.",
+          "preview": "text",
+          "values": {
+            "base": "14px"
+          }
+        },
+        {
+          "id": "type-body-sm",
+          "name": "--type-body-sm",
+          "label": "Body Small",
+          "group": "body",
+          "description": "Compact body size.",
+          "usage": "Tighter UI, supporting text, helper notes.",
+          "preview": "text",
+          "values": {
+            "base": "13px"
+          }
+        },
+        {
+          "id": "type-caption",
+          "name": "--type-caption",
+          "label": "Caption",
+          "group": "body",
+          "description": "Caption size.",
+          "usage": "Metadata, timestamps, helper labels.",
+          "preview": "text",
+          "values": {
+            "base": "12px"
+          }
+        },
+        {
+          "id": "type-micro",
+          "name": "--type-micro",
+          "label": "Micro",
+          "group": "body",
+          "description": "Microcopy size.",
+          "usage": "Badges, very small labels, annotation.",
+          "preview": "text",
+          "values": {
+            "base": "11px"
+          }
+        },
+        {
+          "id": "type-nano",
+          "name": "--type-nano",
+          "label": "Nano",
+          "group": "body",
+          "description": "Smallest sanctioned size.",
+          "usage": "Compact annotation and tiny supporting UI.",
+          "preview": "text",
+          "values": {
+            "base": "10px"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spacing",
+      "label": "Spacing",
+      "description": "4px-based spacing scale.",
+      "kind": "token",
+      "modes": ["base"],
+      "groups": [
+        { "id": "scale", "label": "Scale" }
+      ],
+      "tokens": [
+        { "id": "space-0", "name": "--space-0", "label": "0", "group": "scale", "description": "Reset spacing.", "usage": "Reset / none.", "preview": "spacing", "values": { "base": "0" } },
+        { "id": "space-0-5", "name": "--space-0-5", "label": "0.5", "group": "scale", "description": "Hairline spacing.", "usage": "Micro gaps.", "preview": "spacing", "values": { "base": "2px" } },
+        { "id": "space-1", "name": "--space-1", "label": "1", "group": "scale", "description": "Tight inline gap.", "usage": "Icon gaps, inline spacing.", "preview": "spacing", "values": { "base": "4px" } },
+        { "id": "space-2", "name": "--space-2", "label": "2", "group": "scale", "description": "Small gap.", "usage": "Compact stacks, input padding.", "preview": "spacing", "values": { "base": "8px" } },
+        { "id": "space-3", "name": "--space-3", "label": "3", "group": "scale", "description": "Default small block gap.", "usage": "Rows, default control padding.", "preview": "spacing", "values": { "base": "12px" } },
+        { "id": "space-4", "name": "--space-4", "label": "4", "group": "scale", "description": "Comfortable block gap.", "usage": "Card padding, layout spacing.", "preview": "spacing", "values": { "base": "16px" } },
+        { "id": "space-6", "name": "--space-6", "label": "6", "group": "scale", "description": "Large internal spacing.", "usage": "Card body, section groups.", "preview": "spacing", "values": { "base": "24px" } },
+        { "id": "space-8", "name": "--space-8", "label": "8", "group": "scale", "description": "Large section gap.", "usage": "Section spacing.", "preview": "spacing", "values": { "base": "32px" } },
+        { "id": "space-12", "name": "--space-12", "label": "12", "group": "scale", "description": "Major section break.", "usage": "Wide section spacing.", "preview": "spacing", "values": { "base": "48px" } },
+        { "id": "space-16", "name": "--space-16", "label": "16", "group": "scale", "description": "Page-level spacing.", "usage": "Large padding blocks.", "preview": "spacing", "values": { "base": "64px" } },
+        { "id": "space-24", "name": "--space-24", "label": "24", "group": "scale", "description": "Hero spacing.", "usage": "Top-level vertical rhythm.", "preview": "spacing", "values": { "base": "96px" } }
+      ]
+    },
+    {
+      "id": "radii",
+      "label": "Radii",
+      "description": "Corner radius scale.",
+      "kind": "token",
+      "modes": ["base"],
+      "groups": [
+        { "id": "corners", "label": "Corners" }
+      ],
+      "tokens": [
+        { "id": "radius-0", "name": "--radius-0", "label": "0", "group": "corners", "description": "Sharp edge.", "usage": "Tables and dividers.", "preview": "radius", "values": { "base": "0" } },
+        { "id": "radius-sm", "name": "--radius-sm", "label": "Small", "group": "corners", "description": "Small radius.", "usage": "Badges and tight controls.", "preview": "radius", "values": { "base": "4px" } },
+        { "id": "radius-md", "name": "--radius-md", "label": "Medium", "group": "corners", "description": "Default radius.", "usage": "Buttons, inputs, panels.", "preview": "radius", "values": { "base": "8px" } },
+        { "id": "radius-lg", "name": "--radius-lg", "label": "Large", "group": "corners", "description": "Large radius.", "usage": "Cards, modals, raised surfaces.", "preview": "radius", "values": { "base": "16px" } },
+        { "id": "radius-pill", "name": "--radius-pill", "label": "Pill", "group": "corners", "description": "Full round.", "usage": "Pills, chips, segmented toggles.", "preview": "radius", "values": { "base": "9999px" } }
+      ]
+    },
+    {
+      "id": "shadows",
+      "label": "Shadows",
+      "description": "Theme-aware elevation shadows and focus ring.",
+      "kind": "token",
+      "modes": ["beige", "darkgray", "nearblack"],
+      "groups": [
+        { "id": "elevation", "label": "Elevation" },
+        { "id": "focus", "label": "Focus" }
+      ],
+      "tokens": [
+        {
+          "id": "shadow-none",
+          "name": "--shadow-none",
+          "label": "None",
+          "group": "elevation",
+          "description": "No shadow.",
+          "usage": "Flat surfaces and reset states.",
+          "preview": "shadow",
+          "values": {
+            "beige": "none",
+            "darkgray": "none",
+            "nearblack": "none"
+          }
+        },
+        {
+          "id": "shadow-sm",
+          "name": "--shadow-sm",
+          "label": "Small",
+          "group": "elevation",
+          "description": "Small elevation shadow.",
+          "usage": "Raised cards and soft surfaces.",
+          "preview": "shadow",
+          "values": {
+            "beige": "0 1px 2px rgba(33, 32, 28, 0.05), 0 1px 3px rgba(33, 32, 28, 0.07)",
+            "darkgray": "0 1px 2px rgba(0, 0, 0, 0.20), 0 1px 3px rgba(0, 0, 0, 0.15)",
+            "nearblack": "0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20)"
+          }
+        },
+        {
+          "id": "shadow-md",
+          "name": "--shadow-md",
+          "label": "Medium",
+          "group": "elevation",
+          "description": "Medium elevation shadow.",
+          "usage": "Dropdowns, cards, interactive surfaces.",
+          "preview": "shadow",
+          "values": {
+            "beige": "0 4px 12px rgba(33, 32, 28, 0.06), 0 1px 3px rgba(33, 32, 28, 0.04)",
+            "darkgray": "0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15)",
+            "nearblack": "0 4px 12px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.20)"
+          }
+        },
+        {
+          "id": "shadow-lg",
+          "name": "--shadow-lg",
+          "label": "Large",
+          "group": "elevation",
+          "description": "Large elevation shadow.",
+          "usage": "Modals and high-emphasis overlays.",
+          "preview": "shadow",
+          "values": {
+            "beige": "0 8px 24px rgba(33, 32, 28, 0.10), 0 2px 6px rgba(33, 32, 28, 0.06)",
+            "darkgray": "0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.20)",
+            "nearblack": "0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25)"
+          }
+        },
+        {
+          "id": "shadow-focus",
+          "name": "--shadow-focus",
+          "label": "Focus Ring",
+          "group": "focus",
+          "description": "Theme-aware focus ring shadow.",
+          "usage": "Interactive focus states.",
+          "preview": "shadow",
+          "values": {
+            "beige": "0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent)",
+            "darkgray": "0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent)",
+            "nearblack": "0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "density",
+      "label": "Density",
+      "description": "Comfortable and compact UI density overrides.",
+      "kind": "token",
+      "modes": ["comfortable", "compact"],
+      "groups": [
+        { "id": "overrides", "label": "Overrides" }
+      ],
+      "tokens": [
+        {
+          "id": "density-font-body",
+          "name": "--density-font-body",
+          "label": "Body Font",
+          "group": "overrides",
+          "description": "Body font size override by density.",
+          "usage": "Data tables, dense forms, compact layouts.",
+          "preview": "text",
+          "values": {
+            "comfortable": "14px",
+            "compact": "13px"
+          }
+        },
+        {
+          "id": "density-font-caption",
+          "name": "--density-font-caption",
+          "label": "Caption Font",
+          "group": "overrides",
+          "description": "Caption font size override by density.",
+          "usage": "Metadata and compact UI labels.",
+          "preview": "text",
+          "values": {
+            "comfortable": "12px",
+            "compact": "11px"
+          }
+        },
+        {
+          "id": "density-line-height",
+          "name": "--density-line-height",
+          "label": "Line Height",
+          "group": "overrides",
+          "description": "Line height override by density.",
+          "usage": "Dense lists and rows.",
+          "preview": "generic",
+          "values": {
+            "comfortable": "1.55",
+            "compact": "1.4"
+          }
+        },
+        {
+          "id": "density-padding-y",
+          "name": "--density-padding-y",
+          "label": "Padding Y",
+          "group": "overrides",
+          "description": "Vertical padding override by density.",
+          "usage": "Rows and controls.",
+          "preview": "spacing",
+          "values": {
+            "comfortable": "12px",
+            "compact": "8px"
+          }
+        },
+        {
+          "id": "density-padding-x",
+          "name": "--density-padding-x",
+          "label": "Padding X",
+          "group": "overrides",
+          "description": "Horizontal padding override by density.",
+          "usage": "Rows and controls.",
+          "preview": "spacing",
+          "values": {
+            "comfortable": "16px",
+            "compact": "12px"
+          }
+        },
+        {
+          "id": "density-gap",
+          "name": "--density-gap",
+          "label": "Gap",
+          "group": "overrides",
+          "description": "Gap override by density.",
+          "usage": "Compact stacked layouts.",
+          "preview": "spacing",
+          "values": {
+            "comfortable": "12px",
+            "compact": "8px"
+          }
+        },
+        {
+          "id": "density-row-height",
+          "name": "--density-row-height",
+          "label": "Row Height",
+          "group": "overrides",
+          "description": "Row height override by density.",
+          "usage": "DataTable and other dense lists.",
+          "preview": "generic",
+          "values": {
+            "comfortable": "48px",
+            "compact": "36px"
+          }
+        },
+        {
+          "id": "density-card-padding",
+          "name": "--density-card-padding",
+          "label": "Card Padding",
+          "group": "overrides",
+          "description": "Card padding override by density.",
+          "usage": "Compact cards and repeated surfaces.",
+          "preview": "spacing",
+          "values": {
+            "comfortable": "24px",
+            "compact": "16px"
+          }
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "typography-rules",
+      "label": "Typography Rules",
+      "description": "Role-level typography contracts. These are behavior rules, not variable values.",
+      "kind": "rule",
+      "groups": [
+        { "id": "headings", "label": "Headings" },
+        { "id": "text", "label": "Text" },
+        { "id": "labels", "label": "Labels" }
+      ],
+      "items": [
+        {
+          "id": "heading-display",
+          "label": "Display Heading",
+          "group": "headings",
+          "description": "Hero and most prominent heading.",
+          "previewText": "Display Heading",
+          "properties": {
+            "font": "var(--font-heading)",
+            "size": "var(--type-display)",
+            "line-height": "1.08",
+            "weight": "700",
+            "letter-spacing": "-0.03em",
+            "transform": "uppercase"
+          }
+        },
+        {
+          "id": "heading-1",
+          "label": "Heading 1",
+          "group": "headings",
+          "description": "Page and strong section heading.",
+          "previewText": "Heading 1",
+          "properties": {
+            "font": "var(--font-heading)",
+            "size": "var(--type-heading-1)",
+            "line-height": "1.08",
+            "weight": "700",
+            "letter-spacing": "-0.03em",
+            "transform": "uppercase"
+          }
+        },
+        {
+          "id": "heading-2",
+          "label": "Heading 2",
+          "group": "headings",
+          "description": "Secondary section heading.",
+          "previewText": "Heading 2",
+          "properties": {
+            "font": "var(--font-heading)",
+            "size": "var(--type-heading-2)",
+            "line-height": "1.15",
+            "weight": "600",
+            "letter-spacing": "-0.02em",
+            "transform": "uppercase"
+          }
+        },
+        {
+          "id": "heading-3",
+          "label": "Heading 3",
+          "group": "headings",
+          "description": "Compact section heading.",
+          "previewText": "Heading 3",
+          "properties": {
+            "font": "var(--font-heading)",
+            "size": "var(--type-heading-3)",
+            "line-height": "1.25",
+            "weight": "600",
+            "letter-spacing": "-0.01em",
+            "transform": "uppercase"
+          }
+        },
+        {
+          "id": "heading-4",
+          "label": "Heading 4",
+          "group": "headings",
+          "description": "Subheading.",
+          "previewText": "Heading 4",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-body-lg)",
+            "line-height": "1.35",
+            "weight": "600",
+            "letter-spacing": "-0.01em",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "heading-5",
+          "label": "Heading 5",
+          "group": "headings",
+          "description": "Compact subheading.",
+          "previewText": "Heading 5",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-body)",
+            "line-height": "1.4",
+            "weight": "600",
+            "letter-spacing": "-0.01em",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "heading-6",
+          "label": "Heading 6",
+          "group": "headings",
+          "description": "Small heading / eyebrow style.",
+          "previewText": "Heading 6",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-body-sm)",
+            "line-height": "1.4",
+            "weight": "600",
+            "letter-spacing": "0.04em",
+            "transform": "uppercase"
+          }
+        },
+        {
+          "id": "text-lg",
+          "label": "Text Large",
+          "group": "text",
+          "description": "Large body copy.",
+          "previewText": "Large body copy",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-body-lg)",
+            "line-height": "1.6",
+            "weight": "400",
+            "letter-spacing": "0",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "text-base",
+          "label": "Text Base",
+          "group": "text",
+          "description": "Default body copy.",
+          "previewText": "Default body copy",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-body)",
+            "line-height": "1.55",
+            "weight": "400",
+            "letter-spacing": "0",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "text-sm",
+          "label": "Text Small",
+          "group": "text",
+          "description": "Compact body copy.",
+          "previewText": "Small body copy",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-body-sm)",
+            "line-height": "1.5",
+            "weight": "400",
+            "letter-spacing": "0",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "text-caption",
+          "label": "Text Caption",
+          "group": "text",
+          "description": "Caption and metadata copy.",
+          "previewText": "Caption text",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-caption)",
+            "line-height": "1.5",
+            "weight": "500",
+            "letter-spacing": "0",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "text-micro",
+          "label": "Text Micro",
+          "group": "text",
+          "description": "Microcopy and compact label copy.",
+          "previewText": "Micro text",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-micro)",
+            "line-height": "1.45",
+            "weight": "500",
+            "letter-spacing": "0.02em",
+            "transform": "none"
+          }
+        },
+        {
+          "id": "label",
+          "label": "Label",
+          "group": "labels",
+          "description": "Uppercase label / eyebrow pattern.",
+          "previewText": "Label",
+          "properties": {
+            "font": "var(--font-body)",
+            "size": "var(--type-micro)",
+            "line-height": "1",
+            "weight": "600",
+            "letter-spacing": "0.08em",
+            "transform": "uppercase"
+          }
+        }
+      ]
+    }
+  ]
+}

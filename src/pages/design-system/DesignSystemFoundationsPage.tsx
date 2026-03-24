@@ -1,224 +1,722 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
+import Heading from '../../components/ui/Heading';
+import Text from '../../components/ui/Text';
+import type {
+  FoundationRegistry,
+  FoundationRuleItem,
+  FoundationSection,
+  FoundationToken,
+  FoundationTokenCollection,
+} from '../../design-system/foundations';
+import { generateFoundationCss, getFoundationSections, validateFoundationRegistry } from '../../design-system/foundations';
 
-function useTokenValues(tokenNames: readonly string[]) {
-  const [values, setValues] = useState<Record<string, string>>({});
-  useEffect(() => {
-    const style = getComputedStyle(document.documentElement);
-    const next: Record<string, string> = {};
-    tokenNames.forEach((name) => {
-      const value = style.getPropertyValue(name).trim();
-      next[name] = value || '—';
-    });
-    setValues(next);
-  }, [tokenNames.join(',')]);
-  return values;
+const FOUNDATION_ENDPOINT = '/__internal/foundations';
+const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
+const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
+
+type FoundationsMode = 'view' | 'edit';
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+
+function cloneRegistry(registry: FoundationRegistry) {
+  return JSON.parse(JSON.stringify(registry)) as FoundationRegistry;
 }
 
-type ColorToken = { name: string; label: string };
+function isTokenSection(section: FoundationSection): section is FoundationTokenCollection {
+  return section.kind === 'token';
+}
 
-const COLOR_GROUPS: { groupLabel: string; tokens: readonly ColorToken[] }[] = [
-  {
-    groupLabel: 'Background & Surface',
-    tokens: [
-      { name: '--color-bg', label: 'Background' },
-      { name: '--color-surface', label: 'Surface' },
-    ],
-  },
-  {
-    groupLabel: 'Text',
-    tokens: [
-      { name: '--color-text-main', label: 'Text main' },
-      { name: '--color-text-secondary', label: 'Text secondary' },
-    ],
-  },
-  {
-    groupLabel: 'Border',
-    tokens: [{ name: '--color-border', label: 'Border' }],
-  },
-  {
-    groupLabel: 'Brand / Accent',
-    tokens: [{ name: '--color-accent', label: 'Accent' }],
-  },
-  {
-    groupLabel: 'Semantic (Status)',
-    tokens: [
-      { name: '--color-success', label: 'Success' },
-      { name: '--color-warning', label: 'Warning' },
-      { name: '--color-danger', label: 'Danger' },
-      { name: '--color-info', label: 'Info' },
-    ],
-  },
-];
+function getSectionItems(section: FoundationSection) {
+  return isTokenSection(section) ? section.tokens : section.items;
+}
 
-const allColorTokenNames = COLOR_GROUPS.flatMap((g) => g.tokens.map((t) => t.name));
+function applyFoundationRegistry(registry: FoundationRegistry) {
+  if (typeof document === 'undefined') {
+    return;
+  }
 
-/** Fixed px for type preview on Foundations (avoids clamp so layout is stable). Matches :root max/canonical values. */
-const TYPE_FIXED_PX: Record<string, string> = {
-  '--type-display': '56px',
-  '--type-heading-1': '36px',
-  '--type-heading-2': '22px',
-  '--type-heading-3': '18px',
-  '--type-body-lg': '16px',
-  '--type-body': '14px',
-  '--type-body-sm': '13px',
-  '--type-caption': '12px',
-  '--type-micro': '11px',
-  '--type-nano': '10px',
-};
+  let styleTag = document.getElementById(FOUNDATION_RUNTIME_STYLE_ID) as HTMLStyleElement | null;
+
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = FOUNDATION_RUNTIME_STYLE_ID;
+    document.head.appendChild(styleTag);
+  }
+
+  styleTag.textContent = generateFoundationCss(registry);
+}
+
+async function fetchFoundationRegistry() {
+  const url = import.meta.env.DEV ? FOUNDATION_ENDPOINT : FOUNDATION_PUBLIC_URL;
+  const response = await fetch(url, { cache: 'no-store' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to load foundations (${response.status})`);
+  }
+
+  return response.json() as Promise<FoundationRegistry>;
+}
+
+async function saveFoundationRegistry(registry: FoundationRegistry) {
+  if (!import.meta.env.DEV) {
+    throw new Error('Local Save is available only in the Vite dev server.');
+  }
+
+  const response = await fetch(FOUNDATION_ENDPOINT, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ registry }),
+  });
+
+  const payload = await response.json() as { error?: string } & FoundationRegistry;
+
+  if (!response.ok) {
+    throw new Error(payload.error || `Failed to save foundations (${response.status})`);
+  }
+
+  return payload as FoundationRegistry;
+}
+
+function formatTimestamp(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function tokenPreviewStyle(token: FoundationToken, mode: string) {
+  const value = token.values[mode] ?? '';
+
+  switch (token.preview) {
+    case 'color':
+      return {
+        background: value,
+        border: token.name.includes('border') ? `1px solid ${value}` : '1px solid var(--color-border)',
+        color: 'var(--color-text-main)',
+      };
+    case 'shadow':
+      return {
+        background: 'var(--color-surface)',
+        boxShadow: value,
+        border: '1px solid var(--color-border)',
+      };
+    case 'radius':
+      return {
+        background: 'var(--color-surface-raised)',
+        border: '1px solid var(--color-border)',
+        borderRadius: value,
+      };
+    case 'spacing':
+      return {
+        width: `min(${value}, 100%)`,
+        background: 'var(--color-accent)',
+        borderRadius: '999px',
+      };
+    case 'font':
+      return {
+        fontFamily: value,
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+      };
+    case 'text':
+      return {
+        fontSize: value,
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+      };
+    default:
+      return {
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+      };
+  }
+}
+
+function rulePreviewStyle(item: FoundationRuleItem) {
+  return {
+    fontFamily: item.properties.font,
+    fontSize: item.properties.size,
+    lineHeight: item.properties['line-height'],
+    fontWeight: item.properties.weight,
+    letterSpacing: item.properties['letter-spacing'],
+    textTransform: item.properties.transform as CSSProperties['textTransform'],
+    color: 'var(--color-text-main)',
+  };
+}
+
+function valueSummary(section: FoundationSection, itemId: string, mode?: string) {
+  if (isTokenSection(section)) {
+    const token = section.tokens.find((entry) => entry.id === itemId);
+    return token && mode ? token.values[mode] : '';
+  }
+
+  const item = section.items.find((entry) => entry.id === itemId);
+  return item ? Object.entries(item.properties).slice(0, 2).map(([key, value]) => `${key}: ${value}`).join(' · ') : '';
+}
 
 export default function DesignSystemFoundationsPage() {
-  const typeTokens = [
-    { name: '--type-display', label: 'Display' },
-    { name: '--type-heading-1', label: 'Heading 1' },
-    { name: '--type-heading-2', label: 'Heading 2' },
-    { name: '--type-heading-3', label: 'Heading 3' },
-    { name: '--type-body-lg', label: 'Body large' },
-    { name: '--type-body', label: 'Body' },
-    { name: '--type-body-sm', label: 'Body small' },
-    { name: '--type-caption', label: 'Caption' },
-    { name: '--type-micro', label: 'Micro' },
-    { name: '--type-nano', label: 'Nano' },
-  ] as const;
+  const [mode, setMode] = useState<FoundationsMode>('view');
+  const [savedRegistry, setSavedRegistry] = useState<FoundationRegistry | null>(null);
+  const [draftRegistry, setDraftRegistry] = useState<FoundationRegistry | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<Record<string, string>>({});
+  const [selectedModes, setSelectedModes] = useState<Record<string, string>>({});
 
-  const spaceTokens = [
-    '--space-0',
-    '--space-0-5',
-    '--space-1',
-    '--space-2',
-    '--space-3',
-    '--space-4',
-    '--space-6',
-    '--space-8',
-    '--space-12',
-    '--space-16',
-    '--space-24',
-  ] as const;
+  useEffect(() => {
+    let cancelled = false;
 
-  const radiusTokens = [
-    { name: '--radius-sm', label: 'sm' },
-    { name: '--radius-md', label: 'md' },
-    { name: '--radius-lg', label: 'lg' },
-    { name: '--radius-pill', label: 'pill' },
-  ] as const;
+    async function load() {
+      setLoading(true);
+      setLoadError(null);
 
-  const shadowTokens = [
-    { name: '--shadow-sm', label: 'Small' },
-    { name: '--shadow-md', label: 'Medium' },
-    { name: '--shadow-lg', label: 'Large' },
-  ] as const;
+      try {
+        const registry = await fetchFoundationRegistry();
+        if (cancelled) {
+          return;
+        }
 
-  const allTokenNames = [
-    ...allColorTokenNames,
-    ...typeTokens.map((t) => t.name),
-    ...spaceTokens,
-    ...radiusTokens.map((t) => t.name),
-    ...shadowTokens.map((t) => t.name),
-  ] as const;
-  const tokenValues = useTokenValues(allTokenNames);
+        applyFoundationRegistry(registry);
+        setSavedRegistry(registry);
+        setDraftRegistry(cloneRegistry(registry));
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'Failed to load foundations.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const activeRegistry = draftRegistry ?? savedRegistry;
+  const sections = useMemo(() => (activeRegistry ? getFoundationSections(activeRegistry) : []), [activeRegistry]);
+
+  useEffect(() => {
+    if (sections.length === 0) {
+      return;
+    }
+
+    if (!selectedSectionId || !sections.some((section) => section.id === selectedSectionId)) {
+      setSelectedSectionId(sections[0].id);
+    }
+  }, [sections, selectedSectionId]);
+
+  const activeSection = useMemo(
+    () => sections.find((section) => section.id === selectedSectionId) ?? sections[0] ?? null,
+    [sections, selectedSectionId],
+  );
+
+  useEffect(() => {
+    if (!activeSection) {
+      return;
+    }
+
+    setSelectedItemIds((current) => {
+      const items = getSectionItems(activeSection);
+      const currentId = current[activeSection.id];
+
+      if (currentId && items.some((item) => item.id === currentId)) {
+        return current;
+      }
+
+      return {
+        ...current,
+        [activeSection.id]: items[0]?.id ?? '',
+      };
+    });
+
+    if (isTokenSection(activeSection) && activeSection.modes.length > 0) {
+      setSelectedModes((current) => {
+        const selectedMode = current[activeSection.id];
+        if (selectedMode && activeSection.modes.includes(selectedMode)) {
+          return current;
+        }
+
+        return {
+          ...current,
+          [activeSection.id]: activeSection.modes[0],
+        };
+      });
+    }
+  }, [activeSection]);
+
+  const activeMode = activeSection && isTokenSection(activeSection)
+    ? selectedModes[activeSection.id] ?? activeSection.modes[0]
+    : undefined;
+
+  const selectedItem = useMemo(() => {
+    if (!activeSection) {
+      return null;
+    }
+
+    const selectedId = selectedItemIds[activeSection.id];
+    return getSectionItems(activeSection).find((item) => item.id === selectedId) ?? getSectionItems(activeSection)[0] ?? null;
+  }, [activeSection, selectedItemIds]);
+
+  const validationIssues = useMemo(
+    () => (draftRegistry ? validateFoundationRegistry(draftRegistry) : []),
+    [draftRegistry],
+  );
+
+  const dirty = useMemo(() => {
+    if (!savedRegistry || !draftRegistry) {
+      return false;
+    }
+
+    return JSON.stringify(savedRegistry) !== JSON.stringify(draftRegistry);
+  }, [draftRegistry, savedRegistry]);
+
+  function updateDraft(mutator: (next: FoundationRegistry) => void) {
+    if (!draftRegistry) {
+      return;
+    }
+
+    const next = cloneRegistry(draftRegistry);
+    mutator(next);
+    setDraftRegistry(next);
+    setSaveState('idle');
+    setSaveMessage(null);
+  }
+
+  function updateTokenField(collectionId: string, tokenId: string, field: 'label' | 'description' | 'usage' | 'group', value: string) {
+    updateDraft((next) => {
+      const collection = next.collections.find((entry) => entry.id === collectionId);
+      const token = collection?.tokens.find((entry) => entry.id === tokenId);
+      if (!token) {
+        return;
+      }
+
+      if (field === 'usage') {
+        token.usage = value;
+        return;
+      }
+
+      token[field] = value;
+    });
+  }
+
+  function updateTokenValue(collectionId: string, tokenId: string, tokenMode: string, value: string) {
+    updateDraft((next) => {
+      const collection = next.collections.find((entry) => entry.id === collectionId);
+      const token = collection?.tokens.find((entry) => entry.id === tokenId);
+      if (!token) {
+        return;
+      }
+
+      token.values[tokenMode] = value;
+    });
+  }
+
+  function updateRuleField(collectionId: string, itemId: string, field: 'label' | 'description' | 'previewText', value: string) {
+    updateDraft((next) => {
+      const collection = next.rules.find((entry) => entry.id === collectionId);
+      const item = collection?.items.find((entry) => entry.id === itemId);
+      if (!item) {
+        return;
+      }
+
+      if (field === 'previewText') {
+        item.previewText = value;
+        return;
+      }
+
+      item[field] = value;
+    });
+  }
+
+  function updateRuleProperty(collectionId: string, itemId: string, property: string, value: string) {
+    updateDraft((next) => {
+      const collection = next.rules.find((entry) => entry.id === collectionId);
+      const item = collection?.items.find((entry) => entry.id === itemId);
+      if (!item) {
+        return;
+      }
+
+      item.properties[property] = value;
+    });
+  }
+
+  async function handleSave() {
+    if (!draftRegistry) {
+      return;
+    }
+
+    if (validationIssues.length > 0) {
+      setSaveState('error');
+      setSaveMessage('Fix validation issues before saving.');
+      return;
+    }
+
+    setSaveState('saving');
+    setSaveMessage(null);
+
+    try {
+      const saved = await saveFoundationRegistry(draftRegistry);
+      applyFoundationRegistry(saved);
+      setSavedRegistry(saved);
+      setDraftRegistry(cloneRegistry(saved));
+      setSaveState('saved');
+      setSaveMessage(`Saved locally at ${formatTimestamp(saved.meta.updatedAt)}.`);
+      setMode('view');
+    } catch (error) {
+      setSaveState('error');
+      setSaveMessage(error instanceof Error ? error.message : 'Failed to save foundations.');
+    }
+  }
+
+  function handleReset() {
+    if (!savedRegistry) {
+      return;
+    }
+
+    setDraftRegistry(cloneRegistry(savedRegistry));
+    setSaveState('idle');
+    setSaveMessage('Draft reset to last saved state.');
+  }
+
+  if (loading) {
+    return (
+      <div className="st-ds-content st-ds-foundations">
+        <Heading display level={1}>Foundations</Heading>
+        <Text color="secondary">Loading canonical foundation registry…</Text>
+      </div>
+    );
+  }
+
+  if (loadError || !savedRegistry || !draftRegistry || !activeSection || !selectedItem) {
+    return (
+      <div className="st-ds-content st-ds-foundations">
+        <Heading display level={1}>Foundations</Heading>
+        <div className="st-ds-foundations-alert st-ds-foundations-alert--error">
+          {loadError || 'Foundations registry is unavailable.'}
+        </div>
+      </div>
+    );
+  }
+
+  const groupedItems = activeSection.groups.map((group) => ({
+    ...group,
+    items: getSectionItems(activeSection).filter((item) => item.group === group.id),
+  })).filter((group) => group.items.length > 0);
+
+  const selectedToken = isTokenSection(activeSection) ? selectedItem as FoundationToken : null;
+  const selectedRule = isTokenSection(activeSection) ? null : selectedItem as FoundationRuleItem;
+  const selectedTokenLocked = selectedToken?.editable === false;
 
   return (
     <div className="st-ds-content st-ds-foundations">
-      <h1 className="st-ds-foundations__title">Foundations</h1>
-      <p className="st-ds-foundations__desc">
-        Base design tokens from <code>app.css</code> <code>:root</code>.
-      </p>
+      <div className="st-ds-foundations-hero">
+        <div>
+          <Heading display level={1}>Foundations</Heading>
+          <Text size="lg" color="secondary" className="st-ds-foundations-hero__copy">
+            Canonical foundation editor for tokens and rules. Draft changes stay local to this page until you press Save.
+          </Text>
+        </div>
+        <div className="st-ds-foundations-hero__meta">
+          <span className="st-ds-foundations-chip">Source: <code>public/design-system/foundation.registry.json</code></span>
+          <span className="st-ds-foundations-chip">Last saved: {formatTimestamp(savedRegistry.meta.updatedAt)}</span>
+          <span className={['st-ds-foundations-chip', dirty && 'is-dirty'].filter(Boolean).join(' ')}>
+            {dirty ? 'Draft changed' : 'Saved state'}
+          </span>
+        </div>
+      </div>
 
-      <section className="st-ds-foundations-section" id="colors">
-        <h2 className="st-ds-foundations-section__title">Colors</h2>
-        {COLOR_GROUPS.map(({ groupLabel, tokens }) => (
-          <div key={groupLabel} className="st-ds-foundations-color-group">
-            <h3 className="st-ds-foundations-color-group__title">{groupLabel}</h3>
-            <div className="st-ds-foundations-swatches">
-              {tokens.map(({ name, label }) => (
-                <div key={name} className="st-ds-foundations-swatch">
-                  <div
-                    className="st-ds-foundations-swatch__block"
-                    style={
-                      name.startsWith('--color-text')
-                        ? { background: 'var(--color-bg)', color: `var(${name})` }
-                        : name === '--color-border'
-                          ? { background: 'var(--color-bg)', border: '2px solid var(--color-border)' }
-                          : { background: `var(${name})` }
-                    }
-                  >
-                    {name.startsWith('--color-text') && <span aria-hidden>Aa</span>}
-                  </div>
-                  <code className="st-ds-foundations-swatch__name">{name}</code>
-                  <span className="st-ds-foundations-swatch__value">{tokenValues[name] ?? '—'}</span>
-                  <span className="st-ds-foundations-swatch__label">{label}</span>
-                </div>
-              ))}
-            </div>
+      <div className="st-ds-foundations-toolbar">
+        <div className="st-ds-foundations-toggle" role="tablist" aria-label="Foundations mode">
+          {(['view', 'edit'] as const).map((entry) => (
+            <button
+              key={entry}
+              type="button"
+              className={['st-ds-foundations-toggle__btn', mode === entry && 'is-active'].filter(Boolean).join(' ')}
+              onClick={() => setMode(entry)}
+            >
+              {entry === 'view' ? 'View' : 'Edit'}
+            </button>
+          ))}
+        </div>
+
+        <div className="st-ds-foundations-toolbar__actions">
+          {mode === 'edit' && (
+            <>
+              <button
+                type="button"
+                className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+                onClick={handleReset}
+                disabled={!dirty}
+              >
+                Reset Draft
+              </button>
+              <button
+                type="button"
+                className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+                onClick={handleSave}
+                disabled={!dirty || saveState === 'saving' || validationIssues.length > 0}
+              >
+                {saveState === 'saving' ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {saveMessage && (
+        <div className={['st-ds-foundations-alert', saveState === 'error' && 'st-ds-foundations-alert--error'].filter(Boolean).join(' ')}>
+          {saveMessage}
+        </div>
+      )}
+
+      {validationIssues.length > 0 && mode === 'edit' && (
+        <div className="st-ds-foundations-alert st-ds-foundations-alert--error">
+          <strong>{validationIssues.length}</strong> validation issue(s) block Save.
+          <ul className="st-ds-foundations-issues">
+            {validationIssues.slice(0, 8).map((issue) => (
+              <li key={`${issue.path}-${issue.message}`}>
+                <code>{issue.path}</code> — {issue.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="st-ds-foundations-workspace">
+        <aside className="st-ds-foundations-panel st-ds-foundations-panel--sidebar">
+          <div className="st-ds-foundations-panel__header">
+            <Text size="caption" color="secondary">Collections</Text>
           </div>
-        ))}
-      </section>
+          <div className="st-ds-foundations-nav">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setSelectedSectionId(section.id)}
+                className={['st-ds-foundations-nav__item', activeSection.id === section.id && 'is-active'].filter(Boolean).join(' ')}
+              >
+                <span className="st-ds-foundations-nav__title">{section.label}</span>
+                <span className="st-ds-foundations-nav__meta">{section.kind === 'token' ? 'Variables' : 'Rules'}</span>
+                {section.description && (
+                  <span className="st-ds-foundations-nav__desc">{section.description}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </aside>
 
-      <section className="st-ds-foundations-section" id="typography">
-        <h2 className="st-ds-foundations-section__title">Typography</h2>
-        <p className="st-ds-foundations-section__meta">
-          Fonts: <code>--font1</code> (DM Sans), <code>--font2</code> (Doto).
-        </p>
-        <div className="st-ds-foundations-type-scale">
-          {typeTokens.map(({ name, label }) => (
-            <div key={name} className="st-ds-foundations-type-row">
-              <span className="st-ds-foundations-type-row__sample" style={{ fontFamily: 'var(--font1)', fontSize: TYPE_FIXED_PX[name] ?? `var(${name})` }}>
-                Aa
-              </span>
-              <code className="st-ds-foundations-type-row__token">{name}</code>
-              <span className="st-ds-foundations-type-row__value">{tokenValues[name] ?? '—'}</span>
-              <span className="st-ds-foundations-type-row__label">{label}</span>
+        <section className="st-ds-foundations-panel st-ds-foundations-panel--main">
+          <div className="st-ds-foundations-panel__header st-ds-foundations-panel__header--stack">
+            <div>
+              <Heading level={2}>{activeSection.label}</Heading>
+              {activeSection.description && (
+                <Text color="secondary">{activeSection.description}</Text>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
 
-      <section className="st-ds-foundations-section" id="spacing">
-        <h2 className="st-ds-foundations-section__title">Spacing (4px grid)</h2>
-        <div className="st-ds-foundations-spacing">
-          {spaceTokens.map((token) => (
-            <div key={token} className="st-ds-foundations-spacing-row">
-              <div className="st-ds-foundations-spacing-bar" style={{ width: `var(${token})`, minWidth: 2 }} />
-              <code className="st-ds-foundations-spacing-row__token">{token}</code>
-              <span className="st-ds-foundations-spacing-row__value">{tokenValues[token] ?? '—'}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+            {isTokenSection(activeSection) && (
+              <div className="st-ds-foundations-modes" role="tablist" aria-label={`${activeSection.label} modes`}>
+                {activeSection.modes.map((entry) => (
+                  <button
+                    key={entry}
+                    type="button"
+                    className={['st-ds-foundations-modes__btn', activeMode === entry && 'is-active'].filter(Boolean).join(' ')}
+                    onClick={() => setSelectedModes((current) => ({ ...current, [activeSection.id]: entry }))}
+                  >
+                    {entry}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-      <section className="st-ds-foundations-section" id="radii">
-        <h2 className="st-ds-foundations-section__title">Border radius</h2>
-        <div className="st-ds-foundations-radii">
-          {radiusTokens.map(({ name, label }) => (
-            <div key={name} className="st-ds-foundations-radius-item">
-              <div
-                className="st-ds-foundations-radius-box"
-                style={{ borderRadius: `var(${name})` }}
-              />
-              <code className="st-ds-foundations-radius-item__token">{name}</code>
-              <span className="st-ds-foundations-radius-item__value">{tokenValues[name] ?? '—'}</span>
-              <span className="st-ds-foundations-radius-item__label">{label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+          <div className="st-ds-foundations-groups">
+            {groupedItems.map((group) => (
+              <div key={group.id} className="st-ds-foundations-group">
+                <div className="st-ds-foundations-group__title">{group.label}</div>
+                <div className="st-ds-foundations-list">
+                  {group.items.map((item) => {
+                    const isSelected = selectedItemIds[activeSection.id] === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={['st-ds-foundations-list__item', isSelected && 'is-active'].filter(Boolean).join(' ')}
+                        onClick={() => setSelectedItemIds((current) => ({ ...current, [activeSection.id]: item.id }))}
+                      >
+                        <span className="st-ds-foundations-list__label">{item.label}</span>
+                        <code className="st-ds-foundations-list__code">
+                          {isTokenSection(activeSection) ? (item as FoundationToken).name : item.id}
+                        </code>
+                        <span className="st-ds-foundations-list__value">
+                          {valueSummary(activeSection, item.id, activeMode)}
+                        </span>
+                        <span className="st-ds-foundations-list__desc">{item.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      <section className="st-ds-foundations-section" id="shadows">
-        <h2 className="st-ds-foundations-section__title">Shadows</h2>
-        <div className="st-ds-foundations-shadows">
-          {shadowTokens.map(({ name, label }) => (
-            <div key={name} className="st-ds-foundations-shadow-item">
-              <div
-                className="st-ds-foundations-shadow-card"
-                style={{ boxShadow: `var(${name})` }}
-                aria-hidden
-              />
-              <code className="st-ds-foundations-shadow-item__token">{name}</code>
-              <span className="st-ds-foundations-shadow-item__value">{tokenValues[name] ?? '—'}</span>
-              <span className="st-ds-foundations-shadow-item__label">{label}</span>
+        <aside className="st-ds-foundations-panel st-ds-foundations-panel--inspector">
+          <div className="st-ds-foundations-panel__header">
+            <Text size="caption" color="secondary">Inspector</Text>
+          </div>
+
+          {selectedToken && activeMode && (
+            <div className="st-ds-foundations-inspector">
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Token</span>
+                <code className="st-ds-foundations-field__readonly">{selectedToken.name}</code>
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Label</span>
+                <input
+                  className="st-ds-foundations-input"
+                  value={selectedToken.label}
+                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  onChange={(event) => updateTokenField(activeSection.id, selectedToken.id, 'label', event.target.value)}
+                />
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Description</span>
+                <textarea
+                  className="st-ds-foundations-textarea"
+                  value={selectedToken.description}
+                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  onChange={(event) => updateTokenField(activeSection.id, selectedToken.id, 'description', event.target.value)}
+                />
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Usage</span>
+                <textarea
+                  className="st-ds-foundations-textarea"
+                  value={selectedToken.usage ?? ''}
+                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  onChange={(event) => updateTokenField(activeSection.id, selectedToken.id, 'usage', event.target.value)}
+                />
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Value ({activeMode})</span>
+                <input
+                  className="st-ds-foundations-input"
+                  value={selectedToken.values[activeMode] ?? ''}
+                  readOnly={mode !== 'edit' || selectedTokenLocked}
+                  onChange={(event) => updateTokenValue(activeSection.id, selectedToken.id, activeMode, event.target.value)}
+                />
+              </label>
+
+              {selectedTokenLocked && (
+                <Text size="sm" color="secondary">
+                  This alias token is read-only and mirrors another canonical role.
+                </Text>
+              )}
+
+              <div className="st-ds-foundations-preview">
+                <div className="st-ds-foundations-preview__label">Preview</div>
+                <div
+                  className={[
+                    'st-ds-foundations-preview__surface',
+                    selectedToken.preview === 'spacing' && 'is-spacing',
+                    selectedToken.preview === 'font' && 'is-font',
+                  ].filter(Boolean).join(' ')}
+                  style={tokenPreviewStyle(selectedToken, activeMode)}
+                >
+                  {selectedToken.preview === 'color' && selectedToken.label}
+                  {selectedToken.preview === 'font' && 'Sphinx of black quartz, judge my vow.'}
+                  {selectedToken.preview === 'text' && 'Type Sample'}
+                  {selectedToken.preview === 'generic' && (selectedToken.values[activeMode] ?? 'Value')}
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+          )}
+
+          {selectedRule && (
+            <div className="st-ds-foundations-inspector">
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Rule id</span>
+                <code className="st-ds-foundations-field__readonly">{selectedRule.id}</code>
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Label</span>
+                <input
+                  className="st-ds-foundations-input"
+                  value={selectedRule.label}
+                  readOnly={mode !== 'edit'}
+                  onChange={(event) => updateRuleField(activeSection.id, selectedRule.id, 'label', event.target.value)}
+                />
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Description</span>
+                <textarea
+                  className="st-ds-foundations-textarea"
+                  value={selectedRule.description}
+                  readOnly={mode !== 'edit'}
+                  onChange={(event) => updateRuleField(activeSection.id, selectedRule.id, 'description', event.target.value)}
+                />
+              </label>
+
+              <label className="st-ds-foundations-field">
+                <span className="st-ds-foundations-field__label">Preview text</span>
+                <textarea
+                  className="st-ds-foundations-textarea"
+                  value={selectedRule.previewText ?? ''}
+                  readOnly={mode !== 'edit'}
+                  onChange={(event) => updateRuleField(activeSection.id, selectedRule.id, 'previewText', event.target.value)}
+                />
+              </label>
+
+              <div className="st-ds-foundations-rule-grid">
+                {Object.entries(selectedRule.properties).map(([property, value]) => (
+                  <label key={property} className="st-ds-foundations-field">
+                    <span className="st-ds-foundations-field__label">{property}</span>
+                    <input
+                      className="st-ds-foundations-input"
+                      value={value}
+                      readOnly={mode !== 'edit'}
+                      onChange={(event) => updateRuleProperty(activeSection.id, selectedRule.id, property, event.target.value)}
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <div className="st-ds-foundations-preview">
+                <div className="st-ds-foundations-preview__label">Preview</div>
+                <div className="st-ds-foundations-preview__surface is-rule">
+                  <span style={rulePreviewStyle(selectedRule)}>
+                    {selectedRule.previewText || selectedRule.label}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

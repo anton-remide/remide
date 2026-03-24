@@ -26,9 +26,9 @@ export default function DesignSystemLayout() {
       data-density={density}
       className="st-ds-layout"
       style={{
-        background: '#fff',
+        background: 'var(--color-bg)',
         color: 'var(--color-text-main)',
-        transition: 'color 300ms',
+        transition: 'background 300ms, color 300ms',
       }}
     >
       <header className="st-ds-header">
@@ -74,7 +74,6 @@ export default function DesignSystemLayout() {
               type="button"
               onClick={() => setDensity(d)}
               className={['st-ds-footer__btn', density === d && 'is-active'].filter(Boolean).join(' ')}
-              disabled={d === 'compact'}
             >
               {d}
             </button>

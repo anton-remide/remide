@@ -1,242 +1,123 @@
-# RemiDe Design Token Specification
-
-> **Version:** 1.0 | **Date:** 2026-03-15 | **Status:** Canonical
-> **Decision:** Hard Work UI Ecosystem Upgrade — Cycles 1-2
-> **Owner:** Design Owner (final arbiter on visual conflicts)
-
-## Overview
-
-Single source of truth for all visual tokens across RemiDe surfaces (tracker, institute, home, reports). Every component in the library consumes these tokens exclusively — no hardcoded hex, px, or rgba values in component code.
-
-## Color Tokens (3 Themes)
-
-All themes share the same warm color temperature (hue family H ≈ 48°, S ≈ 6-10%). DarkGray and NearBlack use warm neutrals, not cool slate/blue-gray.
-
-### Core Surface & Text
-
-| Token | Beige (Light) | DarkGray | NearBlack |
-|---|---|---|---|
-| `--color-bg` | `#F6F2EE` | `#1E1E1C` | `#111110` |
-| `--color-surface` | `#FFFFFF` | `#282826` | `#1C1C1A` |
-| `--color-surface-raised` | `#FFFFFF` | `#30302E` | `#242422` |
-| `--color-text-main` | `#21201C` | `#EDEDEC` | `#EDEDEC` |
-| `--color-text-secondary` | `#63635E` | `#9B9B97` | `#7C7C78` |
-| `--color-border` | `rgba(33,32,28, 0.08)` | `rgba(255,255,250, 0.08)` | `rgba(255,255,250, 0.06)` |
-| `--color-border-strong` | `rgba(33,32,28, 0.15)` | `rgba(255,255,250, 0.14)` | `rgba(255,255,250, 0.10)` |
-
-### Accent
-
-| Token | Beige | DarkGray | NearBlack |
-|---|---|---|---|
-| `--color-accent` | `#FF5F0F` | `#FF7A33` | `#FF7A33` |
-| `--color-accent-hover` | `#E95A12` | `#FF8F52` | `#FF8F52` |
-| `--color-accent-subtle` | `rgba(255,95,15, 0.08)` | `rgba(255,95,15, 0.12)` | `rgba(255,95,15, 0.15)` |
-
-Note: canonical brand orange is `#FF5F0F`. Dark themes use `#FF7A33` (lightened) to maintain vibrancy against warm-dark backgrounds.
-
-### Semantic Colors
-
-| Token | Beige | DarkGray / NearBlack |
-|---|---|---|
-| `--color-success` | `#2B7A4B` | `#3ECF71` |
-| `--color-success-subtle` | `#F0FDF4` | `rgba(62,207,113, 0.10)` |
-| `--color-warning` | `#92610B` | `#E8A317` |
-| `--color-warning-subtle` | `#FFFBEB` | `rgba(232,163,23, 0.10)` |
-| `--color-danger` | `#B91C1C` | `#EF5350` |
-| `--color-danger-subtle` | `#FEF2F2` | `rgba(239,83,80, 0.10)` |
-| `--color-info` | `#4338CA` | `#818CF8` |
-| `--color-info-subtle` | `#EEF2FF` | `rgba(129,140,248, 0.10)` |
-| `--color-neutral` | `#63635E` | `#9B9B97` |
-| `--color-neutral-subtle` | `#F1F5F9` | `rgba(155,155,151, 0.08)` |
-
-Dark-mode semantic pattern: use `rgba(semantic-hue, 0.10–0.12)` for subtle backgrounds instead of hardcoded pastel hex.
-
----
-
-## Type Scale (10 Sizes)
+# RemiDe Foundations Spec
 
-Fonts: DM Sans (`--font1`) for body/UI; Doto (`--font2`) for display/headings.
+> Status: prose-only guidance  
+> Canonical values: `public/design-system/foundation.registry.json`  
+> Live editor/viewer: `/ui/foundations`
 
-| Token | Size | Line-height | Weight | Usage |
-|---|---|---|---|---|
-| `--type-display` | `clamp(36px, 5vw, 56px)` | `1.08` | 700 | Hero h1 (Doto) |
-| `--type-heading-1` | `clamp(26px, 3.5vw, 36px)` | `1.08` | 700 | Page title, h2 (Doto) |
-| `--type-heading-2` | `22px` | `1.15` | 600 | Section h3, card group titles |
-| `--type-heading-3` | `18px` | `1.25` | 600 | Card title, subsection h4 |
-| `--type-body-lg` | `16px` | `1.6` | 400 | Default body, paragraphs, long-form |
-| `--type-body` | `14px` | `1.55` | 400 | Table cells, secondary copy |
-| `--type-body-sm` | `13px` | `1.5` | 400 | Compact UI text, form hints |
-| `--type-caption` | `12px` | `1.5` | 500 | Labels, metadata, timestamps |
-| `--type-micro` | `11px` | `1.45` | 500 | Badge text, tiny labels |
-| `--type-nano` | `10px` | `1.4` | 600 | Minimal annotations |
-
-### Elimination Map
-
-| Kill | Map to |
-|---|---|
-| 9px | `nano` (10px) |
-| 11.5px | `micro` (11px) |
-| 12.5px | `caption` (12px) |
-| 15px | `body` (14px) or `body-lg` (16px) |
-| 17px | `body-lg` (16px) |
-| 20px | `heading-3` (18px) |
-| 24px | `heading-2` (22px) |
-| 28px | absorbed into `heading-1` clamp |
+## What Is Canonical
 
----
+All foundation values and foundation-level rules now live in one machine-readable registry:
 
-## Spacing Scale (4px Grid)
+- `public/design-system/foundation.registry.json`
 
-| Token | Value | Usage |
-|---|---|---|
-| `--space-0` | `0` | Reset |
-| `--space-0-5` | `2px` | Hairline gap (icon-text micro-adjust) |
-| `--space-1` | `4px` | Tight inline gap, badge padding-x |
-| `--space-2` | `8px` | Small gap, input padding, compact cell padding |
-| `--space-3` | `12px` | Default cell padding, card gap, button padding-y |
-| `--space-4` | `16px` | Section gap, card padding (compact), button padding-x |
-| `--space-6` | `24px` | Card padding (comfortable), section margin |
-| `--space-8` | `32px` | Section spacing, large gap |
-| `--space-12` | `48px` | Header-content gap, major section break |
-| `--space-16` | `64px` | Page section padding-y |
-| `--space-24` | `96px` | Hero vertical padding |
+This file is the only source of truth for:
 
----
+- color tokens
+- typography scale
+- font roles
+- spacing
+- radii
+- shadows
+- density tokens
+- typography rules and other foundation-level contracts
 
-## Shadow Scale (4 Levels + Focus Ring)
+Runtime CSS is generated from that registry into:
 
-Theme-aware: dark modes use higher opacity because shadows against dark backgrounds are less perceptible.
+- `src/styles/tokens.css`
 
-| Token | Beige | DarkGray | NearBlack |
-|---|---|---|---|
-| `--shadow-none` | `none` | `none` | `none` |
-| `--shadow-sm` | `0 1px 2px rgba(33,32,28,0.05), 0 1px 3px rgba(33,32,28,0.07)` | `0 1px 2px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.15)` | `0 1px 2px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.20)` |
-| `--shadow-md` | `0 4px 12px rgba(33,32,28,0.06), 0 1px 3px rgba(33,32,28,0.04)` | `0 4px 12px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15)` | `0 4px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.20)` |
-| `--shadow-lg` | `0 8px 24px rgba(33,32,28,0.10), 0 2px 6px rgba(33,32,28,0.06)` | `0 8px 24px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.20)` | `0 8px 24px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.25)` |
-| `--shadow-focus` | `0 0 0 3px rgba(255,95,15,0.25)` | `0 0 0 3px rgba(255,95,15,0.35)` | `0 0 0 3px rgba(255,95,15,0.40)` |
+The `/ui/foundations` page reads the same registry and exposes:
 
----
+- `View` mode for inspection
+- `Edit` mode for local authoring
+- `Save` for direct local persistence
 
-## Radius Scale (5 Values)
+## Editing Model
 
-| Token | Value | Usage |
-|---|---|---|
-| `--radius-0` | `0` | Tables, dividers, sharp edges |
-| `--radius-sm` | `4px` | Badges, small inputs, chips |
-| `--radius-md` | `8px` | Buttons, dropdowns |
-| `--radius-lg` | `16px` | Cards, modals, popovers |
-| `--radius-pill` | `9999px` | Pills, full-round tags |
+Foundations are edited only in `/ui/foundations`.
 
----
+Key behavior:
 
-## Density System
+- draft changes exist only inside `Foundations`
+- `Components`, `Composition`, and `Templates` continue using the last saved state
+- pressing `Save` writes the current draft to the local canonical registry
+- after `Save`, the saved foundation state becomes active across the whole `/ui` shell
 
-Two density modes via `data-density` attribute on wrapper elements. Default (no attribute) = comfortable.
+This keeps the design-system workflow close to Figma Variables:
 
-### Token Overrides
+- collections
+- modes
+- inspector-driven editing
+- live preview
+- explicit save point
 
-| Density Token | Comfortable | Compact |
-|---|---|---|
-| `--density-font-body` | `14px` (body) | `13px` (body-sm) |
-| `--density-font-caption` | `12px` (caption) | `11px` (micro) |
-| `--density-line-height` | `1.55` | `1.4` |
-| `--density-padding-y` | `12px` (space-3) | `8px` (space-2) |
-| `--density-padding-x` | `16px` (space-4) | `12px` (space-3) |
-| `--density-gap` | `12px` (space-3) | `8px` (space-2) |
-| `--density-row-height` | `48px` | `36px` |
-| `--density-card-padding` | `24px` (space-6) | `16px` (space-4) |
+## Collections
 
-### Which Components Get Density
+The registry is organized into two top-level buckets:
 
-Gets density: DataTable, Badge, ColumnHeaderFilter, SegmentedControl, Breadcrumb, InfoRow, Button (in-context).
+### `collections`
 
-Does NOT get density: WorldMap, HeroMapCanvas, PaywallGate, FloatingCTA, Header, Footer, TopBanner, PageLoader, ErrorBoundary.
+Variable-like data:
 
----
+- `colors`
+- `typography-scale`
+- `fonts`
+- `spacing`
+- `radii`
+- `shadows`
+- `density`
 
-## Cascade Strategy
+Each collection can expose one or more modes:
 
-CSS Layers for deterministic cascade ordering:
+- themes: `beige`, `darkgray`, `nearblack`
+- density: `comfortable`, `compact`
+- base collections: `base`
 
-```css
-@layer reset, vendor, tokens, components, pages, utilities;
-```
+### `rules`
 
-| Layer | Contains | Priority |
-|---|---|---|
-| `reset` | Minimal box-sizing reset | Lowest |
-| `vendor` | Bootstrap import, MapLibre CSS | ↑ |
-| `tokens` | `:root` vars, `[data-theme]` overrides, `[data-density]` overrides | ↑ |
-| `components` | All `st-*` classes | ↑ |
-| `pages` | Page-specific `st-*` blocks | ↑ |
-| `utilities` | One-off overrides, `.sr-only`, keyframes | Highest |
+Behavior-like data that should not be hidden as CSS side effects:
 
-New React components use CSS Modules (`*.module.css`) authored inside `@layer components`.
+- typography role mapping
+- uppercase policy
+- letter-spacing policy
+- font-role mapping
+- other foundation-level presentation rules
 
----
+Rules are editable in the same surface, but they remain conceptually separate from token values.
 
-## Canonical Library Structure
+## Consumption Contract
 
-### Atoms (15)
+Consumers must read generated CSS variables and foundation rules only.
 
-Button, Badge, Icon, Input, Label, Link, Divider, Heading, Text, Chip, Avatar, Spinner, Toggle, Image, SkipLink
+This means:
 
-### Molecules (20)
+- `src/styles/app.css` is no longer a token source of truth
+- design-system pages must not hardcode parallel token arrays
+- `/ui/components`, `/ui/composition`, and `/ui/templates` are read-only consumers of the saved foundation state
 
-SearchBar, StatCard, FilterChipGroup, Breadcrumb, InfoRow, SegmentedControl, ColumnHeaderFilter, FormField, ContentCard, CTABlock, TestimonialCard, AccordionItem, PullQuote, SectionHeader, AuthorCard, ImageHeader, LogoBar, BulletItem, PhaseCard, NavItem
+## Naming and Authoring Guidelines
 
-### Organisms (23)
+- Use human-readable labels for designer-facing names.
+- Keep token names stable once introduced.
+- Add descriptions and usage notes for every editable token and rule.
+- Prefer role-based fonts (`body`, `heading`, `mono`) over raw font names in rules.
+- Keep semantic colors meaningful: success, warning, danger, info, neutral.
+- Do not encode page-level one-off styling in foundations.
 
-Header (4 modes), Footer (2 variants), TopBanner, MobileMenu, MobileSearchOverlay, DataTable (full/simple), WorldMap, HeroWorldMapCanvas, SidebarNav, ContentCardGrid, TestimonialCarousel, StepFlow, Accordion, PaywallGate, FloatingPaywallCTA, AuthForm, BulletSection, ProseBlock, Timeline, BigStatRow, ErrorBoundary, PageLoader, ProtectedRoute
+## What Stays Out of Foundations
 
-### Templates (11)
+These do not belong in the canonical token registry:
 
-MarketingLanding, TrackerLanding, TrackerList, TrackerDetail, TrackerAuth, DocsArticle, DocsHub, DocsPlaybook, ReportPage, PricingPage, ErrorPage
+- component-specific layout hacks
+- one-off page overrides
+- implementation notes for a single screen
+- route-specific visual exceptions
 
----
+Those stay in component/page styling, not in foundation data.
 
-## Build Sequence (after token normalization)
+## Operational Rule
 
-1. **Badge** — zero dependencies, brand canon, used everywhere
-2. **StatCard** — authority signal, shareable numbers
-3. **AccordionItem → Accordion** — enables deep analytical content
-4. **DataTable** — crown jewel, intelligence platform differentiator
-5. **ContentCard** — hub builder, content navigation
+If a token value or foundation rule changes, the change must be made in one place only:
 
-First complete template: **ReportTemplate** (16 components total: 6 atoms + 5 molecules + 4 organisms + 1 template).
+- `public/design-system/foundation.registry.json`
 
----
-
-## Dead Code to Remove
-
-- `PaywallOverlay` (superseded by PaywallGate)
-- `ContactForm` (zero imports)
-- `SearchInput` (ui/) (merged into SearchBar)
-- `FilterChips` (ui/) (pattern → Chip + FilterChipGroup)
-- `StatCard` (ui/) (zero imports, replaced by canonical)
-
----
-
-## Signature Elements (frozen design)
-
-1. **WorldMap** — 4 regulatory data modes, brand visual identity
-2. **Badge System** — SEMANTIC_SWATCHES as brand canon, regulatory status language
-3. **PaywallGate** — blur over real data, FT-grade premium gate
-
----
-
-## Quality Gate Checklist
-
-Every component must pass before entering the library:
-
-- [ ] Zero hardcoded colors (all via `var(--*)`)
-- [ ] Zero hardcoded font-sizes (all from 10-step type scale)
-- [ ] Zero hardcoded spacing (all from 4px grid tokens)
-- [ ] 3-theme render test (Beige, DarkGray, NearBlack)
-- [ ] WCAG AA contrast (4.5:1 normal text, 3:1 large text) on all themes
-- [ ] Theme-aware shadows (not absolute rgba)
-- [ ] Density modes work correctly where applicable
-- [ ] Responsive at 375px, 768px, 1280px
-- [ ] Keyboard navigable, screen-reader compatible
-- [ ] No inline `style={{}}` except `inline-dynamic-ok:` marked cases
-- [ ] Design owner visual sign-off
+Everything else is derived from it.

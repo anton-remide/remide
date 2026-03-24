@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "foundations:generate": "tsx scripts/generate-design-tokens.ts",
+    "dev": "npm run foundations:generate && vite",
+    "build": "npm run foundations:generate && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

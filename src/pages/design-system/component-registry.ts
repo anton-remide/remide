@@ -39,7 +39,7 @@ export const COMPONENT_REGISTRY: ComponentMeta[] = [
   { id: 'badge', name: 'Badge', description: 'Status and category labels with semantic variants.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-badge', 'st-badge--success', 'st-badge--info', 'st-badge--warning', 'st-badge--danger', 'st-badge--neutral'] },
   { id: 'button', name: 'Button', description: 'Primary action trigger with variants and sizes.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-btn', 'st-btn--primary', 'st-btn--secondary', 'st-btn--ghost', 'st-btn--danger'] },
   { id: 'input', name: 'Input', description: 'Text and form input with validation states.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-input'] },
-  { id: 'heading', name: 'Heading', description: 'Display and section headings with Doto/DM Sans.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-heading'] },
+  { id: 'heading', name: 'Heading', description: 'Foundation-driven display and heading roles.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-heading'] },
   { id: 'text', name: 'Text', description: 'Body and caption text with size/color variants.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-text'] },
   { id: 'chip', name: 'Chip', description: 'Selectable or removable tags and filters.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-chip'] },
   { id: 'toggle', name: 'Toggle', description: 'Boolean switch control.', category: 'atom', status: 'stable', props: [], cssClasses: ['st-toggle'] },
