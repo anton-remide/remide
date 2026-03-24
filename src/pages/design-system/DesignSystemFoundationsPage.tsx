@@ -456,7 +456,6 @@ export default function DesignSystemFoundationsPage() {
             </div>
             {typographyNavSections.length > 0 && (
               <div className="st-ds-foundations-nav__group st-ds-foundations-nav__group--secondary">
-                <div className="st-ds-foundations-nav__group-label">Typography</div>
                 {typographyNavSections.map(renderNavButton)}
               </div>
             )}

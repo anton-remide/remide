@@ -10074,16 +10074,6 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-foundations-nav__group--secondary {
   padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
-}
-
-.st-ds-foundations-nav__group-label {
-  padding: 0 var(--space-3) var(--space-1);
-  font-size: var(--type-micro);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
 }
 
 .st-ds-foundations-nav__item {
