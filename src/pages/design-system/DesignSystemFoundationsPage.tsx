@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { CSSProperties } from 'react';
 import Heading from '../../components/ui/Heading';
 import Text from '../../components/ui/Text';
 import type {
@@ -153,7 +152,6 @@ function rulePreviewStyle(item: FoundationRuleItem) {
     lineHeight: item.properties['line-height'],
     fontWeight: item.properties.weight,
     letterSpacing: item.properties['letter-spacing'],
-    textTransform: item.properties.transform as CSSProperties['textTransform'],
     color: 'var(--color-text-main)',
   };
 }

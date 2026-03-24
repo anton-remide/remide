@@ -137,7 +137,6 @@ h1 {
   line-height: var(--rule-heading-display-line-height);
   font-weight: var(--rule-heading-display-weight);
   letter-spacing: var(--rule-heading-display-letter-spacing);
-  text-transform: var(--rule-heading-display-transform);
 }
 
 h2 {
@@ -146,7 +145,6 @@ h2 {
   line-height: var(--rule-heading-1-line-height);
   font-weight: var(--rule-heading-1-weight);
   letter-spacing: var(--rule-heading-1-letter-spacing);
-  text-transform: var(--rule-heading-1-transform);
 }
 
 h3 {
@@ -155,7 +153,6 @@ h3 {
   line-height: var(--rule-heading-2-line-height);
   font-weight: var(--rule-heading-2-weight);
   letter-spacing: var(--rule-heading-2-letter-spacing);
-  text-transform: var(--rule-heading-2-transform);
 }
 
 h4 {
@@ -164,7 +161,6 @@ h4 {
   line-height: var(--rule-heading-4-line-height);
   font-weight: var(--rule-heading-4-weight);
   letter-spacing: var(--rule-heading-4-letter-spacing);
-  text-transform: var(--rule-heading-4-transform);
 }
 
 h5 {
@@ -173,7 +169,6 @@ h5 {
   line-height: var(--rule-heading-5-line-height);
   font-weight: var(--rule-heading-5-weight);
   letter-spacing: var(--rule-heading-5-letter-spacing);
-  text-transform: var(--rule-heading-5-transform);
 }
 
 h6 {
@@ -182,7 +177,6 @@ h6 {
   line-height: var(--rule-heading-6-line-height);
   font-weight: var(--rule-heading-6-weight);
   letter-spacing: var(--rule-heading-6-letter-spacing);
-  text-transform: var(--rule-heading-6-transform);
 }
 
 p {
@@ -400,7 +394,6 @@ ul {
   font-size: var(--rule-label-size);
   font-weight: var(--rule-label-weight);
   letter-spacing: var(--rule-label-letter-spacing);
-  text-transform: var(--rule-label-transform);
   color: var(--text-muted);
   background: var(--bg-light);
   border: 1px solid var(--color-border);
@@ -7567,7 +7560,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-display-line-height);
   font-weight: var(--rule-heading-display-weight);
   letter-spacing: var(--rule-heading-display-letter-spacing);
-  text-transform: var(--rule-heading-display-transform);
 }
 .st-heading--1 {
   font-family: var(--rule-heading-1-font);
@@ -7575,7 +7567,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-1-line-height);
   font-weight: var(--rule-heading-1-weight);
   letter-spacing: var(--rule-heading-1-letter-spacing);
-  text-transform: var(--rule-heading-1-transform);
 }
 .st-heading--2 {
   font-family: var(--rule-heading-2-font);
@@ -7583,7 +7574,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-2-line-height);
   font-weight: var(--rule-heading-2-weight);
   letter-spacing: var(--rule-heading-2-letter-spacing);
-  text-transform: var(--rule-heading-2-transform);
 }
 .st-heading--3 {
   font-family: var(--rule-heading-3-font);
@@ -7591,7 +7581,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-3-line-height);
   font-weight: var(--rule-heading-3-weight);
   letter-spacing: var(--rule-heading-3-letter-spacing);
-  text-transform: var(--rule-heading-3-transform);
 }
 .st-heading--4 {
   font-family: var(--rule-heading-4-font);
@@ -7599,7 +7588,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-4-line-height);
   font-weight: var(--rule-heading-4-weight);
   letter-spacing: var(--rule-heading-4-letter-spacing);
-  text-transform: var(--rule-heading-4-transform);
 }
 .st-heading--5 {
   font-family: var(--rule-heading-5-font);
@@ -7607,7 +7595,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-5-line-height);
   font-weight: var(--rule-heading-5-weight);
   letter-spacing: var(--rule-heading-5-letter-spacing);
-  text-transform: var(--rule-heading-5-transform);
 }
 .st-heading--6 {
   font-family: var(--rule-heading-6-font);
@@ -7615,7 +7602,6 @@ article.st-page:has(.st-floating-cta) {
   line-height: var(--rule-heading-6-line-height);
   font-weight: var(--rule-heading-6-weight);
   letter-spacing: var(--rule-heading-6-letter-spacing);
-  text-transform: var(--rule-heading-6-transform);
 }
 
 /* ── Text ── */
@@ -10211,7 +10197,8 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-foundations-list__item.is-token-card {
   min-height: 196px;
-  align-content: space-between;
+  align-content: start;
+  gap: var(--space-5);
 }
 
 .st-ds-foundations-list__item.is-rule-card {
@@ -10269,6 +10256,7 @@ article.st-page:has(.st-floating-cta) {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
   align-items: start;
+  padding-top: var(--space-1);
 }
 
 .st-ds-foundations-card__bottom--rule {
