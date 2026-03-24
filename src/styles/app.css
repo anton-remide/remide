@@ -10229,8 +10229,8 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-foundations-card__top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(160px, 200px);
-  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
   align-items: start;
 }
 
@@ -10357,7 +10357,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-foundations-input--inline {
-  text-align: right;
+  text-align: left;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }

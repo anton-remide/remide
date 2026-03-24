@@ -466,9 +466,6 @@ export default function DesignSystemFoundationsPage() {
           <div className="st-ds-foundations-panel__header">
             <div className="st-ds-foundations-panel__header-copy">
               <Heading level={2}>{activeSection.label}</Heading>
-              {activeSection.description && (
-                <Text size="sm" color="secondary">{activeSection.description}</Text>
-              )}
             </div>
 
             {isTokenSection(activeSection) && activeSection.modes.length > 1 && (
