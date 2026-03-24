@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "updatedAt": "2026-03-24T14:48:22.958Z",
+    "updatedAt": "2026-03-24T15:12:41.800Z",
     "defaultTheme": "beige",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
   },
@@ -209,7 +209,7 @@
           "usage": "Buttons, highlights, active states.",
           "preview": "color",
           "values": {
-            "beige": "#F11f",
+            "beige": "#F355D6",
             "darkgray": "#FF7A33",
             "nearblack": "#FF7A33"
           }
@@ -223,7 +223,7 @@
           "usage": "Interactive hover states.",
           "preview": "color",
           "values": {
-            "beige": "#E95A12",
+            "beige": "#E34DC7",
             "darkgray": "#FF8F52",
             "nearblack": "#FF8F52"
           }
@@ -237,7 +237,7 @@
           "usage": "Pills, callouts, lightweight emphasis.",
           "preview": "color",
           "values": {
-            "beige": "rgba(255, 95, 15, 0.08)",
+            "beige": "#FBE7F7",
             "darkgray": "rgba(255, 95, 15, 0.12)",
             "nearblack": "rgba(255, 95, 15, 0.15)"
           }
