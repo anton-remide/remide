@@ -20,6 +20,7 @@ import {
 const FOUNDATION_ENDPOINT = '/__internal/foundations';
 const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
+const TYPOGRAPHY_SECTION_IDS = new Set(['fonts', 'typography-scale', 'typography-rules']);
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -203,6 +204,14 @@ export default function DesignSystemFoundationsPage() {
 
   const activeRegistry = draftRegistry ?? savedRegistry;
   const sections = useMemo(() => (activeRegistry ? getFoundationSections(activeRegistry) : []), [activeRegistry]);
+  const primaryNavSections = useMemo(
+    () => sections.filter((section) => !TYPOGRAPHY_SECTION_IDS.has(section.id)),
+    [sections],
+  );
+  const typographyNavSections = useMemo(
+    () => sections.filter((section) => TYPOGRAPHY_SECTION_IDS.has(section.id)),
+    [sections],
+  );
 
   useEffect(() => {
     if (sections.length === 0) {
@@ -375,6 +384,22 @@ export default function DesignSystemFoundationsPage() {
     items: getSectionItems(activeSection).filter((item) => item.group === group.id),
   })).filter((group) => group.items.length > 0);
 
+  function renderNavButton(section: FoundationSection) {
+    return (
+      <button
+        key={section.id}
+        type="button"
+        onClick={() => setSelectedSectionId(section.id)}
+        className={['st-ds-foundations-nav__item', activeSection.id === section.id && 'is-active'].filter(Boolean).join(' ')}
+      >
+        <span className="st-ds-foundations-nav__title">
+          {section.label}
+          {dirtySectionIds.has(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="st-ds-content st-ds-foundations">
       {dirty && (
@@ -428,19 +453,15 @@ export default function DesignSystemFoundationsPage() {
       <div className="st-ds-foundations-workspace">
         <aside className="st-ds-foundations-panel st-ds-foundations-panel--sidebar">
           <div className="st-ds-foundations-nav">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => setSelectedSectionId(section.id)}
-                className={['st-ds-foundations-nav__item', activeSection.id === section.id && 'is-active'].filter(Boolean).join(' ')}
-              >
-                <span className="st-ds-foundations-nav__title">
-                  {section.label}
-                  {dirtySectionIds.has(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
-                </span>
-              </button>
-            ))}
+            <div className="st-ds-foundations-nav__group">
+              {primaryNavSections.map(renderNavButton)}
+            </div>
+            {typographyNavSections.length > 0 && (
+              <div className="st-ds-foundations-nav__group st-ds-foundations-nav__group--secondary">
+                <div className="st-ds-foundations-nav__group-label">Typography</div>
+                {typographyNavSections.map(renderNavButton)}
+              </div>
+            )}
           </div>
         </aside>
 
