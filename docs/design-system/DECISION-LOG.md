@@ -209,7 +209,7 @@ Explicitly deferred with rationale:
 | ContentCard | `.st-content-card__badge` needs `display:flex; gap:var(--space-1)` for multi-badge support |
 | Callout | Add `tip` variant |
 | DataTable | Add `hideSearch`, `hidePagination` boolean props for static report contexts |
-| BigStatRow | Add `valueFont` prop — currently forces Doto on all values, inappropriate for non-numeric data |
+| BigStatRow | Add `valueFont` prop — currently forces the heading role on all values, inappropriate for non-numeric data |
 | AuthorCard | Compose Avatar component internally (initials fallback when no image) |
 | TestimonialCard | Same — compose Avatar for fallback |
 
@@ -250,7 +250,7 @@ Explicitly deferred with rationale:
 
 ### Typography Decision
 
-Anton chose: **Heading component uses Doto for Display/H1/H2/H3** (same as global heading styles) — unified system where the pixel font is for large headings and data values, DM Sans is for body text.
+Anton chose: **Heading component uses the heading role for Display/H1/H2/H3** (same as global heading styles) — unified system where the heading role is reserved for large headings and data values, and the body role is used for body text.
 
 Full typography pairing decision tree documented in Plan 03 §6 with 14 specific context rules.
 

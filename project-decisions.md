@@ -202,3 +202,10 @@
   5. `version-guard.mdc` — auto-check CLAUDE.md when infra files change
   6. `project-structure.mdc` — import boundaries, naming, ownership
 - **Impact:** .cursor/rules/ created, CLAUDE.md updated, all future sessions auto-load these rules.
+
+## DS-001: Canonical Font Roles Only — Remove Legacy Font Aliases
+- **Category:** Architecture
+- **Date:** 2026-03-24
+- **Context:** Foundations exposed `Legacy Aliases` in `Fonts`, while runtime still referenced `--font1` / `--font2` and a few direct font-family hardcodes. This made the typography system ambiguous and allowed code to bypass foundations roles.
+- **Decision:** Remove `--font1` and `--font2` from the foundation registry, migrate runtime usage to `--font-body` / `--font-heading`, and keep typography API limited to the three canonical roles: `--font-body`, `--font-heading`, `--font-mono`.
+- **Impact:** `public/design-system/foundation.registry.json`, generated `src/styles/tokens.css`, `src/styles/app.css`, `src/components/ui/MermaidDiagram.tsx`, runtime page styles, and current design-system docs now align on role-based typography only.

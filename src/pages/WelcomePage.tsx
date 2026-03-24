@@ -62,7 +62,7 @@ export default function WelcomePage() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-          <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8 }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 8 }}>
             {firstName ? `Welcome, ${firstName}!` : 'Welcome to RemiDe!'}
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', lineHeight: 1.6, maxWidth: 480, margin: '0 auto' }}>
@@ -112,12 +112,12 @@ export default function WelcomePage() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <Star size={16} style={{ color: 'var(--accent)' }} />
-            <span style={{ fontFamily: 'var(--font2)', fontWeight: 700, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Full Access — Beta Pricing
             </span>
           </div>
 
-          <h3 style={{ fontFamily: 'var(--font2)', margin: '0 0 6px', fontSize: '1.25rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 6px', fontSize: '1.25rem' }}>
             Unlock everything for €49
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', margin: '0 0 16px', lineHeight: 1.5 }}>

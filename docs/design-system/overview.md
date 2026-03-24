@@ -49,7 +49,7 @@
 
 ### Основные группы токенов
 
-- **Шрифты**: `--font1` (DM Sans), `--font2` (Doto).
+- **Шрифты**: `--font-body`, `--font-heading`, `--font-mono`.
 - **Core-цвета**: `--color-primary`, `--color-bg`, `--color-surface`, `--color-border`, `--color-text-main`, `--color-text-secondary`, `--color-accent`.
 - **Семантические алиасы (compatibility)**: `--white`, `--black`, `--text`, `--text-muted`, `--border`, `--accent`, `--bg-light`.
 - **Радиусы**: `--radius-pill`, `--radius-lg`, `--radius-md`, `--radius-sm`.
@@ -63,7 +63,7 @@
 | Что меняем | Где менять |
 |---|---|
 | Базовые бренд-цвета, текст, фон | `:root` в `src/styles/app.css` (`--color-*`) |
-| Типографику и шрифтовые пары | `:root` (`--font1`, `--font2`) + импорт Google Fonts |
+| Типографику и шрифтовые пары | `:root` (`--font-body`, `--font-heading`) + импорт Google Fonts |
 | Скругления и базовые размеры интерфейса | `:root` (`--radius-*`, layout vars) |
 | Landing-специфичные цвета/гаттеры | `.st-landing-v2 { --landing-* }` |
 | Статусные цвета (бейджи/карта) | `src/theme.ts` (`SEMANTIC_SWATCHES` → color-maps) |
@@ -74,7 +74,7 @@
 - Основной текст: `--color-text-main` и `--color-text-secondary`.
 - Акцентный цвет: `--color-accent`.
 - Скругления: `--radius-*`.
-- Шрифты: `--font1`, `--font2` + импорт Google Fonts вверху `app.css`.
+- Шрифты: `--font-body`, `--font-heading` + импорт Google Fonts вверху `app.css`.
 
 Примечание по актуальности: в последних коммитах `main` **`:root` токены не менялись**, менялись в основном компонентные блоки и страницы.
 

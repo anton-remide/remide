@@ -33,12 +33,13 @@ export default function MermaidDiagram({ chart, className }: MermaidDiagramProps
         const border = s.getPropertyValue('--color-border-strong').trim() || 'rgba(33,32,28,0.15)';
         const bg = s.getPropertyValue('--color-bg').trim() || '#F6F2EE';
         const accent = s.getPropertyValue('--color-accent').trim() || '#FF5F0F';
+        const fontBody = s.getPropertyValue('--font-body').trim() || "'Geist', sans-serif";
 
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: 'loose',
           theme: 'base',
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: fontBody,
           themeVariables: {
             background: 'transparent',
             primaryColor: surface,

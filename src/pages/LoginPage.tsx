@@ -65,7 +65,7 @@ export default function LoginPage() {
     <div ref={revealRef} className="st-page" style={{ paddingBottom: 80 }}>
       <div className="reveal" style={{ maxWidth: 440, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8 }}>Sign In</h2>
+          <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 8 }}>Sign In</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
             Access entity data, jurisdiction details, and more
           </p>

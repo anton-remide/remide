@@ -262,7 +262,7 @@ export default function JurisdictionDetailPage() {
 
       {/* Title, badges, description */}
       <div className="reveal" style={{ marginTop: 24, marginBottom: 20 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 12 }}>
           <span style={{ marginRight: 8 }}>{countryCodeToFlag(jurisdiction.code)}</span>
           {jurisdiction.name}
         </h2>

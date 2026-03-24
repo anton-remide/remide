@@ -2,7 +2,7 @@
 
 **Generated**: 2026-03-07
 **Framework**: Pure CSS + Bootstrap (CSS-only). No Tailwind.
-**Fonts**: Google Fonts: DM Sans (body) + Doto (display/numbers)
+**Fonts**: role-based typography via `--font-body`, `--font-heading`, `--font-mono`
 **CSS File**: `src/styles/app.css` (5445 lines)
 
 ---
@@ -41,8 +41,8 @@
 ## 2. TYPOGRAPHY
 
 ### Fonts
-- Body: `'DM Sans', sans-serif`
-- Display: `'Doto', sans-serif`
+- Body role: `var(--font-body)`
+- Heading role: `var(--font-heading)`
 - Feature settings: `'cv02', 'cv03', 'cv04', 'cv11'`
 
 ### Font Sizes (30+ values — NEEDS CONSOLIDATION)

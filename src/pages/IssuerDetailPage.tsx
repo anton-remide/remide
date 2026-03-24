@@ -116,7 +116,7 @@ export default function IssuerDetailPage() {
 
       {/* ── Header ── */}
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {issuer.countryCode && (
             <span style={{ fontSize: '1.5rem' }}>{countryCodeToFlag(issuer.countryCode)}</span>
           )}
@@ -162,13 +162,13 @@ export default function IssuerDetailPage() {
           {issuer.lei && (
             <div className="st-info-row">
               <span className="st-info-label">LEI</span>
-              <span className="st-info-value" style={{ fontFamily: 'var(--font2)', fontSize: '0.8125rem' }}>{issuer.lei}</span>
+              <span className="st-info-value" style={{ fontFamily: 'var(--font-heading)', fontSize: '0.8125rem' }}>{issuer.lei}</span>
             </div>
           )}
           {issuer.cik && (
             <div className="st-info-row">
               <span className="st-info-label">SEC CIK</span>
-              <span className="st-info-value" style={{ fontFamily: 'var(--font2)', fontSize: '0.8125rem' }}>{issuer.cik}</span>
+              <span className="st-info-value" style={{ fontFamily: 'var(--font-heading)', fontSize: '0.8125rem' }}>{issuer.cik}</span>
             </div>
           )}
           {issuer.auditor && (
@@ -209,7 +209,7 @@ export default function IssuerDetailPage() {
         <div className="reveal" style={{ marginBottom: 32 }}>
           <h6 className="st-section-label">
             <Building2 size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-            Stablecoins Issued <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({stablecoins.length})</span>
+            Stablecoins Issued <span style={{ color: 'var(--text)', fontFamily: 'var(--font-heading)', fontWeight: 400 }}>({stablecoins.length})</span>
           </h6>
           <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="st-table-scroll">
@@ -230,13 +230,13 @@ export default function IssuerDetailPage() {
                     onClick={() => navigate(`/stablecoins/${sc.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <td style={{ padding: '10px 16px', fontWeight: 600, fontFamily: 'var(--font2)' }}>{sc.ticker}</td>
+                    <td style={{ padding: '10px 16px', fontWeight: 600, fontFamily: 'var(--font-heading)' }}>{sc.ticker}</td>
                     <td style={{ padding: '10px 16px' }}>{sc.name}</td>
                     <td style={{ padding: '10px 16px' }}>
                       <Badge label={sc.type} colorMap={STABLECOIN_TYPE_COLORS} />
                     </td>
                     <td style={{ padding: '10px 16px' }}>{sc.pegCurrency}</td>
-                    <td style={{ padding: '10px 16px', fontFamily: 'var(--font2)', fontWeight: 500 }}>
+                    <td style={{ padding: '10px 16px', fontFamily: 'var(--font-heading)', fontWeight: 500 }}>
                       ${sc.marketCapBn >= 1 ? `${sc.marketCapBn.toFixed(1)}B` : `${(sc.marketCapBn * 1000).toFixed(0)}M`}
                     </td>
                   </tr>
@@ -262,7 +262,7 @@ export default function IssuerDetailPage() {
             <div className="reveal" style={{ marginBottom: 32 }}>
               <h6 className="st-section-label">
                 <Users size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-                Corporate Structure <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({subsidiaries.length})</span>
+                Corporate Structure <span style={{ color: 'var(--text)', fontFamily: 'var(--font-heading)', fontWeight: 400 }}>({subsidiaries.length})</span>
               </h6>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 12 }}>
                 {subsidiaries.map((sub) => (
@@ -278,7 +278,7 @@ export default function IssuerDetailPage() {
                         <span>{countryCodeToFlag(sub.countryCode)} {sub.country || sub.countryCode}</span>
                       )}
                       {sub.lei && (
-                        <span style={{ fontFamily: 'var(--font2)', fontSize: '0.6875rem' }}>LEI: {sub.lei}</span>
+                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: '0.6875rem' }}>LEI: {sub.lei}</span>
                       )}
                       {sub.incorporationDate && (
                         <span>Est. {new Date(sub.incorporationDate).getFullYear()}</span>
@@ -300,7 +300,7 @@ export default function IssuerDetailPage() {
             <div className="reveal" style={{ marginBottom: 32 }}>
               <h6 className="st-section-label">
                 <Shield size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-                Global Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({licenses.length})</span>
+                Global Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font-heading)', fontWeight: 400 }}>({licenses.length})</span>
               </h6>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
                 {licenses.map((lic) => (

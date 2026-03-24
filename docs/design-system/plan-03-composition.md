@@ -264,37 +264,37 @@ For each pattern, show a live rendered example with real components (using place
 
 ## Section 6: Typography Pairing (`#typography`)
 
-Reference for when to use Doto (`--font2`) vs DM Sans (`--font1`). The table below captures the defaults enforced by components (Heading, Badge, Button) and recommended conventions for other contexts.
+Reference for when to use the heading role (`--font-heading`) vs the body role (`--font-body`). The table below captures the defaults enforced by components (Heading, Badge, Button) and recommended conventions for other contexts.
 
 ### Decision Tree (defaults and recommendations)
 
 | Context | Font | Weight | Size token | Example |
 |---------|------|--------|-----------|---------|
-| **Display heading** (hero, page title) | Doto (`--font2`) | 700 | `--type-display` | "AFRICA'S $120B CRISIS" |
-| **Section heading** (H1/H2/H3) | Doto (`--font2`) | 700 | `--type-heading-*` | "KEY FINDINGS" |
-| **Subheading** (H4/H5/H6) | DM Sans (`--font1`) | 600 | `--type-body-lg` | "Regional breakdown" |
-| **Body text** | DM Sans (`--font1`) | 400 | `--type-body` | Paragraph content |
-| **Data identifier** (ticker, LEI) | Doto (`--font2`) | 500 | `--type-body-sm` | "USDT", "LEI-549300..." |
-| **Monetary value** (stat, price) | Doto (`--font2`) | 700 | varies | "$4.2B", "120" |
-| **Section count** in parentheses | Doto (`--font2`) | 500 | inherit from parent | "Licenses (47)" — the "(47)" is Doto |
-| **Badge text** | DM Sans (`--font1`) | 600 | `--type-micro` | "Active", "Licensed" — ALWAYS DM Sans |
-| **Inline code / address** | Doto (`--font2`) | 400 | `--type-body-sm` | "0x1234...abcd" |
-| **Button label** | DM Sans (`--font1`) | 600 | `--type-body-sm` | "Sign In", "View Report" |
-| **Nav item** | DM Sans (`--font1`) | 500 | `--type-body-sm` | "Entities", "Reports" |
-| **Caption / timestamp** | DM Sans (`--font1`) | 400 | `--type-caption` | "Updated 2 hours ago" |
-| **Label** (form, table header) | DM Sans (`--font1`) | 600 | `--type-body-sm` | "Email address", "JURISDICTION" |
-| **Callout stat value** | Doto (`--font2`) | 700 | `--type-heading-2` | Large number in callout card |
+| **Display heading** (hero, page title) | Heading role (`--font-heading`) | 700 | `--type-display` | "AFRICA'S $120B CRISIS" |
+| **Section heading** (H1/H2/H3) | Heading role (`--font-heading`) | 700 | `--type-heading-*` | "KEY FINDINGS" |
+| **Subheading** (H4/H5/H6) | Body role (`--font-body`) | 600 | `--type-body-lg` | "Regional breakdown" |
+| **Body text** | Body role (`--font-body`) | 400 | `--type-body` | Paragraph content |
+| **Data identifier** (ticker, LEI) | Heading role (`--font-heading`) | 500 | `--type-body-sm` | "USDT", "LEI-549300..." |
+| **Monetary value** (stat, price) | Heading role (`--font-heading`) | 700 | varies | "$4.2B", "120" |
+| **Section count** in parentheses | Heading role (`--font-heading`) | 500 | inherit from parent | "Licenses (47)" — the count inherits the heading role |
+| **Badge text** | Body role (`--font-body`) | 600 | `--type-micro` | "Active", "Licensed" |
+| **Inline code / address** | Heading role (`--font-heading`) | 400 | `--type-body-sm` | "0x1234...abcd" |
+| **Button label** | Body role (`--font-body`) | 600 | `--type-body-sm` | "Sign In", "View Report" |
+| **Nav item** | Body role (`--font-body`) | 500 | `--type-body-sm` | "Entities", "Reports" |
+| **Caption / timestamp** | Body role (`--font-body`) | 400 | `--type-caption` | "Updated 2 hours ago" |
+| **Label** (form, table header) | Body role (`--font-body`) | 600 | `--type-body-sm` | "Email address", "JURISDICTION" |
+| **Callout stat value** | Heading role (`--font-heading`) | 700 | `--type-heading-2` | Large number in callout card |
 
 ### Component-enforced constraints (these ARE strict — they're baked into atoms)
 
-1. **Heading component** auto-applies Doto for Display/H1/H2/H3 levels. Developers don't choose the font — the component enforces it.
-2. **Badge text is always DM Sans** at `--type-micro`. The Badge component enforces this.
-3. **Button labels are always DM Sans.** The Button component enforces this.
+1. **Heading component** auto-applies the heading role for Display/H1/H2/H3 levels. Developers don't choose the font — the component enforces it.
+2. **Badge text always uses the body role** at `--type-micro`. The Badge component enforces this.
+3. **Button labels always use the body role.** The Button component enforces this.
 
 ### Recommendations (not enforced — use your judgment)
 
-4. **Numbers in inline body text** — DM Sans is usually better. Doto works for primary data points (stat cards, callout values, financial tables).
-5. **When in doubt: DM Sans.** Doto is high-signal — headings and standalone data values.
+4. **Numbers in inline body text** usually work better with the body role. Use the heading role for primary data points (stat cards, callout values, financial tables).
+5. **When in doubt: use the body role.** The heading role is high-signal — headings and standalone data values.
 
 ### Visual demo
 
@@ -775,7 +775,7 @@ Two pages were assembled from the library during Cycle 3 review:
 | Cycle | Score | Reason |
 |-------|-------|--------|
 | Cycle 1 | n/a | Identified missing components and documentation |
-| Cycle 2 | 62% | "Good but not Stripe-quality" — surface collapse, contrast failure, Doto enforcement |
+| Cycle 2 | 62% | "Good but not Stripe-quality" — surface collapse, contrast failure, heading-role enforcement |
 | Cycle 3 (pre-fix) | 28% | Entity detail page simulation — many raw HTML workarounds, 11 NearBlack failures |
 | Cycle 3 (post-fix estimate) | ~80% | After token prerequisites (0c-0i) + 11 components + NearBlack border enforcement |
 

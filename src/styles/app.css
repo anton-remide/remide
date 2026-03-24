@@ -246,7 +246,7 @@ ul {
   gap: 8px;
   height: 44px;
   padding: 0 24px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 600;
   color: var(--white);
@@ -296,7 +296,7 @@ ul {
   gap: 8px;
   height: 44px;
   padding: 0 24px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 600;
   color: var(--color-text-main);
@@ -363,7 +363,7 @@ ul {
   align-items: center;
   height: 22px;
   padding: 0 8px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-micro);
   font-weight: 600;
   border-radius: var(--radius-sm);
@@ -468,7 +468,7 @@ ul {
 
 .stats_item .stat-value,
 .stat-value {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-1);
   font-weight: 800;
   line-height: 0.85;
@@ -477,7 +477,7 @@ ul {
 
 .stats_item .stat-label,
 .stat-label {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--text-muted);
@@ -528,7 +528,7 @@ ul {
 }
 
 .st-stat-card__value {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-1);
   font-weight: 800;
   line-height: 0.85;
@@ -542,7 +542,7 @@ ul {
 
 .st-stat-card__label {
   display: block;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--density-font-caption, var(--type-caption));
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -574,7 +574,7 @@ ul {
   gap: 8px;
   width: 100%;
   padding: var(--density-padding-y, 16px) 0;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--density-font-body, var(--type-body));
   font-weight: 600;
   color: var(--color-text-main);
@@ -682,7 +682,7 @@ a.st-content-card:hover {
 }
 
 .st-content-card__title {
-  font-family: var(--font2, var(--font1));
+  font-family: var(--font-heading, var(--font-body));
   font-size: var(--type-heading-3);
   font-weight: 700;
   color: var(--color-text-main);
@@ -794,7 +794,7 @@ a.st-content-card:hover {
 }
 
 .st-header-nav a {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 500;
   color: var(--black);
@@ -885,7 +885,7 @@ a.st-content-card:hover {
   text-align: left;
   background: none;
   border: none;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 500;
   color: var(--black);
@@ -905,7 +905,7 @@ a.st-content-card:hover {
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 500;
   color: var(--text-muted);
@@ -926,14 +926,14 @@ a.st-content-card:hover {
   border-radius: 50%;
   background: var(--black);
   color: var(--white);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .st-header-auth-link {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 500;
   color: var(--text-muted);
@@ -1012,7 +1012,7 @@ a.st-content-card:hover {
 }
 
 .st-mobile-menu a {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 700;
   color: var(--black);
@@ -1062,14 +1062,14 @@ a.st-content-card:hover {
 }
 
 .st-mobile-menu-email {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--text-muted);
   text-align: center;
 }
 
 .st-mobile-menu-action {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-lg);
   font-weight: 500;
   color: var(--text-muted);
@@ -1112,7 +1112,7 @@ a.st-content-card:hover {
   padding: 0 40px 0 36px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--black);
   background: var(--bg-light);
@@ -1170,7 +1170,7 @@ a.st-content-card:hover {
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--black);
   transition: background 120ms ease;
@@ -1407,7 +1407,7 @@ a.st-content-card:hover {
   width: 100%;
   height: 44px;
   padding: 0 16px 0 44px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--text);
   background: var(--white);
@@ -1469,7 +1469,7 @@ a.st-content-card:hover {
   align-items: center;
   height: 32px;
   padding: 0 14px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   border: 1px solid var(--color-border-strong);
@@ -1499,7 +1499,7 @@ a.st-content-card:hover {
   gap: 6px;
   height: 28px;
   padding: 0 8px 0 12px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 500;
   border: 1px solid var(--color-border);
@@ -1523,7 +1523,7 @@ a.st-content-card:hover {
 .st-select {
   height: 44px;
   padding: 0 32px 0 12px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--text);
@@ -1564,7 +1564,7 @@ a.st-content-card:hover {
 .st-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
 }
 
@@ -1697,7 +1697,7 @@ a.st-content-card:hover {
   gap: 12px;
   padding: 16px;
   border-top: 1px solid var(--border);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--text-muted);
 }
@@ -1705,7 +1705,7 @@ a.st-content-card:hover {
 .st-pagination button {
   height: 32px;
   padding: 0 14px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--text);
@@ -1731,7 +1731,7 @@ a.st-content-card:hover {
   height: 32px;
   padding: 0 8px;
   margin-left: auto;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 500;
   color: var(--text-muted);
@@ -1808,7 +1808,7 @@ a.st-content-card:hover {
   width: 100%;
   height: 32px;
   padding: 0 28px 0 30px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--text);
   background: var(--color-surface-raised);
@@ -1900,7 +1900,7 @@ a.st-content-card:hover {
   background: var(--color-border);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   color: var(--black);
   white-space: nowrap;
@@ -1952,7 +1952,7 @@ a.st-content-card:hover {
   background: none;
   border: none;
   cursor: pointer;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 500;
   color: var(--text-muted);
@@ -2030,7 +2030,7 @@ a.st-content-card:hover {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 30px var(--color-border-strong), 0 2px 6px var(--color-border);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   overflow: hidden;
   animation: st-col-filter-in 120ms ease-out;
 }
@@ -2054,7 +2054,7 @@ a.st-content-card:hover {
   border: none;
   background: transparent;
   border-radius: var(--radius-sm);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 500;
   color: var(--text);
@@ -2088,7 +2088,7 @@ a.st-content-card:hover {
   flex: 1;
   border: none;
   outline: none;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   color: var(--text);
   background: transparent;
@@ -2108,7 +2108,7 @@ a.st-content-card:hover {
 .st-col-filter-toggle-row button {
   background: none;
   border: none;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-micro);
   font-weight: 600;
   color: var(--accent);
@@ -2184,7 +2184,7 @@ a.st-content-card:hover {
 .st-col-filter-btn-cancel {
   height: 30px;
   padding: 0 14px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -2203,7 +2203,7 @@ a.st-content-card:hover {
 .st-col-filter-btn-apply {
   height: 30px;
   padding: 0 18px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 600;
   color: #fff;
@@ -2300,7 +2300,7 @@ a.st-content-card:hover {
   width: 100%;
   height: 44px;
   padding: 0 16px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--text);
   background: var(--white);
@@ -2322,7 +2322,7 @@ a.st-content-card:hover {
   width: 100%;
   min-height: 120px;
   padding: 12px 16px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--text);
   background: var(--white);
@@ -2469,7 +2469,7 @@ a.st-content-card:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body);
   margin: 0 0 8px;
 }
@@ -2548,7 +2548,7 @@ a.st-content-card:hover {
 
 .st-field-label {
   display: block;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 600;
   color: var(--text);
@@ -2602,7 +2602,7 @@ a.st-content-card:hover {
   background: var(--color-surface-raised, #1C1C1A);
   color: var(--color-text-main, #EDEDEC);
   padding: 10px 16px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   z-index: 99999;
@@ -2679,7 +2679,7 @@ a.st-content-card:hover {
   border-radius: var(--radius-md);
   padding: 12px 16px;
   font-size: var(--type-micro);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-weight: 500;
   line-height: 1;
   box-shadow: 0 1px 3px var(--color-border), 0 4px 12px rgba(10,37,64,0.04);
@@ -2733,7 +2733,7 @@ a.st-content-card:hover {
 }
 
 .st-map-mini-stat-value {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-3);
   font-weight: 700;
   color: var(--black);
@@ -2741,7 +2741,7 @@ a.st-content-card:hover {
 }
 
 .st-map-mini-stat-label {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-nano);
   font-weight: 500;
   color: var(--text-muted);
@@ -2769,7 +2769,7 @@ a.st-content-card:hover {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--text-muted);
   letter-spacing: 0.01em;
@@ -2817,7 +2817,7 @@ a.st-content-card:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 16px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--black);
   margin-bottom: 10px;
@@ -2832,7 +2832,7 @@ a.st-content-card:hover {
 }
 
 .st-insight-text {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   line-height: 1.55;
   color: var(--text-secondary);
@@ -2840,7 +2840,7 @@ a.st-content-card:hover {
 }
 
 .st-insight-disclaimer {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-micro);
   color: var(--text-muted);
   margin: 0;
@@ -2877,7 +2877,7 @@ a.st-content-card:hover {
   justify-content: center;
   height: 100%;
   font-size: var(--type-caption);
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.02em;
@@ -2905,7 +2905,7 @@ a.st-content-card:hover {
   padding: var(--space-2) 14px;
   cursor: pointer;
   transition: border-color 150ms ease, box-shadow 150ms ease;
-  font-family: var(--font1);
+  font-family: var(--font-body);
 }
 
 .st-entity-stat-chip.compact {
@@ -2933,7 +2933,7 @@ a.st-content-card:hover {
 }
 
 .st-entity-stat-value {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-lg);
   font-weight: 700;
   color: var(--black);
@@ -3019,7 +3019,7 @@ a.st-content-card:hover {
   justify-content: center;
   height: 32px;
   padding: 0 16px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--text-muted);
@@ -3169,7 +3169,7 @@ a.st-content-card:hover {
 
 .st-feature-card h6 {
   margin: 0;
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-lg);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -3701,7 +3701,7 @@ a, button, input, select, textarea {
   }
 
   .st-map-mini-stat-value {
-    font-family: var(--font1);
+    font-family: var(--font-body);
     font-size: var(--type-body-sm);
     font-weight: 700;
     color: var(--color-primary);
@@ -3709,7 +3709,7 @@ a, button, input, select, textarea {
   }
 
   .st-map-mini-stat-label {
-    font-family: var(--font1);
+    font-family: var(--font-body);
     font-size: var(--type-body-sm);
     font-weight: 400;
     color: var(--color-text-secondary);
@@ -4380,7 +4380,7 @@ a, button, input, select, textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 8px 20px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 500;
   color: var(--text-muted);
@@ -4444,7 +4444,7 @@ a, button, input, select, textarea {
   padding: 0 40px 0 34px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--text);
   background: var(--bg-light);
@@ -4474,7 +4474,7 @@ a, button, input, select, textarea {
   align-items: center;
   gap: 2px;
   padding: 2px 6px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-micro);
   font-weight: 500;
   color: var(--text-muted);
@@ -4548,7 +4548,7 @@ a, button, input, select, textarea {
   padding: 8px 16px;
   border: none;
   background: none;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--text);
   cursor: pointer;
@@ -4623,7 +4623,7 @@ a, button, input, select, textarea {
 }
 
 .st-footer-links a {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--text-muted);
@@ -4650,7 +4650,7 @@ a, button, input, select, textarea {
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   color: var(--text);
   background: var(--white);
   outline: none;
@@ -4725,7 +4725,7 @@ a, button, input, select, textarea {
 }
 
 .st-section-paywall-title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-3);
   font-weight: 600;
   color: var(--text);
@@ -4868,7 +4868,7 @@ a, button, input, select, textarea {
 }
 
 .st-auth-popup-title {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 700;
   color: var(--black);
@@ -4976,7 +4976,7 @@ a, button, input, select, textarea {
 .st-paywall-urgency strong {
   color: var(--color-accent);
   font-weight: 700;
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
 }
 
 .st-paywall-header {
@@ -5001,7 +5001,7 @@ a, button, input, select, textarea {
 }
 
 .st-paywall-title {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 700;
   color: var(--black);
@@ -5038,7 +5038,7 @@ a, button, input, select, textarea {
 }
 
 .st-paywall-price-current {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: 2.5rem;
   font-weight: 800;
   color: var(--black);
@@ -5267,7 +5267,7 @@ a, button, input, select, textarea {
 }
 
 .st-urgency-num {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-3);
   font-weight: 800;
   line-height: 1;
@@ -5289,7 +5289,7 @@ a, button, input, select, textarea {
 }
 
 .st-urgency-sep {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-3);
   font-weight: 700;
   color: rgba(255, 255, 255, 0.3);
@@ -5312,7 +5312,7 @@ a, button, input, select, textarea {
 }
 
 .st-pricing-hero-title {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 800;
   color: var(--black);
@@ -5379,7 +5379,7 @@ a, button, input, select, textarea {
 }
 
 .st-pricing-price-amount {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: 4rem;
   font-weight: 900;
   color: var(--black);
@@ -5460,7 +5460,7 @@ a, button, input, select, textarea {
 }
 
 .st-pricing-stat strong {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 800;
   color: var(--black);
@@ -5474,7 +5474,7 @@ a, button, input, select, textarea {
 
 /* Section styles */
 .st-pricing-section-title {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 700;
   color: var(--black);
@@ -5566,7 +5566,7 @@ a, button, input, select, textarea {
   font-weight: 700;
   color: var(--black);
   border-bottom: 1px solid var(--border);
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -5622,7 +5622,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-pricing-demo-content h3 {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   margin-bottom: 12px;
   color: var(--black);
@@ -5800,7 +5800,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-pricing-final-cta h2 {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 700;
   color: var(--black);
@@ -5926,7 +5926,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-v2 .st-hero h1 {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   text-transform: uppercase;
   letter-spacing: -0.03em;
   line-height: 1;
@@ -6092,7 +6092,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-v2 .st-landing-stat-value {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-1);
   font-weight: 700;
   line-height: 36px;
@@ -6103,7 +6103,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-v2 .st-landing-stat-label {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 400;
   line-height: 22.4px;
@@ -6266,7 +6266,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-early-access-card p {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   font-weight: 400;
   line-height: 1.6;
@@ -6292,7 +6292,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-landing-ea-current {
-  font-family: 'Doto', monospace;
+  font-family: var(--font-heading);
   font-size: 2.5rem;
   font-weight: 800;
   color: var(--color-accent);
@@ -6389,7 +6389,7 @@ thead .st-pricing-col-highlight {
   border: 1px solid var(--border);
   background: var(--color-surface);
   color: var(--text);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   padding: 0 16px;
   outline: none;
@@ -6699,7 +6699,7 @@ thead .st-pricing-col-highlight {
 }
 
 .st-top-banner-text {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.01em;
@@ -7068,7 +7068,7 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
   align-items: center;
   gap: 4px;
   padding: 5px 12px;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-micro);
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -7269,7 +7269,7 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
 }
 
 .st-blur-cta-banner h6 {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-lg);
   font-weight: 600;
   color: var(--text);
@@ -7358,7 +7358,7 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
 }
 
 .st-paywall-gate__title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-3);
   font-weight: 600;
   color: var(--text);
@@ -7822,7 +7822,7 @@ article.st-page:has(.st-floating-cta) {
   width: 100%;
   height: 44px;
   padding: 0 var(--space-4);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--color-text-main);
   background: var(--color-surface);
@@ -7879,7 +7879,7 @@ article.st-page:has(.st-floating-cta) {
   width: 100%;
   height: 44px;
   padding: 0 var(--space-4) 0 calc(var(--space-3) + 20px + var(--space-2));
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--color-text-main);
   background: var(--color-surface);
@@ -7975,7 +7975,7 @@ article.st-page:has(.st-floating-cta) {
   flex: 1;
 }
 .st-cta-block__title {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-heading-3);
   font-weight: 600;
   color: var(--color-text-main);
@@ -8032,7 +8032,7 @@ article.st-page:has(.st-floating-cta) {
   gap: var(--space-2);
 }
 .st-section-header__title {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-heading-2);
   font-weight: 600;
   color: var(--color-text-main);
@@ -8059,7 +8059,7 @@ article.st-page:has(.st-floating-cta) {
   align-items: center;
   height: 32px;
   padding: 0 var(--space-3);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -8240,7 +8240,7 @@ article.st-page:has(.st-floating-cta) {
   margin-bottom: var(--space-2);
 }
 .st-image-header__title {
-  font-family: var(--font2, var(--font1));
+  font-family: var(--font-heading, var(--font-body));
   font-size: var(--type-heading-1);
   font-weight: 700;
   color: #fff;
@@ -8364,7 +8364,7 @@ article.st-page:has(.st-floating-cta) {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-  font-family: var(--font2, var(--font1));
+  font-family: var(--font-heading, var(--font-body));
   font-size: var(--type-body);
   font-weight: 700;
   color: var(--color-text-secondary);
@@ -8551,7 +8551,7 @@ article.st-page:has(.st-floating-cta) {
 
 /* ── ProseBlock ── */
 .st-prose {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-lg);
   color: var(--color-text-main);
   line-height: 1.7;
@@ -8688,7 +8688,7 @@ article.st-page:has(.st-floating-cta) {
   min-width: 120px;
 }
 .st-big-stat-row__value {
-  font-family: var(--font2, var(--font1));
+  font-family: var(--font-heading, var(--font-body));
   font-size: var(--type-display);
   font-weight: 700;
   color: var(--color-text-main);
@@ -8725,7 +8725,7 @@ article.st-page:has(.st-floating-cta) {
   border-left: 3px solid var(--color-success);
 }
 .st-callout__label {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 700;
   text-transform: uppercase;
@@ -8737,7 +8737,7 @@ article.st-page:has(.st-floating-cta) {
 .st-callout--info .st-callout__label { color: var(--color-info); }
 .st-callout--success .st-callout__label { color: var(--color-success); }
 .st-callout__body {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-lg);
   color: var(--color-text-main);
   line-height: 1.6;
@@ -8764,7 +8764,7 @@ article.st-page:has(.st-floating-cta) {
   }
 }
 .st-callout-stat__value {
-  font-family: var(--font2, var(--font1));
+  font-family: var(--font-heading, var(--font-body));
   font-size: clamp(32px, 5vw, 48px);
   font-weight: 800;
   color: var(--color-text-main);
@@ -8772,7 +8772,7 @@ article.st-page:has(.st-floating-cta) {
   margin-bottom: var(--space-2);
 }
 .st-callout-stat__label {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-caption);
   font-weight: 700;
   text-transform: uppercase;
@@ -8781,7 +8781,7 @@ article.st-page:has(.st-floating-cta) {
   margin-bottom: var(--space-2);
 }
 .st-callout-stat__desc {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body);
   color: var(--color-text-secondary);
   line-height: 1.55;
@@ -8826,7 +8826,7 @@ article.st-page:has(.st-floating-cta) {
    
    Three philosophies converged:
    - Rams: Remove everything unnecessary. 4px radius, thin strokes.
-   - Scher: Semantic color classes, Doto for titles, editorial hierarchy.
+   - Scher: Semantic color classes, heading role for titles, editorial hierarchy.
    - Tufte: Every pixel earns its place. Data-ink ratio maximized.
    ========================================================================== */
 
@@ -8862,13 +8862,13 @@ article.st-page:has(.st-floating-cta) {
 .st-mermaid .loopText,
 .st-mermaid .labelText,
 .st-mermaid .actorTitle {
-  font-family: var(--font1) !important;
+  font-family: var(--font-body) !important;
 }
 
-/* ── Diagram Title — Doto pixel font, editorial weight ── */
+/* ── Diagram Title — heading font, editorial weight ── */
 .st-mermaid .titleText,
 .st-mermaid text.titleText {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 18px !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
@@ -8978,14 +8978,14 @@ article.st-page:has(.st-floating-cta) {
   font-weight: 600 !important;
 }
 
-/* Display nodes — Doto pixel font, oversized, for key figures */
+/* Display nodes — heading font, oversized, for key figures */
 .st-mermaid .node.display rect {
   fill: var(--color-surface) !important;
   stroke: var(--color-accent) !important;
   stroke-width: 2px !important;
 }
 .st-mermaid .node.display .nodeLabel {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 18px !important;
   font-weight: 700 !important;
   fill: var(--color-text-main) !important;
@@ -9131,7 +9131,7 @@ article.st-page:has(.st-floating-cta) {
 .st-mermaid .cluster-label .nodeLabel,
 .st-mermaid .cluster-label span,
 .st-mermaid .cluster text {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 11px !important;
   font-weight: 600 !important;
   fill: var(--color-text-secondary) !important;
@@ -9151,7 +9151,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-mermaid text.actor > tspan {
-  font-family: var(--font1) !important;
+  font-family: var(--font-body) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   fill: var(--color-text-main) !important;
@@ -9229,7 +9229,7 @@ article.st-page:has(.st-floating-cta) {
 .st-mermaid .loopText > tspan,
 .st-mermaid .labelText,
 .st-mermaid .labelText > tspan {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 10px !important;
   font-weight: 600 !important;
   fill: var(--color-text-secondary) !important;
@@ -9294,7 +9294,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-mermaid .classTitle {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-weight: 600 !important;
   font-size: 13px !important;
 }
@@ -9319,7 +9319,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-mermaid .sectionTitle {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 11px !important;
   font-weight: 600 !important;
   fill: var(--color-text-secondary) !important;
@@ -9354,7 +9354,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-mermaid .grid .tick text {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 10px !important;
   fill: var(--color-text-secondary) !important;
 }
@@ -9366,7 +9366,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-mermaid .pieTitleText {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 16px !important;
   font-weight: 700 !important;
   fill: var(--color-text-main) !important;
@@ -9393,14 +9393,14 @@ article.st-page:has(.st-floating-cta) {
 
 /* foreignObject HTML labels (Mermaid v10+) */
 .st-mermaid svg foreignObject div {
-  font-family: var(--font1) !important;
+  font-family: var(--font-body) !important;
   color: var(--color-text-main) !important;
   font-size: 13px !important;
   line-height: 1.35 !important;
 }
 
 .st-mermaid .node.display foreignObject div {
-  font-family: var(--font2, var(--font1)) !important;
+  font-family: var(--font-heading, var(--font-body)) !important;
   font-size: 18px !important;
   font-weight: 700 !important;
 }
@@ -9424,7 +9424,7 @@ article.st-page:has(.st-floating-cta) {
 
 .st-mermaid--error pre {
   margin: 0;
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-sm);
   white-space: pre-wrap;
   word-break: break-word;
@@ -9490,7 +9490,7 @@ article.st-page:has(.st-floating-cta) {
 .st-ds-header__brand {
   display: flex;
   align-items: center;
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
@@ -9509,7 +9509,7 @@ article.st-page:has(.st-floating-cta) {
   display: flex;
   align-items: center;
   padding: 0 var(--space-4);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -9577,7 +9577,7 @@ article.st-page:has(.st-floating-cta) {
 .st-ds-footer__btn {
   padding: var(--space-1) var(--space-3);
   font-size: var(--type-micro);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-weight: 500;
   background: transparent;
   color: var(--color-text-secondary);
@@ -9621,7 +9621,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-sidebar__group-title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -9639,7 +9639,7 @@ article.st-page:has(.st-floating-cta) {
 .st-ds-sidebar__link {
   display: block;
   padding: var(--space-1) var(--space-2);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--color-text-secondary);
   text-decoration: none;
@@ -9675,7 +9675,7 @@ article.st-page:has(.st-floating-cta) {
   width: 100%;
   max-width: 320px;
   padding: var(--space-2) var(--space-3);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   color: var(--color-text-main);
   background: var(--color-surface);
@@ -9734,7 +9734,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-card__title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-lg);
   font-weight: 600;
   margin-bottom: var(--space-1);
@@ -9777,7 +9777,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-atom-page__title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-1);
   font-weight: 700;
   text-transform: uppercase;
@@ -9803,7 +9803,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-atom-page__section-title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-sm);
   font-weight: 600;
   text-transform: uppercase;
@@ -9826,7 +9826,7 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-atom-page__class-list li {
   padding: var(--space-1) 0;
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-body-sm);
 }
 
@@ -10280,7 +10280,7 @@ article.st-page:has(.st-floating-cta) {
 }
 
 .st-ds-not-found__title {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: var(--type-heading-2);
   font-weight: 700;
   margin: 0 0 var(--space-2);

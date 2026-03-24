@@ -94,12 +94,12 @@ export default function CbdcDetailPage() {
       </div>
 
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8 }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 8 }}>
           {countryCodeToFlag(cbdc.countryCode)} {cbdc.name}
         </h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <Badge label={cbdc.status} colorMap={CBDC_STATUS_COLORS} />
-          <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 600, fontFamily: 'var(--font2)' }}>
+          <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 600, fontFamily: 'var(--font-heading)' }}>
             {cbdc.currency}
           </span>
           <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)' }}>

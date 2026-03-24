@@ -91,7 +91,7 @@ export default function SignupPage() {
       <div ref={revealRef} className="st-page" style={{ paddingTop: 120, paddingBottom: 80 }}>
         <div className="reveal" style={{ maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 24 }}>📧</div>
-          <h3 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>Check your email</h3>
+          <h3 style={{ fontFamily: 'var(--font-heading)', marginBottom: 12 }}>Check your email</h3>
           <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.9375rem' }}>
             We've sent a confirmation link to <strong style={{ color: 'var(--black)' }}>{form.businessEmail}</strong>.
             Click the link to activate your account and get access to the full platform.
@@ -108,7 +108,7 @@ export default function SignupPage() {
         <div className="st-signup-offers">
           {/* Hero tagline — inside left column */}
           <div className="st-signup-hero">
-            <h2 style={{ fontFamily: 'var(--font2)', margin: '0 0 8px', fontSize: '1.5rem', lineHeight: 1.25 }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 8px', fontSize: '1.5rem', lineHeight: 1.25 }}>
               Stablecoin Regulatory Intelligence
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', margin: 0, lineHeight: 1.5 }}>
@@ -170,7 +170,7 @@ export default function SignupPage() {
         {/* Right: Form */}
         <div className="st-signup-form-wrap">
           <form onSubmit={handleSubmit} className="st-auth-form st-auth-form-compact clip-lg">
-            <h3 style={{ fontFamily: 'var(--font2)', margin: '0 0 4px' }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', margin: '0 0 4px' }}>
               Create Free Account
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', margin: '0 0 16px', lineHeight: 1.4 }}>

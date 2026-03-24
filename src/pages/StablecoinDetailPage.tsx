@@ -160,15 +160,15 @@ export default function StablecoinDetailPage() {
 
       {/* ── Header ── */}
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 8 }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 8 }}>
           {coin.ticker} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>— {coin.name}</span>
         </h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <Badge label={coin.type} colorMap={STABLECOIN_TYPE_COLORS} />
-          <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 600, fontFamily: 'var(--font2)' }}>
+          <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontWeight: 600, fontFamily: 'var(--font-heading)' }}>
             {coin.pegCurrency}
           </span>
-          <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontFamily: 'var(--font2)' }}>
+          <span className="st-badge" style={{ backgroundColor: 'var(--bg-light)', color: 'var(--text)', fontFamily: 'var(--font-heading)' }}>
             ${coin.marketCapBn >= 1 ? `${coin.marketCapBn.toFixed(1)}B` : `${(coin.marketCapBn * 1000).toFixed(0)}M`}
           </span>
           {coin.collateralMethod && (
@@ -256,7 +256,7 @@ export default function StablecoinDetailPage() {
               )}
             </div>
 
-            <h5 style={{ fontFamily: 'var(--font2)', marginBottom: 4 }}>
+            <h5 style={{ fontFamily: 'var(--font-heading)', marginBottom: 4 }}>
               {issuer.slug ? (
                 <Link to={`/issuers/${issuer.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                   {issuer.name}
@@ -302,7 +302,7 @@ export default function StablecoinDetailPage() {
               {issuer.lei && (
                 <div>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>LEI</span>
-                  <div style={{ marginTop: 2, fontFamily: 'var(--font2)', fontSize: '0.75rem' }}>{issuer.lei}</div>
+                  <div style={{ marginTop: 2, fontFamily: 'var(--font-heading)', fontSize: '0.75rem' }}>{issuer.lei}</div>
                 </div>
               )}
             </div>
@@ -324,7 +324,7 @@ export default function StablecoinDetailPage() {
       {hasAccess && blockchains && blockchains.length > 0 && (
         <div className="reveal" style={{ marginBottom: 32 }}>
           <h6 className="st-section-label">
-            Blockchain Deployments <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({chainCount})</span>
+            Blockchain Deployments <span style={{ color: 'var(--text)', fontFamily: 'var(--font-heading)', fontWeight: 400 }}>({chainCount})</span>
           </h6>
           <div className="st-card clip-lg" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="st-table-scroll">
@@ -340,7 +340,7 @@ export default function StablecoinDetailPage() {
                 {blockchains.map((bc) => (
                   <tr key={bc.id}>
                     <td style={{ padding: '10px 16px', fontWeight: 500 }}>{bc.blockchainName}</td>
-                    <td style={{ padding: '10px 16px', fontFamily: 'var(--font2)', fontSize: '0.8125rem' }}>
+                    <td style={{ padding: '10px 16px', fontFamily: 'var(--font-heading)', fontSize: '0.8125rem' }}>
                       {bc.contractAddress ? (
                         hasFullAccess ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -436,7 +436,7 @@ export default function StablecoinDetailPage() {
           <div className="reveal" style={{ marginBottom: 32 }}>
             <h6 className="st-section-label">
               <Shield size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-              Issuer Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font2)', fontWeight: 400 }}>({licenses.length})</span>
+              Issuer Licenses <span style={{ color: 'var(--text)', fontFamily: 'var(--font-heading)', fontWeight: 400 }}>({licenses.length})</span>
             </h6>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
               {licenses.map((lic) => (

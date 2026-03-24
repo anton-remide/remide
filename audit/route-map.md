@@ -47,7 +47,7 @@
 ## Route Snapshots — Desktop (1280px)
 
 ### R1: Landing Page (`/`)
-**Sections:** Hero (Doto font heading + CTAs) → Stat Counters → Feature Grid → What's Inside → Footer
+**Sections:** Hero (heading role + CTAs) → Stat Counters → Feature Grid → What's Inside → Footer
 **Key Elements:**
 - Hero: "STABLECOIN INTELLIGENCE PLATFORM" + 2 CTAs (Explore Map / Browse Entities)
 - Stat counters: 4 cards (Jurisdictions, Entities, Stablecoins, CBDCs)
@@ -188,7 +188,7 @@
 - All pages use consistent header/footer chrome
 - Breadcrumb pattern is consistent across detail pages
 - ProtectedRoute wraps detail pages (blur + paywall for non-auth)
-- Doto font used for display headings, DM Sans for body
+- Heading role used for display headings, body role for body copy
 - Accent color (#FF5F0F) used consistently for CTAs
 - Map component uses Leaflet/MapLibre with custom layer toggles
 - Early access banner appears on all pages (dismissible)

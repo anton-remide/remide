@@ -173,7 +173,7 @@ Add to `app.css`:
 }
 
 .st-ds-header__brand {
-  font-family: var(--font2);
+  font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
@@ -189,7 +189,7 @@ Add to `app.css`:
 
 .st-ds-header__tab {
   padding: var(--space-2) var(--space-4);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -250,7 +250,7 @@ Add to `app.css`:
 .st-ds-footer__btn {
   padding: var(--space-1) var(--space-3);
   font-size: var(--type-micro);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-weight: 500;
   background: transparent;
   color: var(--color-text-secondary);
@@ -375,7 +375,7 @@ Reads `:componentId` from URL params, looks up the registry, and renders a full 
 
 ### Page sections
 
-**1. Header** — Component name (Doto font, H1), one-line description, category badge, status badge.
+**1. Header** — Component name (heading role, H1), one-line description, category badge, status badge.
 
 **2. Live Preview** — The component rendered with default props in a themed preview area. Three small theme previews side by side (Beige, DarkGray, NearBlack) so you can see all themes at a glance.
 
@@ -476,7 +476,7 @@ const DesignSystemTemplatesPage = lazy(() => import('./pages/design-system/Desig
 export default function DesignSystemCompositionPage() {
   return (
     <div style={{ flex: 1, padding: '32px 48px' }}>
-      <h1 style={{ fontFamily: 'var(--font2)', fontSize: 'var(--type-display)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: 16 }}>
+      <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: 16 }}>
         Composition Patterns
       </h1>
       <p style={{ fontSize: 'var(--type-body-lg)', color: 'var(--color-text-secondary)', maxWidth: 600 }}>
@@ -494,7 +494,7 @@ export default function DesignSystemCompositionPage() {
 export default function DesignSystemTemplatesPage() {
   return (
     <div style={{ flex: 1, padding: '32px 48px' }}>
-      <h1 style={{ fontFamily: 'var(--font2)', fontSize: 'var(--type-display)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: 16 }}>
+      <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.03em', marginBottom: 16 }}>
         Templates
       </h1>
       <p style={{ fontSize: 'var(--type-body-lg)', color: 'var(--color-text-secondary)', maxWidth: 600 }}>

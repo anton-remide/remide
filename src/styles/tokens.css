@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Doto:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
 
 @font-face {
   font-family: 'Satoshi Variable';
@@ -21,8 +21,6 @@
   --font-body: 'Geist', sans-serif;
   --font-heading: 'Satoshi Variable', sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font1: var(--font-body);
-  --font2: var(--font-heading);
   --color-primary: #21201C;
   --color-bg: #F6F2EE;
   --color-surface: #FFFFFF;

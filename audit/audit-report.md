@@ -111,7 +111,7 @@
 
 #### B2. [HIGH] fontFamily/fontSize Repeated Inline
 **File**: `JurisdictionDetailPage.tsx` (throughout)
-**Issue**: `fontFamily: 'var(--font2)'` and `fontSize: '0.9375rem'` repeated in 8+ inline style objects. Should be a CSS class.
+**Issue**: `fontFamily: 'var(--font-heading)'` and `fontSize: '0.9375rem'` repeated in 8+ inline style objects. Should be a CSS class.
 **Fix**: Create `.st-display-text` or similar CSS class.
 
 #### B3. [MEDIUM] SECTION_LABEL Constant Duplicated

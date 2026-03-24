@@ -119,7 +119,7 @@ export default function EntityDetailPage() {
 
       {/* ── Header — always visible for SEO + preview ── */}
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', marginBottom: 12 }}>
           {entity.name}
           {entity.dnsStatus === 'dead' && <span role="img" aria-label="Website is offline" title="Website is dead" style={{ marginLeft: 8, fontSize: '0.75em' }}>💀</span>}
         </h2>

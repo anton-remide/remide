@@ -285,7 +285,7 @@ export function generateFoundationCss(registry: FoundationRegistry) {
     .map((mode) => `[data-density="${mode}"] {\n${cssVarLines(density.tokens, mode).join('\n')}\n}`)
     .join('\n\n');
 
-  return `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Doto:wght@100..900&display=swap');
+  return `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
 
 @font-face {
   font-family: 'Satoshi Variable';

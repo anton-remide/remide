@@ -259,7 +259,7 @@ export interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
 ```css
 .st-label {
   display: block;
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 600;
   color: var(--color-text-main);
@@ -331,7 +331,7 @@ export interface StyledLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
 
 ```css
 .st-link {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   color: var(--color-text-main);
   text-decoration: underline;
   text-decoration-color: var(--color-border-strong);
@@ -415,7 +415,7 @@ export interface AvatarProps {
   flex-shrink: 0;
   background: var(--color-accent-subtle);
   color: var(--color-accent);
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-weight: 600;
   text-transform: uppercase;
   user-select: none;
@@ -518,7 +518,7 @@ export interface BulletSectionProps {
   flex-direction: column;
 }
 .st-bullet-section__title {
-  font-family: var(--font1);
+  font-family: var(--font-body);
   font-size: var(--type-body-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
@@ -877,7 +877,7 @@ export interface SectionProps {
 ### Implementation notes
 
 - Renders `<section>` element with `id` prop for anchor links
-- If `title` is provided, renders an `<h2>` with class `st-section__title` (Doto font, uppercase)
+- If `title` is provided, renders an `<h2>` with class `st-section__title` (heading role, uppercase)
 - If `bleed` is true, the section stretches to viewport width. Content is constrained inside `.st-section__inner` div
 - Default: `spacing="default"`, `maxWidth="default"`, `bleed={false}`, `surface` unset (transparent)
 - If `surface="inverse"`, set `data-theme="nearblack"` on the `<section>` element. This scopes all child token resolution to the NearBlack palette — Heading, CalloutStat, AuthorCard, etc. will automatically get light text on dark background. This is how Stripe/Radix handle forced-dark sections.
@@ -1085,12 +1085,12 @@ Default: `false` (backwards compatible).
 
 ### BigStatRow — Font Override
 
-BigStatRow forces Doto on all values, but LEI fragments and country names aren't numeric data. Add:
+BigStatRow forces the heading role on all values, but LEI fragments and country names aren't numeric data. Add:
 
 ```typescript
 interface BigStatRowProps {
   // ...existing
-  valueFont?: 'display' | 'body';  // default: 'display' (Doto)
+  valueFont?: 'display' | 'body';  // default: 'display' (heading role)
 }
 ```
 

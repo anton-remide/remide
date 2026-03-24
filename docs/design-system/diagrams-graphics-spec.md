@@ -42,7 +42,7 @@ React Flow wrapper that parses Mermaid-like flowchart syntax into interactive no
 | `:::active` / `:::accent` | Current/highlighted | `--color-accent-subtle` / `--color-accent` |
 | `:::pending` / `:::info` | In progress | `--color-info-subtle` / `--color-info` |
 | `:::warning` | Caution | `--color-warning-subtle` / `--color-warning` |
-| `:::display` | Key statistics | `--font2` (Doto), 18px, bold |
+| `:::display` | Key statistics | `--font-heading`, 18px, bold |
 | `:::muted` | Background/secondary | `--color-text-secondary` |
 | `:::expired` | Lapsed/inactive | Dimmed text |
 | `:::revoked` | Withdrawn | Danger + strikethrough |

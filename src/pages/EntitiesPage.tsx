@@ -306,7 +306,7 @@ function StablecoinsTab({ codeToName, tabSwitcher }: { codeToName: Map<string, s
       label: 'Ticker',
       sortable: true,
       render: (r) => (
-        <span style={{ fontWeight: 600, fontFamily: 'var(--font2)' }}>{r.ticker}</span>
+        <span style={{ fontWeight: 600, fontFamily: 'var(--font-heading)' }}>{r.ticker}</span>
       ),
     },
     { key: 'name', label: 'Name', sortable: true },
@@ -337,7 +337,7 @@ function StablecoinsTab({ codeToName, tabSwitcher }: { codeToName: Map<string, s
       label: 'Market Cap',
       sortable: true,
       render: (r) => (
-        <span style={{ fontFamily: 'var(--font2)', fontWeight: 500 }}>
+        <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 500 }}>
           ${r.marketCapBn >= 1 ? `${r.marketCapBn.toFixed(1)}B` : `${(r.marketCapBn * 1000).toFixed(0)}M`}
         </span>
       ),
@@ -568,7 +568,7 @@ function IssuersTab({ tabSwitcher }: { tabSwitcher: React.ReactNode }) {
       key: 'lei',
       label: 'LEI',
       sortable: true,
-      render: (r) => r.lei ? <span style={{ fontFamily: 'var(--font2)', fontSize: '0.8125rem' }}>{r.lei}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>,
+      render: (r) => r.lei ? <span style={{ fontFamily: 'var(--font-heading)', fontSize: '0.8125rem' }}>{r.lei}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>,
     },
     {
       key: 'isVerified',
