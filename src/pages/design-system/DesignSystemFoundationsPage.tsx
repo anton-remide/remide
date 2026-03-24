@@ -568,6 +568,8 @@ export default function DesignSystemFoundationsPage() {
                       const token = entry.item;
                       const tokenMode = entry.mode;
                       const tokenLocked = token.editable === false;
+                      const showTokenPreview = entry.sectionId !== FONTS_SECTION_ID;
+                      const hasTokenFooter = tokenLocked || showTokenPreview;
 
                       return (
                         <article
@@ -575,6 +577,7 @@ export default function DesignSystemFoundationsPage() {
                           className={[
                             'st-ds-foundations-list__item',
                             'is-token-card',
+                            !hasTokenFooter && 'is-token-card--compact',
                             'clip-lg',
                             isDirty && 'is-dirty',
                           ].filter(Boolean).join(' ')}
@@ -600,28 +603,32 @@ export default function DesignSystemFoundationsPage() {
                             </label>
                           </div>
 
-                          <div className="st-ds-foundations-card__bottom">
-                            <div className="st-ds-foundations-card__notes">
-                              {tokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
-                            </div>
-
-                            <div className="st-ds-foundations-card__preview">
-                              <div
-                                className={[
-                                  'st-ds-foundations-preview__surface',
-                                  'st-ds-foundations-preview__surface--card',
-                                  token.preview === 'spacing' && 'is-spacing',
-                                  token.preview === 'font' && 'is-font',
-                                ].filter(Boolean).join(' ')}
-                                style={tokenPreviewStyle(token, tokenMode)}
-                              >
-                                {token.preview === 'color' && token.label}
-                                {token.preview === 'font' && 'Sphinx of black quartz.'}
-                                {token.preview === 'text' && 'Type'}
-                                {token.preview === 'generic' && (token.values[tokenMode] ?? 'Value')}
+                          {hasTokenFooter && (
+                            <div className="st-ds-foundations-card__bottom">
+                              <div className="st-ds-foundations-card__notes">
+                                {tokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
                               </div>
+
+                              {showTokenPreview && (
+                                <div className="st-ds-foundations-card__preview">
+                                  <div
+                                    className={[
+                                      'st-ds-foundations-preview__surface',
+                                      'st-ds-foundations-preview__surface--card',
+                                      token.preview === 'spacing' && 'is-spacing',
+                                      token.preview === 'font' && 'is-font',
+                                    ].filter(Boolean).join(' ')}
+                                    style={tokenPreviewStyle(token, tokenMode)}
+                                  >
+                                    {token.preview === 'color' && token.label}
+                                    {token.preview === 'font' && 'Sphinx of black quartz.'}
+                                    {token.preview === 'text' && 'Type'}
+                                    {token.preview === 'generic' && (token.values[tokenMode] ?? 'Value')}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
+                          )}
                         </article>
                       );
                     }

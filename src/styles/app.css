@@ -10191,6 +10191,11 @@ article.st-page:has(.st-floating-cta) {
   gap: var(--space-6);
 }
 
+.st-ds-foundations-list__item.is-token-card.is-token-card--compact {
+  min-height: 0;
+  gap: var(--space-3);
+}
+
 .st-ds-foundations-list__item.is-rule-card {
   gap: var(--space-5);
 }
