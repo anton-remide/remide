@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Heading from '../../components/ui/Heading';
 import Text from '../../components/ui/Text';
+import { useTheme, type Theme } from '../../context/ThemeProvider';
 import type {
   FoundationRegistry,
   FoundationRuleItem,
@@ -80,6 +81,18 @@ function isTokenSection(section: FoundationSection): section is FoundationTokenC
   return section.kind === 'token';
 }
 
+function resolveTokenMode(section: FoundationTokenCollection, theme: Theme) {
+  if (section.modes.includes(theme)) {
+    return theme;
+  }
+
+  if (section.modes.includes('base')) {
+    return 'base';
+  }
+
+  return section.modes[0];
+}
+
 function applyFoundationRegistry(registry: FoundationRegistry) {
   if (typeof document === 'undefined') {
     return;
@@ -148,12 +161,6 @@ function tokenPreviewStyle(token: FoundationToken, mode: string) {
         background: 'var(--color-surface-raised)',
         border: '1px solid var(--color-border)',
         borderRadius: value,
-      };
-    case 'spacing':
-      return {
-        width: `min(${value}, 100%)`,
-        background: 'var(--color-accent)',
-        borderRadius: '999px',
       };
     case 'font':
       return {
@@ -264,6 +271,7 @@ function getFontRoleOptions(tokenId: string) {
 }
 
 export default function DesignSystemFoundationsPage() {
+  const { theme } = useTheme();
   const [savedRegistry, setSavedRegistry] = useState<FoundationRegistry | null>(null);
   const [draftRegistry, setDraftRegistry] = useState<FoundationRegistry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -271,7 +279,6 @@ export default function DesignSystemFoundationsPage() {
   const [savingItemKey, setSavingItemKey] = useState<string | null>(null);
   const [itemErrorMessages, setItemErrorMessages] = useState<Record<string, string>>({});
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [selectedModes, setSelectedModes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -347,26 +354,8 @@ export default function DesignSystemFoundationsPage() {
     [selectedSectionId, visibleSections],
   );
 
-  useEffect(() => {
-    if (!activeSection || !isTokenSection(activeSection) || activeSection.modes.length === 0) {
-      return;
-    }
-
-    setSelectedModes((current) => {
-      const selectedMode = current[activeSection.id];
-      if (selectedMode && activeSection.modes.includes(selectedMode)) {
-        return current;
-      }
-
-      return {
-        ...current,
-        [activeSection.id]: activeSection.modes[0],
-      };
-    });
-  }, [activeSection]);
-
   const activeMode = activeSection && isTokenSection(activeSection)
-    ? selectedModes[activeSection.id] ?? activeSection.modes[0]
+    ? resolveTokenMode(activeSection, theme)
     : undefined;
 
   const dirty = useMemo(() => {
@@ -586,32 +575,22 @@ export default function DesignSystemFoundationsPage() {
           </div>
         </aside>
 
-        <section className="st-ds-foundations-panel st-ds-foundations-panel--main">
+        <section
+          className={[
+            'st-ds-foundations-panel',
+            'st-ds-foundations-panel--main',
+            activeSection.id === 'typography-rules' && 'is-typography-rules',
+          ].filter(Boolean).join(' ')}
+        >
           <div className="st-ds-foundations-panel__header">
             <div className="st-ds-foundations-panel__header-copy">
               <Heading level={2}>{activeSection.label}</Heading>
             </div>
-
-            {isTokenSection(activeSection) && activeSection.modes.length > 1 && (
-              <div className="st-ds-foundations-modes" role="tablist" aria-label={`${activeSection.label} modes`}>
-                {activeSection.modes.map((entry) => (
-                  <button
-                    key={entry}
-                    type="button"
-                    className={['st-ds-foundations-modes__btn', activeMode === entry && 'is-active'].filter(Boolean).join(' ')}
-                    onClick={() => setSelectedModes((current) => ({ ...current, [activeSection.id]: entry }))}
-                  >
-                    {entry}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="st-ds-foundations-groups">
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
-                  <div className="st-ds-foundations-group__title">{group.label}</div>
                   <div className={['st-ds-foundations-list', group.layout === 'token' ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
                     {group.items.map((entry) => {
                       const itemKey = getFoundationItemKey(entry.sectionId, entry.item.id);
@@ -627,7 +606,7 @@ export default function DesignSystemFoundationsPage() {
                       const isFontRoleCard = entry.sectionId === FONTS_SECTION_ID;
                       const fontRoleOptions = isFontRoleCard ? getFontRoleOptions(token.id) : [];
                       const selectedFontOption = fontRoleOptions.find((option) => option.value === (token.values[tokenMode] ?? '')) ?? null;
-                      const showTokenPreview = !isFontRoleCard;
+                      const showTokenPreview = !isFontRoleCard && token.preview !== 'spacing';
                       const hasTokenFooter = tokenLocked || showTokenPreview || isDirty;
                       const canSaveItem = savingItemKey === null && (!isFontRoleCard || selectedFontOption !== null);
                       const fontRoleStatusLabel = selectedFontOption ? getFontOptionSourceLabel(selectedFontOption.source) : 'Not Bundled';
@@ -704,7 +683,6 @@ export default function DesignSystemFoundationsPage() {
                                     className={[
                                       'st-ds-foundations-preview__surface',
                                       'st-ds-foundations-preview__surface--card',
-                                      token.preview === 'spacing' && 'is-spacing',
                                       token.preview === 'font' && 'is-font',
                                     ].filter(Boolean).join(' ')}
                                     style={tokenPreviewStyle(token, tokenMode)}

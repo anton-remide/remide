@@ -140,35 +140,6 @@
   --rule-label-letter-spacing: 0;
 }
 
-[data-theme="beige"] {
-  --color-primary: #21201C;
-  --color-bg: #F6F2EE;
-  --color-surface: #FFFFFF;
-  --color-surface-raised: #FAF9F6;
-  --color-text-main: #21201C;
-  --color-text-secondary: #63635E;
-  --color-border: rgba(33, 32, 28, 0.08);
-  --color-border-strong: rgba(33, 32, 28, 0.15);
-  --color-accent: #F355D6;
-  --color-accent-hover: #E34DC7;
-  --color-accent-subtle: #FBE7F7;
-  --color-success: #2B7A4B;
-  --color-success-subtle: #F0FDF4;
-  --color-warning: #92610B;
-  --color-warning-subtle: #FFFBEB;
-  --color-danger: #B91C1C;
-  --color-danger-subtle: #FEF2F2;
-  --color-info: #4338CA;
-  --color-info-subtle: #EEF2FF;
-  --color-neutral: #63635E;
-  --color-neutral-subtle: #F1F5F9;
-  --shadow-none: none;
-  --shadow-sm: 0 1px 2px rgba(33, 32, 28, 0.05), 0 1px 3px rgba(33, 32, 28, 0.07);
-  --shadow-md: 0 4px 12px rgba(33, 32, 28, 0.06), 0 1px 3px rgba(33, 32, 28, 0.04);
-  --shadow-lg: 0 8px 24px rgba(33, 32, 28, 0.10), 0 2px 6px rgba(33, 32, 28, 0.06);
-  --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
-}
-
 [data-theme="darkgray"] {
   --color-primary: #EDEDEC;
   --color-bg: #1E1E1C;

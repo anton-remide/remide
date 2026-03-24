@@ -29,6 +29,9 @@ describe('foundation registry', () => {
     expect(css).toContain('--font-body:');
     expect(css).toContain('--color-bg: #F6F2EE;');
     expect(css).toContain('[data-theme="darkgray"]');
+    expect(css).toContain('[data-theme="nearblack"]');
+    expect(css).not.toContain('[data-theme="beige"]');
+    expect(css).not.toContain('[data-theme="main"]');
     expect(css).toContain('--rule-heading-1-font:');
   });
 

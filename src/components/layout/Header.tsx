@@ -114,10 +114,10 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <>
+                  <div className="st-header-auth-links">
                     <Link to="/login" className="st-header-auth-link">Sign In</Link>
                     <Link to="/signup" className="st-header-auth-link">Register</Link>
-                  </>
+                  </div>
                 )}
               </div>
             </nav>

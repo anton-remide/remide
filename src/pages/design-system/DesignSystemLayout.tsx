@@ -1,13 +1,5 @@
-import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { useTheme, THEMES } from '../../context/ThemeProvider';
-import type { Theme } from '../../context/ThemeProvider';
-
-const THEME_LABELS: Record<Theme, string> = {
-  beige: 'Beige',
-  darkgray: 'Dark Gray',
-  nearblack: 'Near Black',
-};
+import ThemeSwitcher from '../../components/layout/ThemeSwitcher';
 
 const TAB_LINKS = [
   { to: '/ui/foundations', label: 'Foundations' },
@@ -17,9 +9,6 @@ const TAB_LINKS = [
 ];
 
 export default function DesignSystemLayout() {
-  const { theme, setTheme } = useTheme();
-  const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
-
   return (
     <div
       className="st-ds-layout"
@@ -44,41 +33,14 @@ export default function DesignSystemLayout() {
             </NavLink>
           ))}
         </nav>
+        <div className="st-ds-header__actions">
+          <ThemeSwitcher className="st-ds-header__theme-switcher" ariaLabel="Design system theme" />
+        </div>
       </header>
 
       <div className="st-ds-main">
-        <Outlet context={{ viewport }} />
+        <Outlet />
       </div>
-
-      <footer className="st-ds-footer">
-        <div className="st-ds-footer__group">
-          <span className="st-ds-footer__label">Theme</span>
-          {THEMES.map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTheme(t)}
-              className={['st-ds-footer__btn', theme === t && 'is-active'].filter(Boolean).join(' ')}
-            >
-              {THEME_LABELS[t]}
-            </button>
-          ))}
-        </div>
-        <div className="st-ds-footer__group">
-          <span className="st-ds-footer__label">Viewport</span>
-          {(['desktop', 'mobile'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setViewport(v)}
-              className={['st-ds-footer__btn', viewport === v && 'is-active'].filter(Boolean).join(' ')}
-              disabled={v === 'mobile'}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-      </footer>
     </div>
   );
 }

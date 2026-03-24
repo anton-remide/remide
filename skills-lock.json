@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "skills": {
+    "12-principles-of-animation": {
+      "source": "raphaelsalaja/userinterface-wiki",
+      "sourceType": "github",
+      "computedHash": "663ccc340e7ed1ed3991793625dd363d684117de29cbd81d8653355421e330da"
+    },
+    "baseline-ui": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "computedHash": "9bb2f868098a9d28ce7d10383039a28169d838cea6299f9df3706ecda7932949"
+    },
+    "canvas-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "a1f288079624402f30682753c1d43920b6664785698d21d3e7aa197450a6448b"
+    },
+    "design-lab": {
+      "source": "0xdesign/design-plugin",
+      "sourceType": "github",
+      "computedHash": "965e5a4d95679aaa36464f429e059fa097549d0491ef672b163c1460a72f2510"
+    },
+    "fixing-accessibility": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "computedHash": "549261e8a53b53a1a20c0ddbf736821e5fc0876ad82eee76e0efab8e9ee9dadf"
+    },
+    "fixing-metadata": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "computedHash": "b8315ff95a92dcfa48c33e2b4838a31d9448bd46252aab45726549ce865d6547"
+    },
+    "fixing-motion-performance": {
+      "source": "ibelick/ui-skills",
+      "sourceType": "github",
+      "computedHash": "0a2d654902bc04263ce68c8c02967ef03f17b482e855360a5463211d99d7baa9"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "b81e2ff87ed8fa4d6c377ccb127a7254c9e6a77e3ae94f21e6b514f7bb2945a0"
+    },
+    "interaction-design": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "87f2765ed1deeef3f1c06f9e4338ff103c391c6c4adcdffc885f3516b7c34ff2"
+    },
+    "interface-design": {
+      "source": "Dammyjay93/interface-design",
+      "sourceType": "github",
+      "computedHash": "9bfdf30dcc1734541a87100dbc6c6eeb33249c6ccd09be85857e686aed6b8b97"
+    },
+    "swiftui-ui-patterns": {
+      "source": "dimillian/skills",
+      "sourceType": "github",
+      "computedHash": "adbc12e85a56643b41ee3649d24db37f00fd8163c70727f5947b38f3cb5760f2"
+    },
+    "tailwind-css-patterns": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "computedHash": "63984406824ef934b457d34db25a5892b5375a82e31845159e6e97179c5acf4c"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "9bd26c52dfd10dfd613dd3cc85df217dc25a172e380bde41fdfa6fedda288b2a"
+    },
+    "wcag-audit-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "0f4bfe3e3ef6305637b0a295286eaa3b1159fe9ecefa028db2cf96a21a49787f"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f"
+    }
+  }
+}

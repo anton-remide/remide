@@ -4,6 +4,7 @@ import { X, Search, MapPin, Building2, Shield } from 'lucide-react';
 import { searchGlobal, type SearchResult } from '../../data/dataLoader';
 import { countryCodeToFlag } from '../../utils/countryFlags';
 import type { User } from '@supabase/supabase-js';
+import ThemeSwitcher from './ThemeSwitcher';
 
 interface Props {
   open: boolean;
@@ -154,6 +155,9 @@ export default function MobileMenu({ open, onClose, links, user, onSignOut }: Pr
             {link.label}
           </Link>
         ))}
+        <div className="st-mobile-menu-theme">
+          <ThemeSwitcher className="st-theme-switcher--mobile" ariaLabel="Global theme" />
+        </div>
         <div className="st-mobile-menu-divider" />
         {user ? (
           <>

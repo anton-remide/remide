@@ -4,6 +4,7 @@
 import { render, type RenderOptions } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContext } from '../context/AuthProvider';
+import { ThemeProvider } from '../context/ThemeProvider';
 import type { Session, User } from '@supabase/supabase-js';
 import type { ReactNode } from 'react';
 
@@ -65,11 +66,13 @@ export function renderWithProviders(ui: ReactNode, options: TestOptions = {}) {
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <AuthContext.Provider value={authValue}>
-        <MemoryRouter initialEntries={[route]}>
-          {children}
-        </MemoryRouter>
-      </AuthContext.Provider>
+      <ThemeProvider>
+        <AuthContext.Provider value={authValue}>
+          <MemoryRouter initialEntries={[route]}>
+            {children}
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </ThemeProvider>
     );
   }
 

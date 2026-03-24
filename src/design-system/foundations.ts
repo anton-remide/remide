@@ -324,6 +324,7 @@ export function generateFoundationCss(registry: FoundationRegistry) {
   ];
 
   const themeBlocks = colors.modes
+    .filter((mode) => mode !== registry.meta.defaultTheme)
     .map((mode) => {
       const lines = [
         ...cssVarLines(colors.tokens, mode),

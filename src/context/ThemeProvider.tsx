@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
-export type Theme = 'beige' | 'darkgray' | 'nearblack';
+export type Theme = 'main' | 'darkgray' | 'nearblack';
 
-const THEMES: Theme[] = ['beige', 'darkgray', 'nearblack'];
+const THEMES: Theme[] = ['main', 'darkgray', 'nearblack'];
 const STORAGE_KEY = 'remide-theme';
 
 interface ThemeContextValue {
@@ -13,14 +13,26 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function normalizeTheme(value: string | null): Theme {
+  if (value === 'beige') {
+    return 'main';
+  }
+
+  return value && THEMES.includes(value as Theme) ? (value as Theme) : 'main';
+}
+
 function applyTheme(t: Theme) {
+  if (t === 'main') {
+    document.documentElement.removeAttribute('data-theme');
+    return;
+  }
+
   document.documentElement.setAttribute('data-theme', t);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    return stored && THEMES.includes(stored) ? stored : 'beige';
+    return normalizeTheme(localStorage.getItem(STORAGE_KEY));
   });
 
   useEffect(() => {
