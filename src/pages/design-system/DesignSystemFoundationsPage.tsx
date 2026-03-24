@@ -295,7 +295,6 @@ export default function DesignSystemFoundationsPage() {
     [draftRegistry, savedRegistry],
   );
 
-  const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
   const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
   const dirtyItemCount = dirtyEntries.itemKeys.length;
 
@@ -452,54 +451,30 @@ export default function DesignSystemFoundationsPage() {
 
   return (
     <div className="st-ds-content st-ds-foundations">
-      <div className="st-ds-foundations-hero">
-        <div>
-          <Heading display level={1}>Foundations</Heading>
-          <Text size="lg" color="secondary" className="st-ds-foundations-hero__copy">
-            Canonical foundation editor for tokens and rules. Draft changes stay local to this page until you press Save.
-          </Text>
-        </div>
-        <div className="st-ds-foundations-hero__meta">
-          <span className="st-ds-foundations-chip">Source: <code>public/design-system/foundation.registry.json</code></span>
-          <span className="st-ds-foundations-chip">Last saved: {formatTimestamp(savedRegistry.meta.updatedAt)}</span>
-          <span className={['st-ds-foundations-chip', dirty && 'is-dirty'].filter(Boolean).join(' ')}>
-            {dirty ? 'Draft changed' : 'Saved state'}
+      {dirty && (
+        <div className="st-ds-foundations-toolbar__actions" role="group" aria-label="Unsaved foundation changes">
+          <span className="st-ds-foundations-toolbar__status">
+            Unsaved changes
+            {dirtyItemCount > 0 ? ` · ${dirtyItemCount} ${dirtyItemCount === 1 ? 'item' : 'items'}` : ''}
           </span>
+          <button
+            type="button"
+            className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+            onClick={handleReset}
+            disabled={saveState === 'saving'}
+          >
+            Discard
+          </button>
+          <button
+            type="button"
+            className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+            onClick={handleSave}
+            disabled={saveState === 'saving' || validationIssues.length > 0}
+          >
+            {saveState === 'saving' ? 'Saving…' : 'Save'}
+          </button>
         </div>
-      </div>
-
-      <div className="st-ds-foundations-toolbar">
-        <div className="st-ds-foundations-toolbar__summary">
-          <Text size="sm" color="secondary">
-            Select any token or rule and edit it directly. Save appears only after the draft changes.
-          </Text>
-        </div>
-
-        {dirty && (
-          <div className="st-ds-foundations-toolbar__actions" role="group" aria-label="Unsaved foundation changes">
-            <span className="st-ds-foundations-toolbar__status">
-              Unsaved changes
-              {dirtyItemCount > 0 ? ` · ${dirtyItemCount} ${dirtyItemCount === 1 ? 'item' : 'items'}` : ''}
-            </span>
-            <button
-              type="button"
-              className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
-              onClick={handleReset}
-              disabled={saveState === 'saving'}
-            >
-              Discard
-            </button>
-            <button
-              type="button"
-              className="st-ds-foundations-btn st-ds-foundations-btn--primary"
-              onClick={handleSave}
-              disabled={saveState === 'saving' || validationIssues.length > 0}
-            >
-              {saveState === 'saving' ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
       {saveMessage && (
         <div
@@ -526,9 +501,6 @@ export default function DesignSystemFoundationsPage() {
 
       <div className="st-ds-foundations-workspace">
         <aside className="st-ds-foundations-panel st-ds-foundations-panel--sidebar">
-          <div className="st-ds-foundations-panel__header">
-            <Text size="caption" color="secondary">Collections</Text>
-          </div>
           <div className="st-ds-foundations-nav">
             {sections.map((section) => (
               <button
@@ -537,43 +509,27 @@ export default function DesignSystemFoundationsPage() {
                 onClick={() => setSelectedSectionId(section.id)}
                 className={['st-ds-foundations-nav__item', activeSection.id === section.id && 'is-active'].filter(Boolean).join(' ')}
               >
-                <span className="st-ds-foundations-nav__title">
-                  {section.label}
-                  {dirtySectionIds.has(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
-                </span>
-                <span className="st-ds-foundations-nav__meta">{section.kind === 'token' ? 'Variables' : 'Rules'}</span>
-                {section.description && (
-                  <span className="st-ds-foundations-nav__desc">{section.description}</span>
-                )}
+                <span className="st-ds-foundations-nav__title">{section.label}</span>
               </button>
             ))}
           </div>
         </aside>
 
         <section className="st-ds-foundations-panel st-ds-foundations-panel--main">
-          <div className="st-ds-foundations-panel__header st-ds-foundations-panel__header--stack">
-            <div className="st-ds-foundations-panel__header-copy">
-              <Heading level={2}>{activeSection.label}</Heading>
-              {activeSection.description && (
-                <Text size="sm" color="secondary">{activeSection.description}</Text>
-              )}
+          {isTokenSection(activeSection) && (
+            <div className="st-ds-foundations-modes" role="tablist" aria-label={`${activeSection.label} modes`}>
+              {activeSection.modes.map((entry) => (
+                <button
+                  key={entry}
+                  type="button"
+                  className={['st-ds-foundations-modes__btn', activeMode === entry && 'is-active'].filter(Boolean).join(' ')}
+                  onClick={() => setSelectedModes((current) => ({ ...current, [activeSection.id]: entry }))}
+                >
+                  {entry}
+                </button>
+              ))}
             </div>
-
-            {isTokenSection(activeSection) && (
-              <div className="st-ds-foundations-modes" role="tablist" aria-label={`${activeSection.label} modes`}>
-                {activeSection.modes.map((entry) => (
-                  <button
-                    key={entry}
-                    type="button"
-                    className={['st-ds-foundations-modes__btn', activeMode === entry && 'is-active'].filter(Boolean).join(' ')}
-                    onClick={() => setSelectedModes((current) => ({ ...current, [activeSection.id]: entry }))}
-                  >
-                    {entry}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
 
           <div className="st-ds-foundations-groups">
             {groupedItems.map((group) => (
@@ -619,16 +575,12 @@ export default function DesignSystemFoundationsPage() {
         </section>
 
         <aside className="st-ds-foundations-panel st-ds-foundations-panel--inspector">
-          <div className="st-ds-foundations-panel__header st-ds-foundations-panel__header--inspector">
-            <div className="st-ds-foundations-panel__header-copy">
-              <Text size="caption" color="secondary">Inspector</Text>
-              <Heading level={3}>{selectedItem.label}</Heading>
-            </div>
+          {(selectedItemDirty || selectedTokenLocked) && (
             <div className="st-ds-foundations-panel__header-meta">
               {selectedItemDirty && <span className="st-ds-foundations-chip is-dirty">Unsaved</span>}
               {selectedTokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
             </div>
-          </div>
+          )}
 
           {selectedToken && activeMode && (
             <div className="st-ds-foundations-inspector">
