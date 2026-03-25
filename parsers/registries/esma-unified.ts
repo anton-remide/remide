@@ -152,8 +152,8 @@ async function processCountry(
     timestamp: new Date().toISOString(),
   };
 
-  // Verify
-  const previousCount = dryRun ? 0 : await getEntityCount(countryCode);
+  // Verify (scope to this parser's entities, not all country entities)
+  const previousCount = dryRun ? 0 : await getEntityCount(countryCode, rid);
   const verification = await verify(result, previousCount);
 
   // Write to DB

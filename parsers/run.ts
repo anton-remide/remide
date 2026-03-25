@@ -37,8 +37,8 @@ async function runParser(parser: RegistryParser): Promise<void> {
       logger.warn(id, `Warnings: ${result.warnings.join('; ')}`);
     }
 
-    // 2. Verify
-    const previousCount = dryRun ? 0 : await getEntityCount(countryCode);
+    // 2. Verify (scope to this parser's entities, not all country entities)
+    const previousCount = dryRun ? 0 : await getEntityCount(countryCode, id);
     const verification = await verify(result, previousCount);
 
     if (!verification.valid) {

@@ -174,16 +174,22 @@ function toRow(entity: ParsedEntity, parserId: string): Record<string, unknown> 
   return row;
 }
 
-/** Get current entity count for a country */
-export async function getEntityCount(countryCode: string): Promise<number> {
+/** Get current entity count for a country, optionally scoped to a specific parser */
+export async function getEntityCount(countryCode: string, parserId?: string): Promise<number> {
   const sb = getSupabase();
-  const { count, error } = await sb
+  let query = sb
     .from('entities')
     .select('*', { count: 'exact', head: true })
     .eq('country_code', countryCode);
 
+  if (parserId) {
+    query = query.eq('parser_id', parserId);
+  }
+
+  const { count, error } = await query;
+
   if (error) {
-    logger.error('db', `Failed to get entity count for ${countryCode}: ${error.message}`);
+    logger.error('db', `Failed to get entity count for ${countryCode}${parserId ? '/' + parserId : ''}: ${error.message}`);
     return 0;
   }
 
