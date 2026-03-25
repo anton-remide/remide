@@ -100,6 +100,61 @@ function buildKnownEntities(): ParsedEntity[] {
   }));
 }
 
+// ── Deduplication Utilities ──────────────────────────────────────────────
+
+/** Create a unique key for deduplication based on license number */
+function createEntityKey(entity: ParsedEntity): string {
+  return entity.licenseNumber.toLowerCase();
+}
+
+/** Deduplicate entities by license number, preferring live data over known entities */
+function deduplicateEntities(entities: ParsedEntity[], registryId: string): ParsedEntity[] {
+  const seen = new Set<string>();
+  const deduped: ParsedEntity[] = [];
+  let duplicatesRemoved = 0;
+
+  for (const entity of entities) {
+    const key = createEntityKey(entity);
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(entity);
+    } else {
+      duplicatesRemoved++;
+      logger.warn(registryId, `Removed duplicate entity: ${entity.name} (${entity.licenseNumber})`);
+    }
+  }
+
+  if (duplicatesRemoved > 0) {
+    logger.info(registryId, `Deduplication: removed ${duplicatesRemoved} duplicates, kept ${deduped.length} unique entities`);
+  }
+
+  return deduped;
+}
+
+/** Generate a unique license number with fallback logic */
+function generateLicenseNumber(registrationNumber: string, name: string, existingNumbers: Set<string>): string {
+  if (registrationNumber) {
+    const baseNumber = `BMA-${registrationNumber}`;
+    if (!existingNumbers.has(baseNumber)) {
+      existingNumbers.add(baseNumber);
+      return baseNumber;
+    }
+  }
+
+  // Fallback: use name-based identifier with collision detection
+  const baseName = name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').substring(0, 20);
+  let counter = 0;
+  let candidateNumber: string;
+
+  do {
+    candidateNumber = counter === 0 ? `BMA-${baseName}` : `BMA-${baseName}-${counter}`;
+    counter++;
+  } while (existingNumbers.has(candidateNumber) && counter < 100);
+
+  existingNumbers.add(candidateNumber);
+  return candidateNumber;
+}
+
 // ── Live Scrape Attempt ──────────────────────────────────────────────────
 
 /** Extract all cookies from response as a single Cookie header value */
@@ -139,7 +194,8 @@ async function fetchCsrfToken(registryId: string): Promise<{ token: string; cook
   const html = await response.text();
   const $ = cheerio.load(html);
 
-  const token = $('input[type="hidden"][name="_token"]').val() as string || '';
+  const token = $('input[type="hidden"][name="_token"]').val() as string || 
+                $('meta[name="csrf-token"]').attr('content') as string || '';
 
   if (!token) {
     throw new Error('CSRF _token not found in page HTML');
@@ -214,6 +270,7 @@ function parseLicenseInfo(text: string): {
 function parseTableRows(html: string, registryId: string): ParsedEntity[] {
   const $ = cheerio.load(html);
   const entities: ParsedEntity[] = [];
+  const usedLicenseNumbers = new Set<string>();
 
   const rows = $('table tbody tr').toArray();
   logger.info(registryId, `Found ${rows.length} table rows`);
@@ -231,7 +288,7 @@ function parseTableRows(html: string, registryId: string): ParsedEntity[] {
 
     const { classType, registrationNumber, activities } = parseLicenseInfo(licenseInfoText);
 
-    const licenseNumber = registrationNumber ? `BMA-${registrationNumber}` : `BMA-${name.replace(/\s+/g, '-').substring(0, 30)}`;
+    const licenseNumber = generateLicenseNumber(registrationNumber, name, usedLicenseNumbers);
     const licenseType = classType ? `DABA Class ${classType}` : 'DABA';
 
     entities.push({
@@ -317,6 +374,9 @@ export class BmBmaParser implements RegistryParser {
       entities = buildKnownEntities();
       logger.info(this.config.id, `Known entities fallback: ${entities.length} entities`);
     }
+
+    // Apply deduplication to prevent database constraint violations
+    entities = deduplicateEntities(entities, this.config.id);
 
     return {
       registryId: this.config.id,
