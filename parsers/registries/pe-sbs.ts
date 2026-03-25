@@ -33,6 +33,7 @@ dotenv.config({ path: '.env.local' });
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
+import { createHash } from 'crypto';
 
 const SOURCE_URL = 'https://www.sbs.gob.pe/';
 
@@ -160,6 +161,13 @@ export class PeSbsParser implements RegistryParser {
     needsBrowser: false,
   };
 
+  private generateUniqueLicenseNumber(entityName: string, category: string, index: number): string {
+    // Create a hash of the entity name to ensure uniqueness
+    const hash = createHash('sha256').update(entityName + category).digest('hex').substring(0, 8);
+    const paddedIndex = String(index + 1).padStart(3, '0');
+    return `SBS-${category}-${paddedIndex}-${hash}`;
+  }
+
   async parse(): Promise<ParseResult> {
     const startTime = Date.now();
     const warnings: string[] = [];
@@ -212,11 +220,11 @@ export class PeSbsParser implements RegistryParser {
         if (seen.has(key)) continue;
         seen.add(key);
 
-        const paddedIndex = String(i + 1).padStart(3, '0');
+        const uniqueLicenseNumber = this.generateUniqueLicenseNumber(known.name, known.category, i);
 
         entities.push({
           name: known.name,
-          licenseNumber: `SBS-VASP-${paddedIndex}`,
+          licenseNumber: uniqueLicenseNumber,
           countryCode: 'PE',
           country: 'Peru',
           status: 'Registered',
