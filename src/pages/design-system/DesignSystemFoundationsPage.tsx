@@ -683,7 +683,9 @@ export default function DesignSystemFoundationsPage() {
       <div className="st-ds-colors-ledger-wrap">
         <div className="st-ds-colors-ledger clip-lg">
           <div className="st-ds-colors-ledger__row st-ds-colors-ledger__row--header">
-            <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-col--header">Name</div>
+            <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-col--header">
+              <span className="sr-only">Name</span>
+            </div>
             {FOUNDATION_THEME_ORDER.map((mode) => (
               <div key={mode} className="st-ds-colors-ledger__header-cell">
                 {FOUNDATION_THEME_LABELS[mode]}

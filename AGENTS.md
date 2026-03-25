@@ -13,7 +13,7 @@
 ### Work Split
 - **Anton + Codex:** Backend, parsers, workers, data pipeline, new features, Notion logging
 - **Sasha:** Frontend visuals, responsive, animations — `UI/SASHA:` prefixed tasks in Notion
-- **Rule:** Codex does NOT touch UI/SASHA tasks. If a UI issue is found, log it in Notion with `UI/SASHA:` prefix and move on.
+- **Rule:** Codex may work on `UI/SASHA` tasks and any other frontend work when explicitly requested in the current session. Default coordination still goes through task ownership in Notion to avoid simultaneous edits.
 
 ## What This Project Is
 A public regulatory intelligence platform that tracks stablecoin regulations, licensed entities (VASPs, CASPs, EMIs, PIs), and compliance status across 206 jurisdictions worldwide. Built as a React SPA with SquareType theme 1:1 visual match.
@@ -39,6 +39,8 @@ A public regulatory intelligence platform that tracks stablecoin regulations, li
 
 **Workflow:** Anton creates skeleton with data (functional but unstyled) → merges to main → creates Notion task for Sasha (Owner: Sasha) → Sasha polishes visuals.
 
+**Override:** Codex has permission to edit any frontend file (`src/components/`, `src/styles/`, `src/hooks/`, `src/pages/`, `src/App.tsx`) when explicitly requested by Sasha or the current user in the active session.
+
 **Rule:** Never work on the same file simultaneously. Use Notion KB to coordinate — each task has an Owner.
 
 ### Branching Strategy
@@ -55,7 +57,7 @@ A public regulatory intelligence platform that tracks stablecoin regulations, li
 - **Both** — cross-cutting tasks (shared interfaces, deploy)
 
 ## Project Structure
-- `/remide/src/` — Frontend React SPA. **NEVER imports from** `parsers/`, `workers/`, or `shared/`. **Anton: data + structure. Sasha: visuals + styles.**
+- `/remide/src/` — Frontend React SPA. **NEVER imports from** `parsers/`, `workers/`, or `shared/`. **Anton: data + structure. Sasha: visuals + styles. Codex may work across the full frontend stack when explicitly requested in-session.**
 - `/remide/parsers/` — Registry scrapers (29 parsers + core toolkit). Imports from `parsers/core/`. **Owner: Anton.**
 - `/remide/workers/` — Background workers (enrichment, intelligence, exports). Imports from `shared/`. **Owner: Anton.**
 - `/remide/shared/` — Shared backend utilities (config, supabase, logger, types). Used by workers & parsers. **Owner: Anton.**
