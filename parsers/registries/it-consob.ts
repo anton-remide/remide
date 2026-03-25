@@ -14,7 +14,7 @@ export class ItConsobParser implements RegistryParser {
     countryCode: 'IT',
     country: 'Italy',
     regulator: 'CONSOB (Commissione Nazionale per le Società e la Borsa)',
-    url: 'https://www.esma.europa.eu/',
+    url: 'https://www.consob.it/',
     sourceType: 'csv',
     rateLimit: 10_000,
     needsProxy: false,
@@ -22,14 +22,25 @@ export class ItConsobParser implements RegistryParser {
   };
 
   async parse(): Promise<ParseResult> {
-    console.log(`[${this.config.id}] DEPRECATED: Covered by esma-unified parser. Skipping.`);
+    const startTime = Date.now();
+    
+    console.log(`[${this.config.id}] DEPRECATED: This parser has been superseded by esma-unified parser.`);
+    console.log(`[${this.config.id}] Italy CONSOB MiCAR data is now available through the unified ESMA registry.`);
+    console.log(`[${this.config.id}] Returning empty results to maintain backwards compatibility.`);
+    
+    const durationMs = Date.now() - startTime;
+    
     return {
       registryId: this.config.id,
       countryCode: this.config.countryCode,
       entities: [],
       totalFound: 0,
-      durationMs: 0,
-      warnings: ['Deprecated: use esma-unified instead'],
+      durationMs,
+      warnings: [
+        'DEPRECATED: This parser has been superseded by esma-unified parser',
+        'Italy CONSOB MiCAR data is now available through the unified ESMA registry',
+        'This parser returns empty results to maintain backwards compatibility'
+      ],
       errors: [],
       timestamp: new Date().toISOString(),
     };
