@@ -16,6 +16,9 @@ import { logger } from '../core/logger.js';
 const OAM_URLS = [
   'https://www.organismo-am.it/elenchi-registri/elenco-operatori-valute-virtuali',
   'https://www.organismo-am.it/elenchi-registri/elenco-operatori-criptovalute',
+  // Fallback URLs in case the primary ones have moved
+  'https://www.organismo-am.it/registri-elenchi/operatori-valute-virtuali',
+  'https://www.organismo-am.it/elenco-operatori-valute-virtuali',
 ];
 
 function normalizeName(name: string): string {
@@ -51,6 +54,16 @@ function extractLicense(text: string): string | undefined {
     if (m?.[1]) return m[1].trim();
   }
   return undefined;
+}
+
+function isValidHtml(html: string): boolean {
+  if (!html || html.trim().length < 100) return false;
+  
+  const $ = cheerio.load(html);
+  const hasContent = $('body').text().trim().length > 50;
+  const hasStructure = $('table, .views-row, .result-item, .card, .list-item, li, script[type="application/ld+json"]').length > 0;
+  
+  return hasContent || hasStructure;
 }
 
 /**
@@ -196,6 +209,8 @@ export class ItOamVaspParser implements RegistryParser {
     const errors: string[] = [];
     const entities: ParsedEntity[] = [];
 
+    let successfulFetch = false;
+
     for (const url of OAM_URLS) {
       try {
         logger.info(this.config.id, `Fetching: ${url}`);
@@ -204,12 +219,27 @@ export class ItOamVaspParser implements RegistryParser {
           rateLimit: this.config.rateLimit,
         });
 
+        logger.info(this.config.id, `Received ${html.length} characters from ${url}`);
+
+        if (!isValidHtml(html)) {
+          warnings.push(`Empty or invalid HTML from ${url} (${html.length} chars)`);
+          continue;
+        }
+
+        successfulFetch = true;
         const parsed = parseOamHtml(html, url);
-        logger.info(this.config.id, `Parsed ${parsed.length} entities from page`);
+        logger.info(this.config.id, `Parsed ${parsed.length} entities from ${url}`);
         entities.push(...parsed);
+
+        // If we got good results from this URL, we can skip the others
+        if (parsed.length > 0) {
+          logger.info(this.config.id, `Found entities on ${url}, skipping remaining URLs`);
+          break;
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        warnings.push(`Failed to fetch ${url}: ${msg}`);
+        errors.push(`Failed to fetch ${url}: ${msg}`);
+        logger.error(this.config.id, `Error fetching ${url}: ${msg}`);
       }
     }
 
@@ -221,8 +251,10 @@ export class ItOamVaspParser implements RegistryParser {
     }
     const unique = Array.from(byName.values());
 
-    if (unique.length === 0) {
-      warnings.push('No OAM entities found. OAM pages may require JS rendering or endpoint update.');
+    if (!successfulFetch) {
+      errors.push('All OAM URLs failed to return valid HTML. Site may require JavaScript rendering or have changed structure.');
+    } else if (unique.length === 0) {
+      warnings.push('No OAM entities found in valid HTML responses. Site structure may have changed.');
     }
 
     return {
@@ -237,4 +269,3 @@ export class ItOamVaspParser implements RegistryParser {
     };
   }
 }
-
