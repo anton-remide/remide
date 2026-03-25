@@ -311,19 +311,18 @@ export async function upsertEntities(
     logger.info(registryId, `Deleted existing entities for ${countryCode} (was: ${delCount ?? '?'})`);
   }
 
-  // Insert in chunks
+  // Upsert in chunks (handles cross-parser slug collisions gracefully)
   const chunkSize = 50;
   for (let i = 0; i < dedupedRows.length; i += chunkSize) {
     const chunk = dedupedRows.slice(i, i + chunkSize);
-    const { error } = await sb.from('entities').insert(chunk);
+    const { error } = await sb.from('entities').upsert(chunk, { onConflict: 'id' });
 
     if (error) {
-      errors.push(`Insert chunk ${Math.floor(i / chunkSize) + 1}: ${error.message}`);
-      logger.error(registryId, `Insert error (chunk ${Math.floor(i / chunkSize) + 1}): ${error.message}`);
+      errors.push(`Upsert chunk ${Math.floor(i / chunkSize) + 1}: ${error.message}`);
+      logger.error(registryId, `Upsert error (chunk ${Math.floor(i / chunkSize) + 1}): ${error.message}`);
 
-      // Try one-by-one insertion for failed chunk to save what we can
       for (const row of chunk) {
-        const { error: singleErr } = await sb.from('entities').insert(row);
+        const { error: singleErr } = await sb.from('entities').upsert(row, { onConflict: 'id' });
         if (!singleErr) {
           inserted++;
         } else {

@@ -108,12 +108,18 @@ export function calculateDelta(previousCount: number, currentCount: number): num
  * Full verification pipeline:
  * 1. Schema validation
  * 2. Deduplication check
- * 3. Delta anomaly detection (>20%)
+ * 3. Delta anomaly detection
+ *
+ * Anomaly triggers only when BOTH conditions are met:
+ * - Percentage delta exceeds threshold (default 50%)
+ * - Absolute change exceeds minimum floor (default 10 entities)
+ * This prevents false positives on small registries (3→4 = 33% but only 1 change).
  */
 export async function verify(
   result: ParseResult,
   previousCount: number,
-  anomalyThreshold = 20
+  anomalyThreshold = 50,
+  minAbsoluteChange = 10
 ): Promise<VerifyResult> {
   const { registryId } = result;
 
@@ -128,11 +134,12 @@ export async function verify(
 
   // 3. Delta check (skip anomaly detection on first run when previousCount is 0)
   const deltaPercent = calculateDelta(previousCount, result.entities.length);
+  const absoluteChange = Math.abs(result.entities.length - previousCount);
   const isFirstRun = previousCount === 0;
-  const anomaly = !isFirstRun && deltaPercent > anomalyThreshold;
+  const anomaly = !isFirstRun && deltaPercent > anomalyThreshold && absoluteChange >= minAbsoluteChange;
 
   if (anomaly) {
-    const msg = `Anomaly detected: entity count changed from ${previousCount} to ${result.entities.length} (${deltaPercent.toFixed(1)}% delta, threshold: ${anomalyThreshold}%)`;
+    const msg = `Anomaly detected: entity count changed from ${previousCount} to ${result.entities.length} (${deltaPercent.toFixed(1)}% delta, ${absoluteChange} abs change, threshold: ${anomalyThreshold}%/${minAbsoluteChange} min)`;
     logger.warn(registryId, msg);
     await sendTelegramAlert(registryId, msg, true);
   }
