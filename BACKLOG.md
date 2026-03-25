@@ -1,17 +1,20 @@
 # RemiDe — Backlog
 
-> **Source of truth:** Notion Knowledge Base (`collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f`).
+> **Source of truth:** Notion Knowledge Base (`collection://c973a8be-f1be-462c-bf14-55c47f0c5708`).
 > This file is a quick-reference cache. Last synced: 2026-03-14.
 
 ---
 
 ## Completed (Post-Launch baseline)
 
-- ✅ 80 registry parsers (14K+ entities across 206 jurisdictions)
+- ✅ 86 registry parsers (15K+ entities across 60+ jurisdictions)
 - ✅ Quality Worker (canonical_name, garbage detection, crypto classification, scoring)
-- ✅ Enrichment Worker (Firecrawl — descriptions, LinkedIn, websites)
+- ✅ Enrichment Worker (Firecrawl — descriptions, LinkedIn, social, audience, fiat on-ramp)
+- ✅ Website Discovery Worker (DuckDuckGo + known brands mapping)
+- ✅ Site Scraper Worker (Cheerio — brand, description, social links)
 - ✅ Verify Worker (DNS + HTTP liveness)
-- ✅ Stripe $49 one-time payment (Edge Functions)
+- ✅ Brand Coverage Worker (CoinGecko + curated stablecoin/payments list)
+- ✅ Stripe €49 one-time payment (Edge Functions)
 - ✅ 3-tier paywall (Anonymous → Registered → Paid)
 - ✅ Progressive entity loading
 - ✅ Stride stablecoin data integration (issuers, laws, events, licenses)

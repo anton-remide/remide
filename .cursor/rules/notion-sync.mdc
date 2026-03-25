@@ -14,12 +14,12 @@ Notion is the source of truth. Code without Notion entries is undocumented. Docu
 
 Before ending any work session, verify:
 
-### 1. Workers Registry (`collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720`)
+### 1. Workers Registry (`collection://cc6b66a2-1904-4c7a-a25f-916146282089`)
 - [ ] Every new parser → entry with Type, Status, Countries, Approach, Notes
 - [ ] Every new worker → entry with Type (Enricher/Cleaner/Verifier), Status, Notes
 - [ ] Status updated for any modified parser/worker
 
-### 2. Knowledge Base (`collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f`)
+### 2. Knowledge Base (`collection://c973a8be-f1be-462c-bf14-55c47f0c5708`)
 - [ ] Every completed task → Status: Done + Completed Date
 - [ ] Every new decision → Type: Decision with Category, Context, Alternatives, Impact
 - [ ] Every discovered bug/task → Status: Backlog with full Notes

@@ -1,0 +1,69 @@
+name: Parser Doctor
+
+on:
+  schedule:
+    # Run 2 hours after parsers (parsers run Mon 06:00 UTC, doctor runs Mon 08:00 UTC)
+    - cron: '0 8 * * 1'
+    # Also check daily at 10:00 UTC for any manual/ad-hoc parser failures
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      parser:
+        description: 'Specific parser to diagnose (e.g. us-nydfs, or leave empty for all broken)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Diagnose only — do not apply fixes or create PRs'
+        type: boolean
+        default: false
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci --force
+
+      - name: Configure git
+        run: |
+          git config user.name "parser-doctor[bot]"
+          git config user.email "parser-doctor@remide.app"
+
+      - name: Run Parser Doctor
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.parser }}" ]; then
+            ARGS="$ARGS --parser ${{ inputs.parser }}"
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          echo "Running parser doctor: $ARGS"
+          npx tsx workers/parser-doctor/run.ts $ARGS
+
+      - name: Summary
+        if: always()
+        run: echo "Parser Doctor completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

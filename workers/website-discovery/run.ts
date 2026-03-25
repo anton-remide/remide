@@ -18,6 +18,7 @@ import { config } from '../../shared/config.js';
 import { getSupabase } from '../../shared/supabase.js';
 import { logger, sendTelegramAlert } from '../../shared/logger.js';
 import { acquireLock, releaseLock, setRuntimeTimeout } from '../../shared/guards.js';
+import { isRegistryWebsite } from '../../shared/registry-domains.js';
 
 const SCOPE = 'website-discovery';
 const DEFAULT_LIMIT = 50_000;
@@ -347,16 +348,19 @@ async function guessWebsite(entity: EntityRow): Promise<{ url: string; domain: s
 
 /* ── DB Operations ── */
 
-async function fetchBatch(sb: ReturnType<typeof getSupabase>, args: Args): Promise<EntityRow[]> {
+interface EntityRowWithWebsite extends EntityRow {
+  website: string | null;
+}
+
+async function fetchBatch(sb: ReturnType<typeof getSupabase>, args: Args): Promise<EntityRowWithWebsite[]> {
   return withRetry(async () => {
     let query = sb
       .from('entities')
-      .select('id, name, canonical_name, country_code, regulator, raw_data')
-      .or('website.is.null,website.eq.')
+      .select('id, name, canonical_name, country_code, regulator, raw_data, website')
       .neq('is_garbage', true)
       .neq('is_hidden', true)
       .order('quality_score', { ascending: false })
-      .limit(BATCH_SIZE);
+      .limit(BATCH_SIZE * 2);
 
     if (args.country) {
       query = query.eq('country_code', args.country);
@@ -364,13 +368,18 @@ async function fetchBatch(sb: ReturnType<typeof getSupabase>, args: Args): Promi
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    return (data || []) as EntityRow[];
+
+    const rows = (data || []) as EntityRowWithWebsite[];
+    return rows.filter((r) => {
+      if (!r.website || r.website.trim() === '') return true;
+      return isRegistryWebsite(r.website);
+    }).slice(0, BATCH_SIZE);
   }, 'fetch-batch');
 }
 
 async function writeWebsite(
   sb: ReturnType<typeof getSupabase>,
-  entity: EntityRow,
+  entity: EntityRowWithWebsite,
   result: DiscoveryResult,
   dryRun: boolean,
 ): Promise<boolean> {
@@ -379,16 +388,27 @@ async function writeWebsite(
   const rawData: Record<string, unknown> = { ...(entity.raw_data || {}) };
   rawData.website_discovery_at = new Date().toISOString();
 
+  // If the entity previously had a registry URL in the website field, preserve it
+  const oldRegistryUrl = entity.website && isRegistryWebsite(entity.website) ? entity.website : null;
+  if (oldRegistryUrl) {
+    rawData.previous_registry_url = oldRegistryUrl;
+  }
+
   if (result.website) {
     rawData.website_source = result.source;
     rawData.website_search_query = result.searchQuery;
     rawData.website_validated = result.validated;
 
+    const updatePayload: Record<string, unknown> = {
+      website: result.website,
+      raw_data: rawData,
+    };
+    if (oldRegistryUrl) {
+      updatePayload.registry_url = oldRegistryUrl;
+    }
+
     await withRetry(async () => {
-      const { error } = await sb.from('entities').update({
-        website: result.website,
-        raw_data: rawData,
-      }).eq('id', entity.id);
+      const { error } = await sb.from('entities').update(updatePayload).eq('id', entity.id);
       if (error) throw new Error(error.message);
     }, `write:${entity.id}`);
     return true;
@@ -396,10 +416,16 @@ async function writeWebsite(
     rawData.website_discovery_failed = true;
     rawData.website_discovery_error = result.error;
 
+    const updatePayload: Record<string, unknown> = {
+      raw_data: rawData,
+    };
+    if (oldRegistryUrl) {
+      updatePayload.registry_url = oldRegistryUrl;
+      updatePayload.website = '';
+    }
+
     await withRetry(async () => {
-      const { error } = await sb.from('entities').update({
-        raw_data: rawData,
-      }).eq('id', entity.id);
+      const { error } = await sb.from('entities').update(updatePayload).eq('id', entity.id);
       if (error) throw new Error(error.message);
     }, `mark-failed:${entity.id}`);
     return false;

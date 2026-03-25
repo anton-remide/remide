@@ -126,13 +126,22 @@ npx tsx parsers/run.ts --registry <id>
 npx tsx scripts/run-critical-parsers.ts --with-quality
 
 # 2) Quality (mandatory)
-npx tsx workers/quality/run.ts --limit 10000
+npx tsx workers/quality/run.ts --limit 50000
 
 # 3) Verify
-npx tsx workers/verify/run.ts --limit 2000
+npx tsx workers/verify/run.ts --limit 20000
 
 # 4) Enrichment
-npx tsx workers/enrichment/run.ts --limit 5000
+npx tsx workers/enrichment/run.ts --limit 50000
+
+# 4b) Website discovery (finds missing websites)
+npx tsx workers/website-discovery/run.ts
+
+# 4c) Site scraper (Cheerio, no Firecrawl credits)
+npx tsx workers/site-scraper/run.ts
+
+# 4d) Brand coverage
+npx tsx workers/brand-coverage/run.ts
 
 # 5) Health report
 npx tsx parsers/health-check.ts

@@ -12,9 +12,10 @@
 - **Decision:** Features first. SEO+Mobile are mandatory quality gates, not priorities. Architecture only when it unblocks features.
 - **Impact:** All sprint planning follows: features > SEO+mobile as quality gates.
 
-## PROC-002: A/B/C/D Adversarial Debate Framework
+## ~~PROC-002: A/B/C/D Adversarial Debate Framework~~ (SUPERSEDED by PROC-005)
 - **Category:** Process
 - **Date:** 2026-03-05
+- **Superseded:** 2026-03-14 by PROC-005 (Hard Work Framework). Echo chamber problem — single AI playing 4 roles sequentially.
 - **Context:** SIMULATE step (10 failure scenarios) was unstructured. No adversarial check, no confidence levels, no business/UX lens.
 - **Decision:** Replace SPEC+SIMULATE+REVIEW with integrated A/B/C/D framework. Tier 1 skip, Tier 2 = 1 round A+B+C, Tier 3 = 2 rounds A+B+D+C.
 - **Impact:** CLAUDE.md Feature Lifecycle replaced. Notion System Prompt + CD Protocol updated.
@@ -106,8 +107,8 @@
   - A) Keep single database with tags/filters (rejected: mixed concerns, unclear ownership)
   - B) Split into two specialized databases (chosen)
 - **Decision:** Parser Registry → two databases:
-  1. **🌍 Country Research Registry** (`collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6`) — same ID, renamed. Per-country regulatory context, research notes, priority tiers.
-  2. **🤖 Workers Registry** (`collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720`) — NEW database. Parser/worker specs with: Worker, Type (Parser/Enricher/Cleaner/Verifier), Status lifecycle (Backlog→Deployed), Countries, Source URL/Type, Approach, Difficulty, Priority, Frequency, Last Run, Success Rate, Entity Count, Data Quality, Build Order, Owner, Notes, Deploy Session.
+  1. **🌍 Country Research Registry** (`collection://9618ad8b-302f-421f-9d30-de322226c4d1`) — same ID, renamed. Per-country regulatory context, research notes, priority tiers.
+  2. **🤖 Workers Registry** (`collection://cc6b66a2-1904-4c7a-a25f-916146282089`) — NEW database. Parser/worker specs with: Worker, Type (Parser/Enricher/Cleaner/Verifier), Status lifecycle (Backlog→Deployed), Countries, Source URL/Type, Approach, Difficulty, Priority, Frequency, Last Run, Success Rate, Entity Count, Data Quality, Build Order, Owner, Notes, Deploy Session.
 - **Logging rule:** New parsers/workers → Workers Registry. Country research → Country Research Registry. Never mix.
 - **Confidence:** 95%
 - **Impact:** CLAUDE.md, MEMORY.md updated. All future parser/worker logging goes to Workers Registry.
@@ -126,9 +127,9 @@
 - **Context:** Binary paywall (isLocked=!user) had high bounce rate. All-or-nothing approach doesn't show value before commitment. Need progressive disclosure to increase conversion.
 - **Alternatives:**
   - A) Keep binary paywall, improve CTA copy (rejected: doesn't solve core problem)
-  - B) Three-tier: Anonymous (blurred) → Registered (free) → Paid $49 (chosen)
+  - B) Three-tier: Anonymous (blurred) → Registered (free) → Paid €49 (chosen)
   - C) Freemium with feature limits only (rejected: less visual impact)
-- **Decision:** Three-tier model via `usePaywall()` hook. Anonymous: see structure with blurred values, first 3 entity rows clickable. Registered: jurisdiction profiles, entity lists, basic details unlocked. Paid $49: license numbers, registry links, corporate structure, contract addresses, export.
+- **Decision:** Three-tier model via `usePaywall()` hook. Anonymous: see structure with blurred values, first 3 entity rows clickable. Registered: jurisdiction profiles, entity lists, basic details unlocked. Paid €49: license numbers, registry links, corporate structure, contract addresses, export.
 - **Confidence:** 85%
 - **Impact:** All detail pages migrated from `useAuth()` binary to `usePaywall()` three-tier. PaywallOverlay updated. PricingPage/SignupPage redesigned.
 
@@ -175,7 +176,7 @@
 7. **ENTITY-DESC:** Entity Detail — company description area from website parser data
 8. **ENTITY-SIMILAR:** Entity Detail — "Similar Companies" block below profile
 9. **ENTITY-OFFER:** Entity table blurred section — offer overlay on top of gradient (not just blur)
-10. **STRIPE-CHECKOUT:** Stripe integration with product `prod_U6qNlT7koH0SlO` ($49 one-time)
+10. **STRIPE-CHECKOUT:** Stripe integration with product `prod_U6qNlT7koH0SlO` (€49 one-time)
 
 ---
 

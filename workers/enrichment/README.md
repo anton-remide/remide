@@ -26,8 +26,8 @@ All loaded via `shared/config.ts`:
 ## Supabase tables
 
 - **Reads:** `entities` (website, description, linkedin_url)
-- **Writes:** `entities` (description, linkedin_url, enriched_at)
-- **Logs:** `scrape_runs` (registry_id = 'enrichment')
+- **Writes:** `entities` (description, linkedin_url, twitter_url, brand_name, enriched_at, raw_data — includes site_languages, target_regions, target_audience, fiat_onramp, app_platforms, trading_pairs, founded_year, logo_url, og_image)
+- **Logs:** `scrape_runs` (registry_id = 'enrichment-firecrawl')
 
 ## Run locally
 

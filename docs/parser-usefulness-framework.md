@@ -94,6 +94,16 @@ Priority for paid-value surfaces:
 - Treating dead DNS as automatic garbage without business review
 - Keeping low-confidence inferred values without confidence tagging
 
+## Implementation Status (as of 2026-03-23)
+
+| Item | Status |
+|------|--------|
+| Decision-Grade Field Set V1 extraction | **Implemented** in `workers/enrichment/run.ts` (target_regions, fiat_onramp, app_platforms, trading_pairs, founded_year, site_languages, business_summary) |
+| `field_confidence` map in `raw_data` | **NOT IMPLEMENTED** |
+| PUS (Parser Utility Score) computation | **NOT IMPLEMENTED** — no script exists |
+| B2C/B2B/fiat/mobile dashboard filters | **NOT IMPLEMENTED** |
+| Confidence rubric per field | **NOT IMPLEMENTED** |
+
 ## Next Execution Steps
 
 1. Add `field_confidence` map into enrichment `raw_data`

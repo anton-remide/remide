@@ -1,13 +1,16 @@
 /**
  * Quality Worker — Rules Engine
  *
- * Three responsibilities:
+ * Four responsibilities:
  * 1. CLEANUP   — canonical_name normalization, garbage detection
  * 2. CLASSIFY  — crypto_status by parser_id + keywords
  * 3. SCORE     — quality_score 0-100 based on Data Tiers T1-T4
+ * 4. VALIDATE  — flag data quality issues (registry URLs in website, etc.)
  *
  * Related decisions: ARCH-008, DATA-003, DATA-005, DATA-006
  */
+
+import { isRegistryWebsite } from '../../shared/registry-domains.js';
 
 /* ── Types ── */
 
@@ -629,8 +632,8 @@ const FIELD_WEIGHTS: Array<{ field: string; check: (e: QualityInput) => boolean;
   { field: 'status', check: (e) => !!e.status && e.status !== 'Unknown', points: 5 },
   { field: 'regulator', check: (e) => !!e.regulator && e.regulator.trim().length > 0, points: 5 },
 
-  // T2 Fields
-  { field: 'website', check: (e) => !!e.website && e.website.trim().length > 3 && e.website !== 'N/A', points: 15 },
+  // T2 Fields — registry URLs don't count as a real website
+  { field: 'website', check: (e) => !!e.website && e.website.trim().length > 3 && e.website !== 'N/A' && !isRegistryWebsite(e.website), points: 15 },
   { field: 'description', check: (e) => !!e.description && e.description.trim().length > 20, points: 15 },
 
   // T3 Fields
@@ -745,7 +748,12 @@ export function processEntity(entity: QualityInput): QualityResult {
     rules.push('brand:from_entity_types');
   }
 
-  // 5. Scoring
+  // 5. Validate website — flag if it's a registry URL
+  if (entity.website && isRegistryWebsite(entity.website)) {
+    rules.push('warn:website_is_registry_url');
+  }
+
+  // 6. Scoring
   const score = calculateScore(entity);
   rules.push(`score:${score.total}(${score.tier})`);
 

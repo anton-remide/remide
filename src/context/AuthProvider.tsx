@@ -66,9 +66,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}auth/callback`,
     });
     if (!error) return { error: null };
-    // Map cryptic Supabase errors to user-friendly messages
+    console.error('[Auth] resetPassword error:', error.message, error.status);
     const msg = error.message?.toLowerCase() ?? '';
-    if (msg.includes('rate limit') || msg.includes('too many'))
+    if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('once every'))
       return { error: 'Too many attempts. Please wait a few minutes and try again.' };
     if (msg.includes('not found') || msg.includes('no user'))
       return { error: 'If this email is registered, you\'ll receive a reset link shortly.' };

@@ -24,6 +24,7 @@ export interface Entity {
   twitterUrl: string;
   sector: EntitySector;
   cryptoRelated: boolean;
+  logoUrl: string | null;
   /* Quality pipeline fields */
   qualityScore: number | null;
   qualityTier: QualityTier | null;

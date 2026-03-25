@@ -1,0 +1,39 @@
+name: Quality Audit (Daily Digest)
+
+on:
+  schedule:
+    - cron: '0 7 * * *'   # Daily at 07:00 UTC (after all workers finish)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --force
+
+      - name: Run quality audit
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: npx tsx workers/quality-audit/run.ts
+
+      - name: Commit updated QUALITY-ISSUES.md
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add QUALITY-ISSUES.md
+          git diff --staged --quiet || git commit -m "chore: update QUALITY-ISSUES.md (daily audit)"
+          git push || echo "Push failed — may need to pull first"

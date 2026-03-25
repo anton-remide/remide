@@ -22,6 +22,7 @@ import { config } from '../../shared/config.js';
 import { getSupabase } from '../../shared/supabase.js';
 import { logger, sendTelegramAlert } from '../../shared/logger.js';
 import { SYSTEM_LIMITS, enforceBatchLimit, acquireLock, releaseLock, setRuntimeTimeout, withRetry } from '../../shared/guards.js';
+import { isRegistryWebsite } from '../../shared/registry-domains.js';
 
 const SCOPE = 'enrichment';
 const DEFAULT_LIMIT = 5_000;
@@ -948,6 +949,8 @@ async function fetchEntitiesToEnrich(
   // Skip entities that already have enrichment data in raw_data (when dedicated columns don't exist)
   return (data ?? [])
     .filter((row: Record<string, unknown>) => {
+      // Skip entities whose "website" is actually a regulator registry page
+      if (isRegistryWebsite(row.website as string)) return false;
       // If dedicated columns exist, the .or() filter above already handles this
       if (schema.hasDescription || schema.hasLinkedinUrl) return true;
       // Without dedicated columns, skip if raw_data already has enrichment_description

@@ -150,8 +150,7 @@ export class SgMasParser implements RegistryParser {
               regulator: 'MAS',
               licenseType,
               activities: ['Digital Payment Token Service'],
-              website: detailUrl || undefined,
-              sourceUrl,
+              sourceUrl: detailUrl || sourceUrl,
             });
           }
         });

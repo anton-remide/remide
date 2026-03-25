@@ -5,8 +5,8 @@
 **Site is LIVE. Stripe is LIVE. Focus: data coverage, enrichment, product features that drive conversion.**
 
 ### Post-Launch Priorities
-1. Data quality & parser coverage (80 parsers, 14K+ entities — expand and clean)
-2. Enrichment pipeline (descriptions, LinkedIn, websites via Firecrawl + AI)
+1. Data quality & parser coverage (86 parsers, 15K+ entities — expand and clean)
+2. Enrichment pipeline (descriptions, LinkedIn, websites via Firecrawl + Cheerio + DuckDuckGo discovery)
 3. Product features that drive monetization (reports, alerts, exports)
 4. UI polish (remaining UI/SASHA backlog items)
 
@@ -16,7 +16,7 @@
 - **Rule:** Claude Code does NOT touch UI/SASHA tasks. If a UI issue is found, log it in Notion with `UI/SASHA:` prefix and move on.
 
 ## What This Project Is
-A public regulatory intelligence platform that tracks stablecoin regulations, licensed entities (VASPs, CASPs, EMIs, PIs), and compliance status across 206 jurisdictions worldwide. Built as a React SPA with SquareType theme 1:1 visual match.
+A public regulatory intelligence platform that tracks stablecoin regulations, licensed entities (VASPs, CASPs, EMIs, PIs), and compliance status across 60+ jurisdictions worldwide. Built as a React SPA with SquareType theme 1:1 visual match.
 
 ## Team & Roles
 
@@ -56,10 +56,10 @@ A public regulatory intelligence platform that tracks stablecoin regulations, li
 
 ## Project Structure
 - `/remide/src/` — Frontend React SPA. **NEVER imports from** `parsers/`, `workers/`, or `shared/`. **Anton: data + structure. Sasha: visuals + styles.**
-- `/remide/parsers/` — Registry scrapers (29 parsers + core toolkit). Imports from `parsers/core/`. **Owner: Anton.**
+- `/remide/parsers/` — Registry scrapers (86 parsers + core toolkit). Imports from `parsers/core/`. **Owner: Anton.**
 - `/remide/workers/` — Background workers (enrichment, intelligence, exports). Imports from `shared/`. **Owner: Anton.**
 - `/remide/shared/` — Shared backend utilities (config, supabase, logger, types). Used by workers & parsers. **Owner: Anton.**
-- `/Theme SquareType/` — Visual reference template (UI8 purchase). Use for CSS/animation reference only.
+- `/Theme SquareType/` — Visual reference template (UI8 purchase). **Note: folder not in repo — reference only for design patterns, not filesystem access.**
 - `/vasp-tracker-claude-analyze-crypto-registries-CD5TT/` — Old abandoned codebase. Only data files carried over. Do not modify.
 
 ## Tech Stack
@@ -69,13 +69,13 @@ A public regulatory intelligence platform that tracks stablecoin regulations, li
 - Google Fonts: DM Sans (body) + Doto (display/numbers)
 - Deploy: GitHub Pages with BrowserRouter (SEO-optimized, 404.html fallback)
 - Backend: Supabase (auth, DB, Edge Functions, Stripe webhooks)
-- Payments: Stripe ($49 one-time via Edge Functions)
-- Parsers: 80 registry parsers, GitHub Actions (cron), TypeScript, shared toolkit
-- Workers: 3 active (quality, enrichment, verify), 2 planned (intelligence, exports)
+- Payments: Stripe (€49 one-time via Edge Functions)
+- Parsers: 86 registry parsers, GitHub Actions (cron), TypeScript, shared toolkit
+- Workers: 6 active (quality, enrichment, verify, website-discovery, site-scraper, brand-coverage), 2 planned (intelligence, exports — READMEs only, no code yet)
 
 ## Key Constraints
 - **NO:** MUI, Lenis (causes scroll lag), Tailwind, jQuery, react-simple-maps
-- **Visual:** SquareType theme 1:1 — reference `/Theme SquareType/` for CSS patterns
+- **Visual:** SquareType theme 1:1 — visual patterns already embedded in `src/styles/app.css` (original folder not in repo)
 - **Clip-path:** `.clip-lg` on ALL cards everywhere
 - **Animations:** GSAP only (reveal, stagger, counter), no Lenis smooth scroll
 - **Language:** Speak Russian to the user. Do maximum work autonomously.
@@ -156,7 +156,7 @@ Parser → DB → Quality Worker → Frontend. Without Quality Worker, new entit
   - CTA → `/signup` (Register Free)
 - **Tier 1 — Registered (бесплатно):** Values видны, но LIMITED (первые ~20 entities)
   - Detail pages (Entity, Stablecoin, CBDC) за paywall — premium поля скрыты
-  - CTA → `/pricing` (Get Full Access — $49)
+  - CTA → `/pricing` (Get Full Access — €49)
 - **Tier 2 — Paid (full access):** Всё открыто — детальные страницы, алерты, скачивание
 - CSS: `.st-blur-value` (individual), `.st-blur-card` (card values), `.st-blur-row` (table rows)
 - Конверсия: Blur preview → Register free → See lists → Click detail → Paywall → Pay
@@ -217,8 +217,9 @@ Architecture/infra work is done ONLY when it unblocks features, never as busywor
 4. После confirmation — разработка
 
 ### System Limits (Workers & Agents)
-- Enrichment batch: max 200 entities per run (prevents context overflow)
-- No parallel Firecrawl batches (conflict risk)
+- Enrichment batch: max 50,000 entities per run (configurable via `shared/guards.ts`, default CLI: 5,000)
+- Firecrawl: sequential per-entity within a process + local file lock, but no cross-runner lock
+- Quality batch: max 50,000, Verify batch: max 20,000
 - Notion API: retry 3x with backoff on 500 errors
 - Worker logging: every run → Notion Scrape Runs
 
@@ -235,7 +236,11 @@ npx tsx parsers/run.ts --list                    # List all parsers
 npx tsx parsers/registries/esma-unified.ts       # ESMA all EU countries
 npx tsx workers/quality/run.ts                   # Quality pipeline (MANDATORY after parser)
 npx tsx workers/quality/run.ts --country KZ      # Quality for specific country
-npx tsx workers/enrichment/run.ts --limit 5000   # Enrichment worker (full run)
+npx tsx workers/enrichment/run.ts --limit 50000  # Enrichment worker (full run)
+npx tsx workers/website-discovery/run.ts          # Website discovery (DuckDuckGo + known brands)
+npx tsx workers/site-scraper/run.ts               # Site scraper (Cheerio, no Firecrawl)
+npx tsx workers/brand-coverage/run.ts             # Brand coverage (CoinGecko + curated list)
+npx tsx workers/verify/run.ts --limit 20000       # DNS + HTTP liveness check
 npx tsx scripts/generate-sitemap.ts              # Rebuild sitemap
 ```
 
@@ -265,10 +270,13 @@ npx tsx scripts/generate-sitemap.ts              # Rebuild sitemap
 Parent page: 3182ac10-63c8-809a-870f-fe525637dd79
 
 Databases:
-  Knowledge Base:           collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f
-  Country Research Registry: collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6
-  Workers Registry:         collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720
-  Scrape Runs:              collection://5dfa965b-6f3e-441e-b37b-8768b52ea131
+  Knowledge Base:                        collection://c973a8be-f1be-462c-bf14-55c47f0c5708
+  Country Research Registry (=jurisdictions): collection://9618ad8b-302f-421f-9d30-de322226c4d1
+  Workers Registry:                      collection://cc6b66a2-1904-4c7a-a25f-916146282089
+  Scrape Runs:                           collection://5501fd5a-9964-4394-b13c-0a83519fd213
+  Entities:                              collection://32d2ac10-63c8-81db-98b7-e92a8f8c855a
+  Registry Sources:                      collection://2c1ef45b-b9e5-4e34-9c47-a85fd31d7a20
+  Resolution Log:                        collection://00b7f0c3-d0aa-4b94-aa05-aefcc93815bf
 
 Pages:
   Architecture Router:  3182ac10-63c8-8132-a898-fc7e7c04b757
@@ -292,7 +300,7 @@ Pages:
 
 **EVERY decision → Notion KB (Type: Decision) + project-decisions.md**
 When a decision is made (architecture, UX, tech, data, infra, business):
-1. Create row in Notion KB (`collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f`)
+1. Create row in Notion KB (`collection://c973a8be-f1be-462c-bf14-55c47f0c5708`)
    - Task: `[ID]: Description` (e.g. `ARCH-007: New routing strategy`)
    - Type: Decision, Status: Done, Owner, Sprint, Priority
    - Notes: `Category: ...\n\nContext: ...\n\nAlternatives: ...\n\nImpact: ...`
@@ -300,7 +308,7 @@ When a decision is made (architecture, UX, tech, data, infra, business):
 2. Append to `project-decisions.md` as cache
 
 **NEW task or feature discovered → Notion Knowledge Base**
-Create row in `collection://b48d85fc-29a9-4e68-b331-cbbc5595bc5f`:
+Create row in `collection://c973a8be-f1be-462c-bf14-55c47f0c5708`:
 - Task (title), Type, Status: Backlog, Sprint, Owner, Priority, Notes
 
 **Question for Anton (blocked) → Notion Knowledge Base**
@@ -310,7 +318,7 @@ Create row with Status: Blocked, Blocker: "question text here"
 Create row with Type: Task, Priority: Core, Status: Backlog
 
 **Parser/Worker created → Notion Workers Registry (MANDATORY — NO EXCEPTIONS)**
-Create row in `collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720` **IMMEDIATELY after building each parser or worker:**
+Create row in `collection://cc6b66a2-1904-4c7a-a25f-916146282089` **IMMEDIATELY after building each parser or worker:**
 - Worker name, Type (Parser/Enricher/Cleaner/Verifier), Countries, Source URL, Source Type
 - **Approach:** HOW it works (API type, scraping method, pagination, fallback strategy)
 - **Technical Decisions:** What was tried, what failed, what alternative was chosen and why
@@ -318,10 +326,10 @@ Create row in `collection://d9ee6a73-0f3d-42d6-8967-e4dee49d8720` **IMMEDIATELY 
 - **Status:** Backlog → Research → In Development → Testing → Deployed & Running / Blocked
 - **Notes:** Full writeup including: API endpoints, data format, edge cases, known issues
 - ⚠️ **NEVER batch worker documentation.** Each parser/worker is logged to Notion the moment it is built and tested.
-- ⚠️ **Country Research Registry** (`collection://3de230bb-1638-40b0-b3d1-5c3cf54101a6`) is for **country-level regulatory context only** — NOT for parser/worker specs. Do not create parser entries there.
+- ⚠️ **Country Research Registry** (`collection://9618ad8b-302f-421f-9d30-de322226c4d1`) is for **country-level regulatory context only** — NOT for parser/worker specs. Do not create parser entries there.
 
 **Parser executed → Notion Scrape Runs (MANDATORY)**
-Create row in `collection://5dfa965b-6f3e-441e-b37b-8768b52ea131` **IMMEDIATELY after each parser deployment:**
+Create row in `collection://5501fd5a-9964-4394-b13c-0a83519fd213` **IMMEDIATELY after each parser deployment:**
 - Run name, Parser, Status, Started, Duration, Records Found/New/Updated, Errors, Trigger
 - ⚠️ Do not skip this step. Every parser run that writes to Supabase MUST be logged.
 

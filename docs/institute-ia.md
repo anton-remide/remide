@@ -3,6 +3,7 @@
 > **Version:** 3.2 | **Date:** 2026-03-17
 > **Process:** Hard Work Framework v2.0, Explore Mode, 4 Cycles + direct user refinement
 > **Decision:** Pending user approval
+> **Note:** This is a SPECIFICATION document. Numbers in wireframes (entity counts, jurisdiction counts) are illustrative examples, not current database state.
 
 ---
 

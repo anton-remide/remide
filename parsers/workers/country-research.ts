@@ -34,9 +34,9 @@ const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 const NOTION_VERSION = '2022-06-28';
 
 // Notion database IDs
-const NOTION_JURISDICTIONS_DB = '29eae1ce-af89-42f8-b0d6-75c88ddef482';
-const NOTION_PARSER_REGISTRY_DB = '3de230bb-1638-40b0-b3d1-5c3cf54101a6';
-const NOTION_KB_DB = 'b48d85fc-29a9-4e68-b331-cbbc5595bc5f';
+const NOTION_JURISDICTIONS_DB = '9618ad8b-302f-421f-9d30-de322226c4d1';
+const NOTION_PARSER_REGISTRY_DB = '9618ad8b-302f-421f-9d30-de322226c4d1';
+const NOTION_KB_DB = 'c973a8be-f1be-462c-bf14-55c47f0c5708';
 
 interface CountryResearch {
   countryCode: string;

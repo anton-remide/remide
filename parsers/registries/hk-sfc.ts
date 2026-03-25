@@ -12,6 +12,7 @@ import * as cheerio from 'cheerio';
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
+import { isRegistryWebsite } from '../../shared/registry-domains.js';
 
 const SOURCE_URL = 'https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms';
 
@@ -82,7 +83,8 @@ export class HkSfcParser implements RegistryParser {
           seen.add(key);
 
           const licenseNum = cells.length > 1 ? $(cells[1]).text().trim() : '';
-          const website = $(cells[0]).find('a').attr('href') || (cells.length > 2 ? $(cells[2]).find('a').attr('href') : '');
+          const rawLink = $(cells[0]).find('a').attr('href') || (cells.length > 2 ? $(cells[2]).find('a').attr('href') : '');
+          const website = rawLink && rawLink.startsWith('http') && !isRegistryWebsite(rawLink) ? rawLink : undefined;
 
           entities.push({
             name,
@@ -93,8 +95,8 @@ export class HkSfcParser implements RegistryParser {
             regulator: 'SFC',
             licenseType: 'VATP Licence',
             activities: ['Virtual Asset Trading Platform'],
-            website: website && website.startsWith('http') ? website : undefined,
-            sourceUrl: SOURCE_URL,
+            website,
+            sourceUrl: rawLink && rawLink.startsWith('http') ? rawLink : SOURCE_URL,
           });
         });
       });

@@ -151,6 +151,8 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
       ? rd.site_languages.split(/[,\s|/]+/).filter(Boolean).map((v) => v.toUpperCase()).slice(0, 4)
       : []);
 
+  const logoUrl = (rd?.logo_url as string) || null;
+
   return {
     id: row.id,
     name: row.canonical_name || cleanNameFallback(row.name),
@@ -169,6 +171,7 @@ function mapEntity(row: Partial<EntityRow> & Pick<EntityRow, 'id' | 'name' | 'co
     registryUrl,
     linkedinUrl,
     twitterUrl,
+    logoUrl,
     sector: (row.sector as Entity['sector']) ?? 'Crypto',
     cryptoRelated: row.crypto_related ?? true,
     qualityScore: row.quality_score ?? null,

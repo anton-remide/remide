@@ -192,8 +192,7 @@ export class GiGfscParser implements RegistryParser {
           status: 'Licensed',
           regulator: 'FSC Gibraltar',
           activities: [page.activity],
-          website: href.startsWith('/') ? `${BASE_URL}${href}` : undefined,
-          sourceUrl: page.url,
+          sourceUrl: href.startsWith('/') ? `${BASE_URL}${href}` : page.url,
         });
       }
     });

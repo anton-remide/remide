@@ -4,8 +4,8 @@
  * Mirrors Supabase writes to Notion for backup/visibility.
  *
  * Notion Databases:
- *   Jurisdictions: collection://29eae1ce-af89-42f8-b0d6-75c88ddef482
- *   Entities:      collection://9e2055ca-9803-4eee-a321-0b7e72d9f84d
+ *   Country Research Registry (jurisdictions): collection://9618ad8b-302f-421f-9d30-de322226c4d1
+ *   Entities:                                  collection://32d2ac10-63c8-81db-98b7-e92a8f8c855a
  *
  * Required env: NOTION_TOKEN (Internal Integration Token)
  *
@@ -18,8 +18,8 @@ import type { ParsedEntity, ParseResult } from './types.js';
 import { logger } from './logger.js';
 
 // Database IDs (extracted from collection:// URLs)
-const ENTITIES_DB_ID = '9e2055ca-9803-4eee-a321-0b7e72d9f84d';
-const JURISDICTIONS_DB_ID = '29eae1ce-af89-42f8-b0d6-75c88ddef482';
+const ENTITIES_DB_ID = '32d2ac10-63c8-81db-98b7-e92a8f8c855a';
+const JURISDICTIONS_DB_ID = '9618ad8b-302f-421f-9d30-de322226c4d1';
 
 let notion: Client | null = null;
 
@@ -253,12 +253,12 @@ export async function updateJurisdictionCount(
   if (!client) return;
 
   try {
-    // Find the jurisdiction page by country code
+    // Find the jurisdiction in Country Research Registry (field "Country" = "CC — Name")
     const response = await client.databases.query({
       database_id: JURISDICTIONS_DB_ID,
       filter: {
-        property: 'Country Code',
-        rich_text: { equals: countryCode },
+        property: 'Country',
+        rich_text: { starts_with: `${countryCode} ` },
       },
       page_size: 1,
     });
@@ -273,8 +273,8 @@ export async function updateJurisdictionCount(
     await client.pages.update({
       page_id: pageId,
       properties: {
-        'Licensed Entity Count': { number: entityCount },
-        'Last Updated': { date: { start: new Date().toISOString().split('T')[0] } },
+        'Entity Count': { number: entityCount },
+        'Last Run': { date: { start: new Date().toISOString().split('T')[0] } },
       } as any,
     });
 

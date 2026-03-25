@@ -113,12 +113,12 @@ export function loadConfig(overrides?: Partial<AppConfig>): AppConfig {
     },
     notion: {
       token: notionToken,
-      entitiesDbId: '9e2055ca-9803-4eee-a321-0b7e72d9f84d',
-      jurisdictionsDbId: '29eae1ce-af89-42f8-b0d6-75c88ddef482',
-      knowledgeBaseId: 'b48d85fc-29a9-4e68-b331-cbbc5595bc5f',
-      decisionLogId: '50f7c3c0-0c6e-45ee-bc85-d8e0e052d281',
-      parserRegistryId: '3de230bb-1638-40b0-b3d1-5c3cf54101a6',
-      scrapeRunsId: '5dfa965b-6f3e-441e-b37b-8768b52ea131',
+      entitiesDbId: '32d2ac10-63c8-81db-98b7-e92a8f8c855a',
+      jurisdictionsDbId: '9618ad8b-302f-421f-9d30-de322226c4d1',
+      knowledgeBaseId: 'c973a8be-f1be-462c-bf14-55c47f0c5708',
+      decisionLogId: '00b7f0c3-d0aa-4b94-aa05-aefcc93815bf',
+      parserRegistryId: '9618ad8b-302f-421f-9d30-de322226c4d1',
+      scrapeRunsId: '5501fd5a-9964-4394-b13c-0a83519fd213',
       enabled: !!notionToken,
     },
     telegram: {

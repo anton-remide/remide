@@ -20,7 +20,7 @@ import { logger } from '../core/logger.js';
 
 // ── Config ──────────────────────────────────────────────────────────────
 
-const NOTION_KB_ID = 'b48d85fc-29a9-4e68-b331-cbbc5595bc5f';
+const NOTION_KB_ID = 'c973a8be-f1be-462c-bf14-55c47f0c5708';
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 interface QAIssue {

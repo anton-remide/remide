@@ -119,10 +119,33 @@ export default function EntityDetailPage() {
 
       {/* ── Header — always visible for SEO + preview ── */}
       <div className="reveal" style={{ marginTop: 24, marginBottom: 32 }}>
-        <h2 style={{ fontFamily: 'var(--font2)', marginBottom: 12 }}>
-          {entity.name}
-          {entity.dnsStatus === 'dead' && <span role="img" aria-label="Website is offline" title="Website is dead" style={{ marginLeft: 8, fontSize: '0.75em' }}>💀</span>}
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+          {entity.logoUrl && (
+            <img
+              src={entity.logoUrl}
+              alt={`${entity.brandName || entity.name} logo`}
+              style={{
+                width: 48,
+                height: 48,
+                objectFit: 'contain',
+                borderRadius: 8,
+                background: 'var(--bg-card, #fff)',
+                border: '1px solid var(--border, #e0e0e0)',
+                flexShrink: 0,
+              }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+          <h2 style={{ fontFamily: 'var(--font2)', margin: 0 }}>
+            {entity.brandName || entity.name}
+            {entity.brandName && entity.brandName !== entity.name && (
+              <span style={{ display: 'block', fontSize: '0.75em', color: 'var(--text-muted)', fontWeight: 400 }}>
+                {entity.name}
+              </span>
+            )}
+            {entity.dnsStatus === 'dead' && <span role="img" aria-label="Website is offline" title="Website is dead" style={{ marginLeft: 8, fontSize: '0.75em' }}>💀</span>}
+          </h2>
+        </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <Badge label={entity.status} colorMap={STATUS_COLORS} />
           {jurisdiction && (

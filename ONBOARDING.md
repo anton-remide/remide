@@ -50,13 +50,13 @@ Test user for login: `test@remide.dev` / `TestPass123!`
 ## Step 4: Claude Code Setup
 
 ### Install
-- VS Code: install "Claude Code" extension
-- Or CLI: `npm install -g @anthropic-ai/claude-code`
+- Install Cursor IDE (https://cursor.com)
+- Claude Code CLI (optional): `npm install -g @anthropic-ai/claude-code`
 
 ### Notion Integration (required)
 1. Go to https://www.notion.so/my-integrations
 2. Click "New Integration"
-3. Name: `Claude Code - Sasha`
+3. Name: `Cursor - Sasha`
 4. Workspace: select RemiDe workspace
 5. Copy the token → paste as `NOTION_TOKEN` in `.env.local`
 6. In Notion: share the RemiDe parent page with this integration (click "..." → "Connections" → add your integration)
@@ -72,7 +72,7 @@ When you launch Claude Code for the first time in this project, it will:
 
 > These memory files live at `~/.claude/projects/...` and are local to your machine. They are NOT committed to git. Notion is the source of truth.
 
-### How Claude Code Works for You
+### How the AI Agent Works for You
 - It reads `CLAUDE.md` at every session start — all rules are there
 - It logs tasks and decisions to Notion Knowledge Base automatically
 - It knows your role is **Frontend Lead** — scope is `src/` only
@@ -127,7 +127,7 @@ git push -u origin frontend/fix-mobile-nav
 - **CSS:** Bootstrap 5.3 classes + custom CSS. NO Tailwind, NO MUI
 - **Animations:** GSAP only. NO Lenis (causes scroll lag)
 - **Icons:** Lucide React only
-- **Fonts:** Inter (body) + Doto (display/numbers) via Google Fonts
+- **Fonts:** DM Sans (body) + Doto (display/numbers) via Google Fonts
 - **Cards:** Always use `.clip-lg` class (clip-path corners)
 - **Map:** MapLibre GL JS. NO react-simple-maps
 - **Charts:** Recharts
@@ -172,7 +172,7 @@ git push -u origin frontend/fix-mobile-nav
 | Tool | Used for |
 |------|----------|
 | React 19 + TypeScript | UI framework |
-| Vite 6 | Build tool |
+| Vite 7 | Build tool |
 | Bootstrap 5.3 | CSS framework (no JS) |
 | GSAP + ScrollTrigger | Animations |
 | MapLibre GL JS | World map |
@@ -184,6 +184,6 @@ git push -u origin frontend/fix-mobile-nav
 
 ## Need Help?
 - Check `CLAUDE.md` for full project rules
-- Ask Claude Code — it has full context of the project
+- Ask Cursor AI agent — it has full context of the project
 - Check Notion Knowledge Base for task history and decisions
 - Ask Anton for backend/data questions
