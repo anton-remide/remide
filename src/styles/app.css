@@ -10193,12 +10193,14 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-colors-ledger-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding-bottom: var(--space-2);
 }
 
 .st-ds-colors-ledger {
-  min-width: 820px;
+  min-width: max(100%, 980px);
   background: color-mix(in srgb, var(--color-surface) 84%, var(--color-bg));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -10222,7 +10224,7 @@ article.st-page:has(.st-floating-cta) {
 
 .st-ds-colors-ledger__row {
   display: grid;
-  grid-template-columns: minmax(240px, 1.15fr) repeat(3, minmax(180px, 1fr));
+  grid-template-columns: minmax(280px, 1.25fr) repeat(3, minmax(220px, 1fr));
 }
 
 .st-ds-colors-ledger__row--header {
@@ -10764,11 +10766,11 @@ select.st-ds-foundations-input {
   }
 
   .st-ds-colors-ledger {
-    min-width: 760px;
+    min-width: 940px;
   }
 
   .st-ds-colors-ledger__row {
-    grid-template-columns: minmax(220px, 1.05fr) repeat(3, minmax(170px, 1fr));
+    grid-template-columns: minmax(260px, 1.1fr) repeat(3, minmax(210px, 1fr));
   }
 
   .st-ds-foundations-workspace {
@@ -10813,7 +10815,7 @@ select.st-ds-foundations-input {
   }
 
   .st-ds-colors-ledger {
-    min-width: 700px;
+    min-width: 900px;
   }
 
   .st-ds-colors-ledger__name-col,
