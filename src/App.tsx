@@ -97,7 +97,7 @@ export default function App() {
         <Footer />
         {AgentationDevtools ? (
           <Suspense fallback={null}>
-            <AgentationDevtools />
+            <AgentationDevtools endpoint="http://localhost:4747" />
           </Suspense>
         ) : null}
       </div>

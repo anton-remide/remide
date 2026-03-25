@@ -9,6 +9,8 @@
     "build": "npm run foundations:generate && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "agentation:server": "npx -y agentation-mcp server",
+    "agentation:doctor": "npx -y agentation-mcp doctor",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
