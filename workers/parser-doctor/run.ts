@@ -90,6 +90,7 @@ async function findBrokenParsers(lookbackHours: number, specificParser: string |
 
     const errMsg = (row.error_message as string | null) ?? '';
     if (/anomaly/i.test(errMsg) || /write blocked/i.test(errMsg)) continue;
+    if (/duplicate key/i.test(errMsg)) continue;
 
     const parserFile = findParserFile(rid);
     if (!parserFile) {
@@ -373,14 +374,27 @@ async function main() {
   }
 
   const results: DiagnosisResult[] = [];
+  let apiLimitHit = false;
 
   for (const bp of broken) {
+    if (apiLimitHit) {
+      results.push({ registryId: bp.registryId, diagnosis: 'Skipped — Claude API limit reached', suggestedFix: null, fixedCode: null, testPassed: false });
+      continue;
+    }
+
     logger.info(SCOPE, `\n--- Diagnosing: ${bp.registryId} ---`);
     logger.info(SCOPE, `Error: ${bp.errorMessage ?? 'unknown'}`);
     logger.info(SCOPE, `Source: ${bp.sourceUrl ?? 'unknown'}`);
     logger.info(SCOPE, `File: ${bp.parserFile ?? 'NOT FOUND'}`);
 
     const diagnosis = await diagnoseAndFix(bp);
+
+    if (/API usage limits|rate.limit|quota/i.test(diagnosis.diagnosis)) {
+      logger.error(SCOPE, 'Claude API limit hit — stopping further diagnoses');
+      apiLimitHit = true;
+      results.push(diagnosis);
+      continue;
+    }
 
     if (!dryRun && diagnosis.fixedCode && bp.parserFile) {
       logger.info(SCOPE, 'Testing proposed fix...');
