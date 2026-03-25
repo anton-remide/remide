@@ -32,6 +32,12 @@ const DesignSystemAtomsIndex = lazy(() => import('./pages/design-system/DesignSy
 const DesignSystemAtomPage = lazy(() => import('./pages/design-system/DesignSystemAtomPage'));
 const DesignSystemCompositionPage = lazy(() => import('./pages/design-system/DesignSystemCompositionPage'));
 const DesignSystemTemplatesPage = lazy(() => import('./pages/design-system/DesignSystemTemplatesPage'));
+const AgentationDevtools = import.meta.env.DEV
+  ? lazy(async () => {
+      const { Agentation } = await import('agentation');
+      return { default: Agentation };
+    })
+  : null;
 
 /* BrowserRouter basename — matches Vite base config.
    Dev: BASE_URL = '/'  →  basename = ''
@@ -89,6 +95,11 @@ export default function App() {
           </ErrorBoundary>
         </main>
         <Footer />
+        {AgentationDevtools ? (
+          <Suspense fallback={null}>
+            <AgentationDevtools />
+          </Suspense>
+        ) : null}
       </div>
     </BrowserRouter>
   );
