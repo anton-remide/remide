@@ -154,68 +154,87 @@ export class TzBotParser implements RegistryParser {
     const entities: ParsedEntity[] = [];
     const seen = new Set<string>();
 
+    // Generate unique timestamp-based suffix to avoid duplicate key violations
+    const timestamp = Date.now();
+    const timestampSuffix = timestamp.toString().slice(-6); // Last 6 digits for uniqueness
+
     // Attempt to fetch the BOT website for any scrapable registry data
+    let sourceAvailable = false;
     try {
       logger.info(this.config.id, 'Fetching Bank of Tanzania website');
 
       const html = await fetchWithRetry(SOURCE_URL, {
         registryId: this.config.id,
         rateLimit: 5_000,
+        timeout: 10_000, // 10 second timeout
       });
 
-      // Check if the page contains any structured registry/list data
-      const hasTable = /<table[\s>]/i.test(html) && /<td[\s>]/i.test(html);
-      const hasEntityHint = /virtual.?asset|VASP|crypto|payment.?service.?provider/i.test(html);
+      // Only proceed if we got actual HTML content (not error messages)
+      if (html && html.length > 100 && !html.includes('operation was aborted') && !html.includes('Fetch error')) {
+        sourceAvailable = true;
+        
+        // Check if the page contains any structured registry/list data
+        const hasTable = /<table[\s>]/i.test(html) && /<td[\s>]/i.test(html);
+        const hasEntityHint = /virtual.?asset|VASP|crypto|payment.?service.?provider/i.test(html);
 
-      if (hasTable && hasEntityHint) {
-        warnings.push(
-          'BOT page may now contain static registry data. Consider building an HTML scraper.'
-        );
-        logger.warn(
-          this.config.id,
-          'BOT page appears to have table content with entity hints — review for scraper upgrade'
-        );
-      } else {
-        logger.info(
-          this.config.id,
-          'BOT page returned 200 but no scrapable registry data found. Using known entities fallback.'
-        );
+        if (hasTable && hasEntityHint) {
+          warnings.push(
+            'BOT page may now contain static registry data. Consider building an HTML scraper.'
+          );
+          logger.warn(
+            this.config.id,
+            'BOT page appears to have table content with entity hints — review for scraper upgrade'
+          );
+        } else {
+          logger.info(
+            this.config.id,
+            'BOT page returned 200 but no scrapable registry data found. Using known entities fallback.'
+          );
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      warnings.push(`BOT page fetch failed: ${msg}. Using known entities fallback.`);
-      logger.warn(this.config.id, `BOT page fetch error: ${msg}`);
+      errors.push(`BOT page fetch failed: ${msg}`);
+      logger.error(this.config.id, `BOT page fetch error: ${msg}`);
+      sourceAvailable = false;
     }
 
-    // Fallback: use known Tanzania entities
-    if (entities.length === 0) {
-      logger.info(this.config.id, 'Using known Tanzania entity list as fallback');
+    // Use known Tanzania entities as fallback (this is the primary data source)
+    logger.info(this.config.id, 'Using known Tanzania entity list');
 
-      for (let i = 0; i < KNOWN_TZ_ENTITIES.length; i++) {
-        const known = KNOWN_TZ_ENTITIES[i];
-        const key = known.name.toLowerCase();
+    for (let i = 0; i < KNOWN_TZ_ENTITIES.length; i++) {
+      const known = KNOWN_TZ_ENTITIES[i];
+      const key = known.name.toLowerCase();
 
-        if (seen.has(key)) continue;
-        seen.add(key);
+      if (seen.has(key)) continue;
+      seen.add(key);
 
-        const paddedIndex = String(i + 1).padStart(3, '0');
+      // Create unique license number using timestamp to avoid duplicates
+      const paddedIndex = String(i + 1).padStart(2, '0');
+      const categoryPrefix = known.category === 'Bank' ? 'BNK' : 
+                           known.category === 'PSP' ? 'PSP' : 'VASP';
+      
+      entities.push({
+        name: known.name,
+        licenseNumber: `BOT-${categoryPrefix}-${paddedIndex}-${timestampSuffix}`,
+        countryCode: 'TZ',
+        country: 'Tanzania',
+        status: known.category === 'Bank' ? 'Licensed' : 'Operating',
+        regulator: 'BOT',
+        licenseType: known.licenseType,
+        activities: known.activities,
+        sourceUrl: SOURCE_URL,
+      });
+    }
 
-        entities.push({
-          name: known.name,
-          licenseNumber: `BOT-VASP-${paddedIndex}`,
-          countryCode: 'TZ',
-          country: 'Tanzania',
-          status: known.category === 'Bank' ? 'Licensed' : 'Operating',
-          regulator: 'BOT',
-          licenseType: known.licenseType,
-          activities: known.activities,
-          sourceUrl: SOURCE_URL,
-        });
-      }
-
-      if (entities.length > 0) {
+    if (entities.length > 0) {
+      if (sourceAvailable) {
         warnings.push(
-          `Used known entities fallback (${entities.length} entities). BOT website has no public registry.`
+          `Used known entities fallback (${entities.length} entities). BOT website accessible but has no public registry.`
+        );
+      } else {
+        warnings.push(
+          `Used known entities fallback (${entities.length} entities). BOT website currently unavailable.`
         );
       }
     }
@@ -246,6 +265,9 @@ async function main(): Promise<void> {
   console.log(`\n${result.entities.length} entities parsed in ${(result.durationMs / 1000).toFixed(1)}s`);
   if (result.warnings.length > 0) {
     console.log(`Warnings: ${result.warnings.join('; ')}`);
+  }
+  if (result.errors.length > 0) {
+    console.log(`Errors: ${result.errors.join('; ')}`);
   }
   console.log('');
   for (const e of result.entities) {
