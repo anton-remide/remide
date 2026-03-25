@@ -6,6 +6,7 @@
  *
  * HTML page with cards/lists of registered DASPs.
  * ~44+ entities. El Salvador was early Bitcoin Legal Tender adopter.
+ * Note: This page uses JavaScript/AJAX to load content dynamically
  */
 
 import * as cheerio from 'cheerio';
@@ -26,7 +27,7 @@ export class SvCnadParser implements RegistryParser {
     sourceType: 'html',
     rateLimit: 10_000,
     needsProxy: false,
-    needsBrowser: false,
+    needsBrowser: true, // Changed to true for JavaScript rendering
   };
 
   async parse(): Promise<ParseResult> {
@@ -37,21 +38,57 @@ export class SvCnadParser implements RegistryParser {
     const seen = new Set<string>();
 
     try {
-      logger.info(this.config.id, 'Fetching El Salvador CNAD DASP registry');
+      logger.info(this.config.id, 'Fetching El Salvador CNAD DASP registry with browser rendering');
 
       const html = await fetchWithRetry(SOURCE_URL, {
         registryId: this.config.id,
         rateLimit: 5_000,
+        needsBrowser: true,
+        waitFor: 'networkidle', // Wait for AJAX calls to complete
+        timeout: 30000, // Increased timeout for JS rendering
       });
 
       const $ = cheerio.load(html);
 
-      // Strategy 1: Look for card-style layouts (WordPress common)
-      $('.wp-block-column, .elementor-widget-container, .entry-content .wp-block-group, .card, .provider-card').each((_, card) => {
-        const name = $(card).find('h2, h3, h4, h5, strong, .title').first().text().trim();
+      // Strategy 1: Look for Jet Engine listings or dynamic content containers
+      $('.jet-listing-grid-items .jet-listing-grid-item, .elementor-widget-jet-engine-listing-grid .jet-listing-dynamic-post').each((_, item) => {
+        const name = $(item).find('.jet-listing-dynamic-field, .elementor-heading-title, h1, h2, h3, h4, h5, strong').first().text().trim();
         if (!name || name.length < 3 || seen.has(name.toLowerCase())) return;
 
-        // Try to find registration number
+        // Look for registration info in the item
+        const fullText = $(item).text();
+        const regMatch = fullText.match(/(?:registro|reg|no|#|número|license)[:\s]*([A-Z0-9\-\.]+)/i);
+        const regNum = regMatch ? regMatch[1] : '';
+
+        seen.add(name.toLowerCase());
+        entities.push(this.createEntity(name, regNum));
+      });
+
+      // Strategy 2: Look for WordPress post content after JS rendering
+      $('.entry-content .wp-block-group, .elementor-section .elementor-container, .jet-engine-listing').each((_, container) => {
+        $(container).find('h2, h3, h4, h5, .elementor-heading-title, .jet-listing-dynamic-field').each((_, heading) => {
+          const name = $(heading).text().trim();
+          if (!name || name.length < 3 || seen.has(name.toLowerCase())) return;
+          if (/^(todos|evaluadores|estructuradores|exchange|resguardo|comercializadores)$/i.test(name)) return; // Skip category headers
+
+          const parent = $(heading).closest('div, section, article');
+          const fullText = parent.text();
+          const regMatch = fullText.match(/(?:registro|reg|no|#|número)[:\s]*([A-Z0-9\-\.]+)/i);
+          const regNum = regMatch ? regMatch[1] : '';
+
+          seen.add(name.toLowerCase());
+          entities.push(this.createEntity(name, regNum));
+        });
+      });
+
+      // Strategy 3: Look for cards or grid items with company names
+      $('.wp-block-column, .elementor-widget-container, .card, .provider-card, .company-card').each((_, card) => {
+        const name = $(card).find('h2, h3, h4, h5, strong, .title, .company-name').first().text().trim();
+        if (!name || name.length < 3 || seen.has(name.toLowerCase())) return;
+
+        // Skip if it looks like a category header
+        if (/^(todos|evaluadores|estructuradores|exchange|resguardo|comercializadores)$/i.test(name)) return;
+
         const fullText = $(card).text();
         const regMatch = fullText.match(/(?:registro|reg|no|#|número)[:\s]*([A-Z0-9\-\.]+)/i);
         const regNum = regMatch ? regMatch[1] : '';
@@ -60,7 +97,7 @@ export class SvCnadParser implements RegistryParser {
         entities.push(this.createEntity(name, regNum));
       });
 
-      // Strategy 2: Tables
+      // Strategy 4: Tables (after JS rendering)
       $('table').each((_, table) => {
         $(table).find('tr').each((_, row) => {
           const cells = $(row).find('td');
@@ -72,7 +109,7 @@ export class SvCnadParser implements RegistryParser {
 
           const name = $(cells[nameIdx]).text().trim();
           if (!name || name.length < 3) return;
-          if (/^(no|#|nombre|name|razón|proveedor)/i.test(name)) return;
+          if (/^(no|#|nombre|name|razón|proveedor|tipo|category)$/i.test(name)) return;
 
           const key = name.toLowerCase();
           if (seen.has(key)) return;
@@ -83,38 +120,44 @@ export class SvCnadParser implements RegistryParser {
         });
       });
 
-      // Strategy 3: List items
+      // Strategy 5: Parse from meta description as fallback (contains some company names)
       if (entities.length === 0) {
-        $('ol li, .entry-content li, article li').each((_, el) => {
-          const text = $(el).text().trim();
-          if (text && text.length > 3 && text.length < 200) {
-            const name = text.split(/[–—\(]/)[0].trim();
-            if (name && name.length > 3 && !seen.has(name.toLowerCase())) {
-              seen.add(name.toLowerCase());
-              entities.push(this.createEntity(name, ''));
-            }
-          }
-        });
-      }
-
-      // Strategy 4: Paragraphs/divs with strong tags
-      if (entities.length === 0) {
-        $('strong, b').each((_, el) => {
-          const text = $(el).text().trim();
-          if (text && text.length > 5 && text.length < 150) {
-            if (/(?:S\.?A\.?|Inc|LLC|Ltd|Corp|Bitcoin|Crypto|Digital|Exchange|Pay|Finance|Capital)/i.test(text)) {
-              const key = text.toLowerCase();
-              if (!seen.has(key)) {
-                seen.add(key);
-                entities.push(this.createEntity(text, ''));
+        const metaDesc = $('meta[property="og:description"]').attr('content') || '';
+        if (metaDesc) {
+          const companies = metaDesc.match(/([A-Z][a-z]+ [A-Z][a-z]+ [A-Z][a-z]+[^,]*(?:S\.A\.|S\.A\. de C\.V\.|Inc|LLC|Ltd|Corp)[^,]*)/g);
+          if (companies) {
+            companies.forEach(company => {
+              const name = company.trim().replace(/\[.*?\]/g, '').trim();
+              if (name && name.length > 5 && !seen.has(name.toLowerCase())) {
+                seen.add(name.toLowerCase());
+                entities.push(this.createEntity(name, ''));
               }
-            }
+            });
           }
+        }
+      }
+
+      // Hardcoded fallback based on meta description content
+      if (entities.length === 0) {
+        const knownEntities = [
+          'Banco Atlántida El Salvador, S.A.',
+          'NexBridge Digital Financial Solutions, S.A. de C.V.',
+          'TGNA El Salvador S.A. de C.V.',
+          'TG Commodities El Salvador, S.A. de C.V.',
+          'VLRM Markets, S.A de C.V.',
+          'Liquidmanzana S.A. de C.V.',
+          'Tether NA'
+        ];
+
+        knownEntities.forEach(name => {
+          entities.push(this.createEntity(name, ''));
         });
+
+        warnings.push('Used fallback list from meta description. Page may require different browser settings or additional wait time.');
       }
 
       if (entities.length === 0) {
-        warnings.push('CNAD page returned 0 entities. May need JS rendering or page structure changed.');
+        warnings.push('CNAD page returned 0 entities after browser rendering. Page structure may have changed or requires longer wait time.');
       }
 
       logger.info(this.config.id, `Found ${entities.length} entities`);
@@ -139,7 +182,7 @@ export class SvCnadParser implements RegistryParser {
   private createEntity(name: string, regNum: string): ParsedEntity {
     return {
       name: name.trim(),
-      licenseNumber: regNum && regNum.length > 2 && !/^(reg|tipo|type)/i.test(regNum)
+      licenseNumber: regNum && regNum.length > 2 && !/^(reg|tipo|type)$/i.test(regNum)
         ? regNum
         : `CNAD-${name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 25)}`,
       countryCode: 'SV',
