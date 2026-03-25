@@ -28,10 +28,12 @@ describe('foundation registry', () => {
 
     expect(css).toContain('--font-body:');
     expect(css).toContain('--color-bg: #F6F2EE;');
-    expect(css).toContain('[data-theme="darkgray"]');
-    expect(css).toContain('[data-theme="nearblack"]');
+    expect(css).toContain('[data-theme="institute"]');
+    expect(css).toContain('[data-theme="main-site"]');
     expect(css).not.toContain('[data-theme="beige"]');
     expect(css).not.toContain('[data-theme="main"]');
+    expect(css).not.toContain('[data-theme="darkgray"]');
+    expect(css).not.toContain('[data-theme="nearblack"]');
     expect(css).toContain('--rule-heading-1-font:');
   });
 

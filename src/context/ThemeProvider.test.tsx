@@ -13,8 +13,8 @@ function ThemeProbe() {
   return (
     <div>
       <span>{theme}</span>
-      <button type="button" onClick={() => setTheme('darkgray')}>
-        Dark Gray
+      <button type="button" onClick={() => setTheme('institute')}>
+        Institute
       </button>
     </div>
   );
@@ -26,7 +26,7 @@ afterEach(() => {
 });
 
 describe('ThemeProvider', () => {
-  it('migrates the legacy beige theme to main root defaults', async () => {
+  it('migrates legacy theme ids to tracker root defaults', async () => {
     localStorage.setItem('remide-theme', 'beige');
 
     render(
@@ -35,11 +35,11 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
 
-    expect(screen.getByText('main')).toBeInTheDocument();
+    expect(screen.getByText('tracker')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(document.documentElement).not.toHaveAttribute('data-theme');
-      expect(localStorage.getItem('remide-theme')).toBe('main');
+      expect(localStorage.getItem('remide-theme')).toBe('tracker');
     });
   });
 
@@ -50,12 +50,28 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Dark Gray' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Institute' }));
 
     await waitFor(() => {
-      expect(screen.getByText('darkgray')).toBeInTheDocument();
-      expect(document.documentElement).toHaveAttribute('data-theme', 'darkgray');
-      expect(localStorage.getItem('remide-theme')).toBe('darkgray');
+      expect(screen.getByText('institute')).toBeInTheDocument();
+      expect(document.documentElement).toHaveAttribute('data-theme', 'institute');
+      expect(localStorage.getItem('remide-theme')).toBe('institute');
+    });
+  });
+
+  it('migrates nearblack to main-site', async () => {
+    localStorage.setItem('remide-theme', 'nearblack');
+
+    render(
+      <ThemeProvider>
+        <ThemeProbe />
+      </ThemeProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('main-site')).toBeInTheDocument();
+      expect(document.documentElement).toHaveAttribute('data-theme', 'main-site');
+      expect(localStorage.getItem('remide-theme')).toBe('main-site');
     });
   });
 });

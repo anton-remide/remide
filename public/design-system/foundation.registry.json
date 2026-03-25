@@ -2,7 +2,7 @@
   "meta": {
     "version": "1.0.0",
     "updatedAt": "2026-03-24T15:14:51.961Z",
-    "defaultTheme": "main",
+    "defaultTheme": "tracker",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
   },
   "collections": [
@@ -65,9 +65,9 @@
       "description": "Theme-aware surface, text, accent, and semantic colors.",
       "kind": "token",
       "modes": [
-        "main",
-        "darkgray",
-        "nearblack"
+        "tracker",
+        "institute",
+        "main-site"
       ],
       "groups": [
         {
@@ -97,9 +97,9 @@
           "usage": "Derived text and icon aliases.",
           "preview": "color",
           "values": {
-            "main": "#21201C",
-            "darkgray": "#EDEDEC",
-            "nearblack": "#EDEDEC"
+            "tracker": "#21201C",
+            "institute": "#EDEDEC",
+            "main-site": "#EDEDEC"
           }
         },
         {
@@ -111,9 +111,9 @@
           "usage": "Page canvas and large surfaces.",
           "preview": "color",
           "values": {
-            "main": "#F6F2EE",
-            "darkgray": "#1E1E1C",
-            "nearblack": "#111110"
+            "tracker": "#F6F2EE",
+            "institute": "#1E1E1C",
+            "main-site": "#111110"
           }
         },
         {
@@ -125,9 +125,9 @@
           "usage": "Cards, panels, raised sections.",
           "preview": "color",
           "values": {
-            "main": "#FFFFFF",
-            "darkgray": "#282826",
-            "nearblack": "#1C1C1A"
+            "tracker": "#FFFFFF",
+            "institute": "#282826",
+            "main-site": "#1C1C1A"
           }
         },
         {
@@ -139,9 +139,9 @@
           "usage": "Dropdowns, inset cards, layered previews.",
           "preview": "color",
           "values": {
-            "main": "#FAF9F6",
-            "darkgray": "#30302E",
-            "nearblack": "#242422"
+            "tracker": "#FAF9F6",
+            "institute": "#30302E",
+            "main-site": "#242422"
           }
         },
         {
@@ -153,9 +153,9 @@
           "usage": "Primary text, icons, emphasis.",
           "preview": "color",
           "values": {
-            "main": "#21201C",
-            "darkgray": "#EDEDEC",
-            "nearblack": "#EDEDEC"
+            "tracker": "#21201C",
+            "institute": "#EDEDEC",
+            "main-site": "#EDEDEC"
           }
         },
         {
@@ -167,9 +167,9 @@
           "usage": "Captions, metadata, helper text.",
           "preview": "color",
           "values": {
-            "main": "#63635E",
-            "darkgray": "#9B9B97",
-            "nearblack": "#8A8A86"
+            "tracker": "#63635E",
+            "institute": "#9B9B97",
+            "main-site": "#8A8A86"
           }
         },
         {
@@ -181,9 +181,9 @@
           "usage": "Inputs, cards, dividers.",
           "preview": "color",
           "values": {
-            "main": "rgba(33, 32, 28, 0.08)",
-            "darkgray": "rgba(255, 255, 250, 0.08)",
-            "nearblack": "rgba(255, 255, 250, 0.06)"
+            "tracker": "rgba(33, 32, 28, 0.08)",
+            "institute": "rgba(255, 255, 250, 0.08)",
+            "main-site": "rgba(255, 255, 250, 0.06)"
           }
         },
         {
@@ -195,9 +195,9 @@
           "usage": "NearBlack surfaces, emphasis borders.",
           "preview": "color",
           "values": {
-            "main": "rgba(33, 32, 28, 0.15)",
-            "darkgray": "rgba(255, 255, 250, 0.14)",
-            "nearblack": "rgba(255, 255, 250, 0.10)"
+            "tracker": "rgba(33, 32, 28, 0.15)",
+            "institute": "rgba(255, 255, 250, 0.14)",
+            "main-site": "rgba(255, 255, 250, 0.10)"
           }
         },
         {
@@ -209,9 +209,9 @@
           "usage": "Buttons, highlights, active states.",
           "preview": "color",
           "values": {
-            "main": "#F355D6",
-            "darkgray": "#FF7A33",
-            "nearblack": "#FF7A33"
+            "tracker": "#F355D6",
+            "institute": "#FF7A33",
+            "main-site": "#FF7A33"
           }
         },
         {
@@ -223,9 +223,9 @@
           "usage": "Interactive hover states.",
           "preview": "color",
           "values": {
-            "main": "#E34DC7",
-            "darkgray": "#FF8F52",
-            "nearblack": "#FF8F52"
+            "tracker": "#E34DC7",
+            "institute": "#FF8F52",
+            "main-site": "#FF8F52"
           }
         },
         {
@@ -237,9 +237,9 @@
           "usage": "Pills, callouts, lightweight emphasis.",
           "preview": "color",
           "values": {
-            "main": "#FBE7F7",
-            "darkgray": "rgba(255, 95, 15, 0.12)",
-            "nearblack": "rgba(255, 95, 15, 0.15)"
+            "tracker": "#FBE7F7",
+            "institute": "rgba(255, 95, 15, 0.12)",
+            "main-site": "rgba(255, 95, 15, 0.15)"
           }
         },
         {
@@ -251,9 +251,9 @@
           "usage": "Positive state text and icons.",
           "preview": "color",
           "values": {
-            "main": "#2B7A4B",
-            "darkgray": "#3ECF71",
-            "nearblack": "#3ECF71"
+            "tracker": "#2B7A4B",
+            "institute": "#3ECF71",
+            "main-site": "#3ECF71"
           }
         },
         {
@@ -265,9 +265,9 @@
           "usage": "Positive badges and soft backgrounds.",
           "preview": "color",
           "values": {
-            "main": "#F0FDF4",
-            "darkgray": "rgba(62, 207, 113, 0.10)",
-            "nearblack": "rgba(62, 207, 113, 0.10)"
+            "tracker": "#F0FDF4",
+            "institute": "rgba(62, 207, 113, 0.10)",
+            "main-site": "rgba(62, 207, 113, 0.10)"
           }
         },
         {
@@ -279,9 +279,9 @@
           "usage": "Warning badges, charts, notices.",
           "preview": "color",
           "values": {
-            "main": "#92610B",
-            "darkgray": "#E8A317",
-            "nearblack": "#E8A317"
+            "tracker": "#92610B",
+            "institute": "#E8A317",
+            "main-site": "#E8A317"
           }
         },
         {
@@ -293,9 +293,9 @@
           "usage": "Warning surfaces and pills.",
           "preview": "color",
           "values": {
-            "main": "#FFFBEB",
-            "darkgray": "rgba(232, 163, 23, 0.10)",
-            "nearblack": "rgba(232, 163, 23, 0.10)"
+            "tracker": "#FFFBEB",
+            "institute": "rgba(232, 163, 23, 0.10)",
+            "main-site": "rgba(232, 163, 23, 0.10)"
           }
         },
         {
@@ -307,9 +307,9 @@
           "usage": "Errors, destructive states, warnings.",
           "preview": "color",
           "values": {
-            "main": "#B91C1C",
-            "darkgray": "#EF5350",
-            "nearblack": "#EF5350"
+            "tracker": "#B91C1C",
+            "institute": "#EF5350",
+            "main-site": "#EF5350"
           }
         },
         {
@@ -321,9 +321,9 @@
           "usage": "Soft destructive state backgrounds.",
           "preview": "color",
           "values": {
-            "main": "#FEF2F2",
-            "darkgray": "rgba(239, 83, 80, 0.10)",
-            "nearblack": "rgba(239, 83, 80, 0.10)"
+            "tracker": "#FEF2F2",
+            "institute": "rgba(239, 83, 80, 0.10)",
+            "main-site": "rgba(239, 83, 80, 0.10)"
           }
         },
         {
@@ -335,9 +335,9 @@
           "usage": "Informational badges and helper highlights.",
           "preview": "color",
           "values": {
-            "main": "#4338CA",
-            "darkgray": "#818CF8",
-            "nearblack": "#818CF8"
+            "tracker": "#4338CA",
+            "institute": "#818CF8",
+            "main-site": "#818CF8"
           }
         },
         {
@@ -349,9 +349,9 @@
           "usage": "Info callouts and lightweight panels.",
           "preview": "color",
           "values": {
-            "main": "#EEF2FF",
-            "darkgray": "rgba(129, 140, 248, 0.10)",
-            "nearblack": "rgba(129, 140, 248, 0.10)"
+            "tracker": "#EEF2FF",
+            "institute": "rgba(129, 140, 248, 0.10)",
+            "main-site": "rgba(129, 140, 248, 0.10)"
           }
         },
         {
@@ -363,9 +363,9 @@
           "usage": "Low-priority state labels and badges.",
           "preview": "color",
           "values": {
-            "main": "#63635E",
-            "darkgray": "#9B9B97",
-            "nearblack": "#9B9B97"
+            "tracker": "#63635E",
+            "institute": "#9B9B97",
+            "main-site": "#9B9B97"
           }
         },
         {
@@ -377,9 +377,9 @@
           "usage": "Neutral pills, subtle containers.",
           "preview": "color",
           "values": {
-            "main": "#F1F5F9",
-            "darkgray": "rgba(155, 155, 151, 0.08)",
-            "nearblack": "rgba(155, 155, 151, 0.08)"
+            "tracker": "#F1F5F9",
+            "institute": "rgba(155, 155, 151, 0.08)",
+            "main-site": "rgba(155, 155, 151, 0.08)"
           }
         }
       ]
@@ -757,9 +757,9 @@
       "description": "Theme-aware elevation shadows and focus ring.",
       "kind": "token",
       "modes": [
-        "main",
-        "darkgray",
-        "nearblack"
+        "tracker",
+        "institute",
+        "main-site"
       ],
       "groups": [
         {
@@ -781,9 +781,9 @@
           "usage": "Flat surfaces and reset states.",
           "preview": "shadow",
           "values": {
-            "main": "none",
-            "darkgray": "none",
-            "nearblack": "none"
+            "tracker": "none",
+            "institute": "none",
+            "main-site": "none"
           }
         },
         {
@@ -795,9 +795,9 @@
           "usage": "Raised cards and soft surfaces.",
           "preview": "shadow",
           "values": {
-            "main": "0 1px 2px rgba(33, 32, 28, 0.05), 0 1px 3px rgba(33, 32, 28, 0.07)",
-            "darkgray": "0 1px 2px rgba(0, 0, 0, 0.20), 0 1px 3px rgba(0, 0, 0, 0.15)",
-            "nearblack": "0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20)"
+            "tracker": "0 1px 2px rgba(33, 32, 28, 0.05), 0 1px 3px rgba(33, 32, 28, 0.07)",
+            "institute": "0 1px 2px rgba(0, 0, 0, 0.20), 0 1px 3px rgba(0, 0, 0, 0.15)",
+            "main-site": "0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20)"
           }
         },
         {
@@ -809,9 +809,9 @@
           "usage": "Dropdowns, cards, interactive surfaces.",
           "preview": "shadow",
           "values": {
-            "main": "0 4px 12px rgba(33, 32, 28, 0.06), 0 1px 3px rgba(33, 32, 28, 0.04)",
-            "darkgray": "0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15)",
-            "nearblack": "0 4px 12px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.20)"
+            "tracker": "0 4px 12px rgba(33, 32, 28, 0.06), 0 1px 3px rgba(33, 32, 28, 0.04)",
+            "institute": "0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15)",
+            "main-site": "0 4px 12px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.20)"
           }
         },
         {
@@ -823,9 +823,9 @@
           "usage": "Modals and high-emphasis overlays.",
           "preview": "shadow",
           "values": {
-            "main": "0 8px 24px rgba(33, 32, 28, 0.10), 0 2px 6px rgba(33, 32, 28, 0.06)",
-            "darkgray": "0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.20)",
-            "nearblack": "0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25)"
+            "tracker": "0 8px 24px rgba(33, 32, 28, 0.10), 0 2px 6px rgba(33, 32, 28, 0.06)",
+            "institute": "0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.20)",
+            "main-site": "0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25)"
           }
         },
         {
@@ -837,9 +837,9 @@
           "usage": "Interactive focus states.",
           "preview": "shadow",
           "values": {
-            "main": "0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-            "darkgray": "0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent)",
-            "nearblack": "0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent)"
+            "tracker": "0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent)",
+            "institute": "0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent)",
+            "main-site": "0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent)"
           }
         }
       ]

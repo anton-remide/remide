@@ -217,3 +217,9 @@
 - **Decision:** Remove the global `View/Edit` dichotomy and remove the right-side inspector. Editing happens directly inside each card: token cards expose the active mode value in the top-right corner with a compact preview in the lower-right corner, rule cards expose their properties inline, and `Save`/`Discard` appear only after the draft becomes dirty.
 - **Impact:** `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/design-system/foundations.ts`, `src/design-system/foundations.test.ts`, and `src/styles/app.css` now follow a card-first editing model with unsaved-change protection (`beforeunload`), inline dirty markers, and no visible `description` / `usage` editing surface in the main UX.
 
+## DS-003: Foundations Colors Use Tri-Palette Ledger and Theme IDs Match Product Names
+- **Category:** UX-UI
+- **Date:** 2026-03-25
+- **Context:** The card-first foundations editor worked for single-mode editing, but `Colors` needed side-by-side comparison and faster token maintenance across all three palettes. Legacy theme ids (`main`, `darkgray`, `nearblack`) also no longer matched product language.
+- **Decision:** Rename runtime theme ids to `tracker`, `institute`, and `main-site`, keep `tracker` as the root/default palette, and render `Colors` as a Figma Variables-style ledger with columns `Name / Tracker / Institute / Main site`. Color cells edit inline and save on `blur` or `Enter`; invalid CSS colors stay local with inline error and do not persist.
+- **Impact:** `src/context/ThemeProvider.tsx`, `src/components/layout/ThemeSwitcher.tsx`, `public/design-system/foundation.registry.json`, generated `src/styles/tokens.css`, `src/styles/app.css`, `src/pages/design-system/DesignSystemFoundationsPage.tsx`, and new UI tests now align on the renamed themes and the tri-palette color workflow.

@@ -140,7 +140,7 @@
   --rule-label-letter-spacing: 0;
 }
 
-[data-theme="darkgray"] {
+[data-theme="institute"] {
   --color-primary: #EDEDEC;
   --color-bg: #1E1E1C;
   --color-surface: #282826;
@@ -169,7 +169,7 @@
   --shadow-focus: 0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
-[data-theme="nearblack"] {
+[data-theme="main-site"] {
   --color-primary: #EDEDEC;
   --color-bg: #111110;
   --color-surface: #1C1C1A;

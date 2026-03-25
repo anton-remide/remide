@@ -19,6 +19,7 @@ import {
 const FOUNDATION_ENDPOINT = '/__internal/foundations';
 const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
+const COLOR_SECTION_ID = 'colors';
 const FONTS_SECTION_ID = 'fonts';
 const TYPOGRAPHY_RULES_SECTION_ID = 'typography-rules';
 const TYPOGRAPHY_SCALE_SECTION_ID = 'typography-scale';
@@ -34,6 +35,12 @@ const SECTION_NAV_ORDER = [
 ];
 type ProjectFontCategory = 'sans' | 'serif' | 'mono';
 type ProjectFontSource = 'google' | 'local';
+const FOUNDATION_THEME_ORDER: Theme[] = ['tracker', 'institute', 'main-site'];
+const FOUNDATION_THEME_LABELS: Record<Theme, string> = {
+  tracker: 'Tracker',
+  institute: 'Institute',
+  'main-site': 'Main site',
+};
 type DisplayFoundationItem =
   | { kind: 'token'; sectionId: string; item: FoundationToken; mode: string }
   | { kind: 'rule'; sectionId: string; item: FoundationRuleItem };
@@ -75,6 +82,10 @@ const PROJECT_FONT_OPTIONS: ProjectFontOption[] = [
 
 function cloneRegistry(registry: FoundationRegistry) {
   return JSON.parse(JSON.stringify(registry)) as FoundationRegistry;
+}
+
+function getColorCellKey(sectionId: string, tokenId: string, mode: string) {
+  return `${sectionId}::${tokenId}::${mode}`;
 }
 
 function isTokenSection(section: FoundationSection): section is FoundationTokenCollection {
@@ -197,6 +208,40 @@ function cloneFoundationValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function getTokenValue(registry: FoundationRegistry, collectionId: string, tokenId: string, mode: string) {
+  const collection = registry.collections.find((entry) => entry.id === collectionId);
+  const token = collection?.tokens.find((entry) => entry.id === tokenId);
+
+  return token?.values[mode] ?? '';
+}
+
+function isCssColorValue(value: string) {
+  if (value.trim().length === 0) {
+    return false;
+  }
+
+  if (typeof CSS === 'undefined' || typeof CSS.supports !== 'function') {
+    return true;
+  }
+
+  return CSS.supports('color', value);
+}
+
+function colorSwatchStyle(value: string, isInvalid = false) {
+  if (isInvalid || !isCssColorValue(value)) {
+    return {
+      background:
+        'repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent) 0 8px, transparent 8px 16px)',
+      borderColor: 'color-mix(in srgb, var(--color-danger) 38%, var(--color-border-strong))',
+    };
+  }
+
+  return {
+    background: value,
+    borderColor: 'var(--color-border-strong)',
+  };
+}
+
 function copyFoundationItem(
   sourceRegistry: FoundationRegistry,
   targetRegistry: FoundationRegistry,
@@ -279,6 +324,9 @@ export default function DesignSystemFoundationsPage() {
   const [savingItemKey, setSavingItemKey] = useState<string | null>(null);
   const [itemErrorMessages, setItemErrorMessages] = useState<Record<string, string>>({});
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [editingColorCellKey, setEditingColorCellKey] = useState<string | null>(null);
+  const [colorCellDrafts, setColorCellDrafts] = useState<Record<string, string>>({});
+  const [colorCellErrors, setColorCellErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -296,6 +344,9 @@ export default function DesignSystemFoundationsPage() {
         applyFoundationRegistry(registry);
         setSavedRegistry(registry);
         setDraftRegistry(cloneRegistry(registry));
+        setEditingColorCellKey(null);
+        setColorCellDrafts({});
+        setColorCellErrors({});
       } catch (error) {
         if (!cancelled) {
           setLoadError(error instanceof Error ? error.message : 'Failed to load foundations.');
@@ -442,6 +493,30 @@ export default function DesignSystemFoundationsPage() {
     });
   }
 
+  function clearColorCellDraft(cellKey: string) {
+    setColorCellDrafts((current) => {
+      if (!(cellKey in current)) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[cellKey];
+      return next;
+    });
+  }
+
+  function clearColorCellError(cellKey: string) {
+    setColorCellErrors((current) => {
+      if (!(cellKey in current)) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[cellKey];
+      return next;
+    });
+  }
+
   function updateTokenValue(collectionId: string, tokenId: string, tokenMode: string, value: string) {
     const itemKey = getFoundationItemKey(collectionId, tokenId);
     clearItemError(itemKey);
@@ -470,19 +545,25 @@ export default function DesignSystemFoundationsPage() {
     });
   }
 
-  async function handleSaveItem(sectionId: string, itemId: string, itemKey: string) {
-    if (!savedRegistry || !draftRegistry || savingItemKey) {
+  async function saveItemFromDraft(
+    sourceDraftRegistry: FoundationRegistry,
+    sectionId: string,
+    itemId: string,
+    itemKey: string,
+  ) {
+    if (!savedRegistry || savingItemKey) {
       return;
     }
 
     const nextSavedRegistry = cloneRegistry(savedRegistry);
-    const copied = copyFoundationItem(draftRegistry, nextSavedRegistry, sectionId, itemId);
+    const copied = copyFoundationItem(sourceDraftRegistry, nextSavedRegistry, sectionId, itemId);
     if (!copied) {
       return;
     }
 
-    const previousDraft = cloneRegistry(draftRegistry);
-    const pendingItemKeys = dirtyEntries.itemKeys.filter((entryKey) => entryKey !== itemKey);
+    const previousDraft = cloneRegistry(sourceDraftRegistry);
+    const pendingItemKeys = getDirtyFoundationEntries(savedRegistry, sourceDraftRegistry).itemKeys
+      .filter((entryKey) => entryKey !== itemKey);
     clearItemError(itemKey);
     setSavingItemKey(itemKey);
 
@@ -512,6 +593,14 @@ export default function DesignSystemFoundationsPage() {
     }
   }
 
+  async function handleSaveItem(sectionId: string, itemId: string, itemKey: string) {
+    if (!draftRegistry) {
+      return;
+    }
+
+    await saveItemFromDraft(draftRegistry, sectionId, itemId, itemKey);
+  }
+
   function handleDiscardItem(sectionId: string, itemId: string, itemKey: string) {
     if (!savedRegistry) {
       return;
@@ -521,6 +610,206 @@ export default function DesignSystemFoundationsPage() {
     updateDraft((next) => {
       copyFoundationItem(savedRegistry, next, sectionId, itemId);
     });
+  }
+
+  function beginColorCellEdit(sectionId: string, tokenId: string, mode: string, value: string) {
+    const cellKey = getColorCellKey(sectionId, tokenId, mode);
+    clearColorCellError(cellKey);
+    clearItemError(getFoundationItemKey(sectionId, tokenId));
+    setEditingColorCellKey(cellKey);
+    setColorCellDrafts((current) => (cellKey in current ? current : { ...current, [cellKey]: value }));
+  }
+
+  function updateColorCellDraft(sectionId: string, tokenId: string, mode: string, value: string) {
+    const cellKey = getColorCellKey(sectionId, tokenId, mode);
+    setEditingColorCellKey(cellKey);
+    clearColorCellError(cellKey);
+    clearItemError(getFoundationItemKey(sectionId, tokenId));
+    setColorCellDrafts((current) => ({ ...current, [cellKey]: value }));
+  }
+
+  function discardColorCell(sectionId: string, tokenId: string, mode: string) {
+    const cellKey = getColorCellKey(sectionId, tokenId, mode);
+    clearColorCellDraft(cellKey);
+    clearColorCellError(cellKey);
+    setEditingColorCellKey((current) => (current === cellKey ? null : current));
+  }
+
+  async function commitColorCell(sectionId: string, tokenId: string, mode: string) {
+    if (!savedRegistry || !draftRegistry) {
+      return;
+    }
+
+    const cellKey = getColorCellKey(sectionId, tokenId, mode);
+    const itemKey = getFoundationItemKey(sectionId, tokenId);
+    const nextValue = colorCellDrafts[cellKey] ?? getTokenValue(draftRegistry, sectionId, tokenId, mode);
+    const savedValue = getTokenValue(savedRegistry, sectionId, tokenId, mode);
+
+    if (nextValue === savedValue) {
+      clearColorCellDraft(cellKey);
+      clearColorCellError(cellKey);
+      setEditingColorCellKey((current) => (current === cellKey ? null : current));
+      return;
+    }
+
+    if (!isCssColorValue(nextValue)) {
+      setColorCellErrors((current) => ({
+        ...current,
+        [cellKey]: 'Enter a valid CSS color.',
+      }));
+      return;
+    }
+
+    clearColorCellError(cellKey);
+    setEditingColorCellKey((current) => (current === cellKey ? null : current));
+    clearColorCellDraft(cellKey);
+
+    const nextDraft = cloneRegistry(draftRegistry);
+    const collection = nextDraft.collections.find((entry) => entry.id === sectionId);
+    const token = collection?.tokens.find((entry) => entry.id === tokenId);
+
+    if (!token) {
+      return;
+    }
+
+    token.values[mode] = nextValue;
+    setDraftRegistry(nextDraft);
+
+    await saveItemFromDraft(nextDraft, sectionId, tokenId, itemKey);
+  }
+
+  function renderColorsLedger(section: FoundationTokenCollection) {
+    return (
+      <div className="st-ds-colors-ledger-wrap">
+        <div className="st-ds-colors-ledger clip-lg">
+          <div className="st-ds-colors-ledger__row st-ds-colors-ledger__row--header">
+            <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-col--header">Name</div>
+            {FOUNDATION_THEME_ORDER.map((mode) => (
+              <div key={mode} className="st-ds-colors-ledger__header-cell">
+                {FOUNDATION_THEME_LABELS[mode]}
+              </div>
+            ))}
+          </div>
+
+          {section.groups.map((group) => {
+            const tokens = section.tokens.filter((item) => item.group === group.id);
+
+            if (tokens.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={group.id} className="st-ds-colors-ledger__group">
+                <div className="st-ds-colors-ledger__group-label">{group.label}</div>
+
+                {tokens.map((token) => {
+                  const itemKey = getFoundationItemKey(section.id, token.id);
+                  const isDirty = dirtyItemKeys.has(itemKey);
+                  const isSaving = savingItemKey === itemKey;
+                  const itemError = itemErrorMessages[itemKey];
+                  const tokenLocked = token.editable === false;
+
+                  return (
+                    <div
+                      key={token.id}
+                      className={[
+                        'st-ds-colors-ledger__row',
+                        isDirty && 'is-dirty',
+                        isSaving && 'is-saving',
+                      ].filter(Boolean).join(' ')}
+                    >
+                      <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-cell">
+                        <div className="st-ds-colors-ledger__name-top">
+                          <span className="st-ds-colors-ledger__token-label">{token.label}</span>
+                          <span className="st-ds-colors-ledger__row-badges">
+                            {tokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
+                            {isSaving && <span className="st-ds-foundations-list__badge">Saving…</span>}
+                            {isDirty && !isSaving && <span className="st-ds-foundations-list__badge">Edited</span>}
+                          </span>
+                        </div>
+                        <code className="st-ds-colors-ledger__token-code">{token.name}</code>
+                        {itemError && (
+                          <div className="st-ds-colors-ledger__row-error" role="alert">
+                            {itemError}
+                          </div>
+                        )}
+                      </div>
+
+                      {FOUNDATION_THEME_ORDER.map((mode) => {
+                        const cellKey = getColorCellKey(section.id, token.id, mode);
+                        const inputLabel = `${token.label} ${FOUNDATION_THEME_LABELS[mode]} color value`;
+                        const value = colorCellDrafts[cellKey] ?? token.values[mode] ?? '';
+                        const isEditing = editingColorCellKey === cellKey;
+                        const cellError = colorCellErrors[cellKey];
+
+                        return (
+                          <div key={cellKey} className="st-ds-colors-ledger__cell-shell">
+                            {isEditing ? (
+                              <label className="st-ds-colors-ledger__cell st-ds-colors-ledger__cell--editing">
+                                <span
+                                  className="st-ds-colors-ledger__swatch"
+                                  style={colorSwatchStyle(value, Boolean(cellError))}
+                                  aria-hidden="true"
+                                />
+                                <span className="sr-only">{inputLabel}</span>
+                                <input
+                                  className="st-ds-colors-ledger__input"
+                                  aria-label={inputLabel}
+                                  value={value}
+                                  autoFocus
+                                  disabled={tokenLocked || savingItemKey !== null}
+                                  onChange={(event) => updateColorCellDraft(section.id, token.id, mode, event.target.value)}
+                                  onBlur={() => {
+                                    void commitColorCell(section.id, token.id, mode);
+                                  }}
+                                  onKeyDown={(event) => {
+                                    if (event.key === 'Enter') {
+                                      event.preventDefault();
+                                      event.currentTarget.blur();
+                                    }
+
+                                    if (event.key === 'Escape') {
+                                      event.preventDefault();
+                                      discardColorCell(section.id, token.id, mode);
+                                    }
+                                  }}
+                                />
+                              </label>
+                            ) : (
+                              <button
+                                type="button"
+                                className="st-ds-colors-ledger__cell"
+                                aria-label={`Edit ${inputLabel}`}
+                                disabled={tokenLocked || savingItemKey !== null}
+                                onClick={() => beginColorCellEdit(section.id, token.id, mode, value)}
+                                onFocus={() => beginColorCellEdit(section.id, token.id, mode, value)}
+                              >
+                                <span
+                                  className="st-ds-colors-ledger__swatch"
+                                  style={colorSwatchStyle(value, Boolean(cellError))}
+                                  aria-hidden="true"
+                                />
+                                <span className="st-ds-colors-ledger__value">{value}</span>
+                              </button>
+                            )}
+
+                            {cellError && (
+                              <div className="st-ds-colors-ledger__cell-error" role="alert">
+                                {cellError}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   if (loading) {
@@ -588,7 +877,8 @@ export default function DesignSystemFoundationsPage() {
             </div>
           </div>
 
-          <div className="st-ds-foundations-groups">
+          {activeSection.id === COLOR_SECTION_ID && isTokenSection(activeSection) ? renderColorsLedger(activeSection) : (
+            <div className="st-ds-foundations-groups">
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
                   <div className={['st-ds-foundations-list', group.layout === 'token' ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
@@ -806,7 +1096,8 @@ export default function DesignSystemFoundationsPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </section>
       </div>
     </div>

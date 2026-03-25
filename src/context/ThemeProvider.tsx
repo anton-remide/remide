@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
-export type Theme = 'main' | 'darkgray' | 'nearblack';
+export type Theme = 'tracker' | 'institute' | 'main-site';
 
-const THEMES: Theme[] = ['main', 'darkgray', 'nearblack'];
+const THEMES: Theme[] = ['tracker', 'institute', 'main-site'];
 const STORAGE_KEY = 'remide-theme';
 
 interface ThemeContextValue {
@@ -14,15 +14,23 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function normalizeTheme(value: string | null): Theme {
-  if (value === 'beige') {
-    return 'main';
+  if (value === 'beige' || value === 'main' || value === 'tracker') {
+    return 'tracker';
   }
 
-  return value && THEMES.includes(value as Theme) ? (value as Theme) : 'main';
+  if (value === 'darkgray' || value === 'institute') {
+    return 'institute';
+  }
+
+  if (value === 'nearblack' || value === 'main-site') {
+    return 'main-site';
+  }
+
+  return 'tracker';
 }
 
 function applyTheme(t: Theme) {
-  if (t === 'main') {
+  if (t === 'tracker') {
     document.documentElement.removeAttribute('data-theme');
     return;
   }

@@ -1,9 +1,9 @@
 import { useTheme, THEMES, type Theme } from '../../context/ThemeProvider';
 
 const THEME_LABELS: Record<Theme, string> = {
-  main: 'Main',
-  darkgray: 'Dark Gray',
-  nearblack: 'Near Black',
+  tracker: 'Tracker',
+  institute: 'Institute',
+  'main-site': 'Main site',
 };
 
 interface ThemeSwitcherProps {

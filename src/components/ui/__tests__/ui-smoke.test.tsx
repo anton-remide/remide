@@ -52,9 +52,9 @@ import DataTable from '../DataTable';
 
 // Mock ThemeProvider (used by MermaidDiagram)
 vi.mock('../../../context/ThemeProvider', () => ({
-  useTheme: () => ({ theme: 'main', setTheme: vi.fn() }),
+  useTheme: () => ({ theme: 'tracker', setTheme: vi.fn() }),
   ThemeProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
-  THEMES: ['main', 'darkgray', 'nearblack'],
+  THEMES: ['tracker', 'institute', 'main-site'],
 }));
 
 // Mock mermaid (heavy dep)
