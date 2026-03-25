@@ -34,6 +34,7 @@ dotenv.config({ path: '.env.local' });
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
+import { createHash } from 'crypto';
 
 const SOURCE_URL = 'https://www.cnbv.gob.mx/Paginas/default.aspx';
 
@@ -192,6 +193,14 @@ export class MxCnbvParser implements RegistryParser {
     needsBrowser: false,
   };
 
+  private generateLicenseNumber(entityName: string, index: number): string {
+    // Create a deterministic but unique license number based on entity name
+    // This ensures the same entity always gets the same license number
+    const hash = createHash('md5').update(`${entityName}-mx-cnbv`).digest('hex');
+    const shortHash = hash.substring(0, 8).toUpperCase();
+    return `CNBV-ITF-${shortHash}`;
+  }
+
   async parse(): Promise<ParseResult> {
     const startTime = Date.now();
     const warnings: string[] = [];
@@ -233,37 +242,38 @@ export class MxCnbvParser implements RegistryParser {
     }
 
     // Fallback: use known Mexico VASP / fintech entities
-    if (entities.length === 0) {
-      logger.info(this.config.id, 'Using known Mexico ITF/VASP list as fallback');
+    logger.info(this.config.id, 'Using known Mexico ITF/VASP list as fallback');
 
-      for (let i = 0; i < KNOWN_MX_ITFS.length; i++) {
-        const known = KNOWN_MX_ITFS[i];
-        const key = known.name.toLowerCase();
+    for (let i = 0; i < KNOWN_MX_ITFS.length; i++) {
+      const known = KNOWN_MX_ITFS[i];
+      const key = known.name.toLowerCase().trim();
 
-        if (seen.has(key)) continue;
-        seen.add(key);
-
-        const paddedIndex = String(i + 1).padStart(3, '0');
-
-        entities.push({
-          name: known.name,
-          licenseNumber: `CNBV-ITF-${paddedIndex}`,
-          countryCode: 'MX',
-          country: 'Mexico',
-          status: known.status,
-          regulator: 'CNBV',
-          licenseType: known.licenseType,
-          entityTypes: [known.entityType],
-          activities: known.activities,
-          sourceUrl: SOURCE_URL,
-        });
+      if (seen.has(key)) {
+        logger.warn(this.config.id, `Duplicate entity name detected: ${known.name}`);
+        continue;
       }
+      seen.add(key);
 
-      if (entities.length > 0) {
-        warnings.push(
-          `Used known entities fallback (${entities.length} entities). CNBV does not publish a machine-readable ITF registry.`
-        );
-      }
+      const licenseNumber = this.generateLicenseNumber(known.name, i);
+
+      entities.push({
+        name: known.name,
+        licenseNumber,
+        countryCode: 'MX',
+        country: 'Mexico',
+        status: known.status,
+        regulator: 'CNBV',
+        licenseType: known.licenseType,
+        entityTypes: [known.entityType],
+        activities: known.activities,
+        sourceUrl: SOURCE_URL,
+      });
+    }
+
+    if (entities.length > 0) {
+      warnings.push(
+        `Used known entities fallback (${entities.length} entities). CNBV does not publish a machine-readable ITF registry.`
+      );
     }
 
     logger.info(this.config.id, `Found ${entities.length} entities`);
