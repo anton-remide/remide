@@ -86,7 +86,7 @@ describe('SG-MAS Parser', () => {
     expect(result.entities[0].name).toBe('Alpha Crypto Pte Ltd');
     expect(result.entities[0].status).toBe('Licensed');
     expect(result.entities[0].regulator).toBe('MAS');
-    expect(result.entities[0].website).toContain('https://eservices.mas.gov.sg/fid/institution/detail/100');
+    expect(result.entities[0].sourceUrl).toContain('https://eservices.mas.gov.sg/fid/institution/detail/100');
     expect(result.entities[0].activities).toContain('Digital Payment Token Service');
 
     // fetchWithRetry should have been called twice (Major + Standard)
@@ -185,7 +185,7 @@ describe('SG-MAS Parser', () => {
 
     const result = await parser.parse();
 
-    expect(result.entities[0].website).toBe('https://eservices.mas.gov.sg/fid/institution/detail/42');
+    expect(result.entities[0].sourceUrl).toBe('https://eservices.mas.gov.sg/fid/institution/detail/42');
   });
 
   it('returns empty on fully empty HTML', async () => {
