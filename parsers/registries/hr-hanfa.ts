@@ -31,6 +31,7 @@ dotenv.config({ path: '.env.local' });
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
+import crypto from 'crypto';
 
 const SOURCE_URL = 'https://www.hanfa.hr/';
 
@@ -128,6 +129,12 @@ export class HrHanfaParser implements RegistryParser {
     needsBrowser: false,
   };
 
+  private generateStableLicenseNumber(entityName: string): string {
+    // Generate a stable hash-based license number to avoid duplicates
+    const hash = crypto.createHash('md5').update(entityName).digest('hex');
+    return `HANFA-${hash.substring(0, 8).toUpperCase()}`;
+  }
+
   async parse(): Promise<ParseResult> {
     const startTime = Date.now();
     const warnings: string[] = [];
@@ -173,18 +180,18 @@ export class HrHanfaParser implements RegistryParser {
     if (entities.length === 0) {
       logger.info(this.config.id, 'Using known Croatia CASP list as fallback');
 
-      for (let i = 0; i < KNOWN_HR_CASPS.length; i++) {
-        const known = KNOWN_HR_CASPS[i];
+      for (const known of KNOWN_HR_CASPS) {
         const key = known.name.toLowerCase();
 
         if (seen.has(key)) continue;
         seen.add(key);
 
-        const paddedIndex = String(i + 1).padStart(3, '0');
+        // Generate stable license number based on entity name to avoid duplicates
+        const licenseNumber = this.generateStableLicenseNumber(known.name);
 
         entities.push({
           name: known.name,
-          licenseNumber: `HANFA-CASP-${paddedIndex}`,
+          licenseNumber,
           countryCode: 'HR',
           country: 'Croatia',
           status: 'Licensed',
