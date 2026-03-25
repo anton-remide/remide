@@ -33,7 +33,6 @@ const FIRMS_URL = 'https://www.dfsa.ae/public-register/firms';
 
 interface KnownFirm {
   name: string;
-  refNumber: string;
   firmType: string;
   status: string;
   activities?: string[];
@@ -41,59 +40,85 @@ interface KnownFirm {
 
 const KNOWN_FIRMS: KnownFirm[] = [
   // Virtual Asset / Crypto-related firms
-  { name: 'Komainu Holdings Ltd.', refNumber: 'F009342', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Custody', 'Virtual Asset Services'] },
-  { name: 'Laser Digital Holdings AG (DIFC Branch)', refNumber: 'F009514', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Trading', 'Digital Asset OTC'] },
-  { name: 'Ripple (DIFC) Ltd.', refNumber: 'F009521', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services', 'Virtual Asset Services'] },
-  { name: 'Crypto.com (DIFC) Ltd.', refNumber: 'F009528', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Exchange', 'Virtual Asset Custody'] },
-  { name: 'OKX (DIFC) Ltd.', refNumber: 'F009570', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Exchange', 'Virtual Asset Custody'] },
-  { name: 'Binance (DIFC) Ltd.', refNumber: 'F009580', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Exchange', 'Virtual Asset Custody', 'Virtual Asset Management'] },
-  { name: 'Bybit (DIFC) Ltd.', refNumber: 'F009590', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Trading', 'Virtual Asset Exchange'] },
-  { name: 'Galaxy Digital (DIFC) Ltd.', refNumber: 'F009540', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Trading', 'Investment Management'] },
-  { name: 'Hex Trust (DIFC) Ltd.', refNumber: 'F009555', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Custody'] },
-  { name: 'Fireblocks (DIFC) Ltd.', refNumber: 'F009560', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Infrastructure', 'Custody Technology'] },
+  { name: 'Komainu Holdings Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Custody', 'Virtual Asset Services'] },
+  { name: 'Laser Digital Holdings AG (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Trading', 'Digital Asset OTC'] },
+  { name: 'Ripple (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services', 'Virtual Asset Services'] },
+  { name: 'Crypto.com (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Exchange', 'Virtual Asset Custody'] },
+  { name: 'OKX (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Exchange', 'Virtual Asset Custody'] },
+  { name: 'Binance (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Exchange', 'Virtual Asset Custody', 'Virtual Asset Management'] },
+  { name: 'Bybit (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Virtual Asset Trading', 'Virtual Asset Exchange'] },
+  { name: 'Galaxy Digital (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Trading', 'Investment Management'] },
+  { name: 'Hex Trust (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Custody'] },
+  { name: 'Fireblocks (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Digital Asset Infrastructure', 'Custody Technology'] },
 
   // Major DIFC financial institutions (non-crypto, but important)
-  { name: 'Deutsche Bank AG (DIFC Branch)', refNumber: 'F000023', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
-  { name: 'HSBC Bank Middle East Limited', refNumber: 'F000034', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
-  { name: 'Standard Chartered Bank (DIFC Branch)', refNumber: 'F000044', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
-  { name: 'Citibank N.A. (DIFC Branch)', refNumber: 'F000054', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
-  { name: 'Goldman Sachs International (DIFC Branch)', refNumber: 'F000064', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Banking', 'Securities'] },
-  { name: 'Morgan Stanley & Co. International plc (DIFC Branch)', refNumber: 'F000074', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Banking', 'Securities'] },
-  { name: 'Barclays Bank PLC (DIFC Branch)', refNumber: 'F000084', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
-  { name: 'BNP Paribas (DIFC Branch)', refNumber: 'F000094', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
-  { name: 'UBS AG (DIFC Branch)', refNumber: 'F000104', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Wealth Management'] },
-  { name: 'Credit Suisse (DIFC Branch)', refNumber: 'F000114', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Wealth Management'] },
+  { name: 'Deutsche Bank AG (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
+  { name: 'HSBC Bank Middle East Limited', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
+  { name: 'Standard Chartered Bank (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
+  { name: 'Citibank N.A. (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
+  { name: 'Goldman Sachs International (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Banking', 'Securities'] },
+  { name: 'Morgan Stanley & Co. International plc (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Banking', 'Securities'] },
+  { name: 'Barclays Bank PLC (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
+  { name: 'BNP Paribas (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Financial Services'] },
+  { name: 'UBS AG (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Wealth Management'] },
+  { name: 'Credit Suisse (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Banking', 'Wealth Management'] },
 
   // Fund managers / Investment firms
-  { name: 'BlackRock Advisors (UK) Limited (DIFC Branch)', refNumber: 'F000200', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management', 'Fund Administration'] },
-  { name: 'Franklin Templeton Investments (ME) Limited', refNumber: 'F000210', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management'] },
-  { name: 'Invesco (DIFC) Ltd.', refNumber: 'F000220', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management'] },
-  { name: 'Schroders Wealth Management (DIFC) Ltd.', refNumber: 'F000230', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Wealth Management', 'Investment Advice'] },
-  { name: 'PIMCO Global Advisors (DIFC) Ltd.', refNumber: 'F000240', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management'] },
+  { name: 'BlackRock Advisors (UK) Limited (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management', 'Fund Administration'] },
+  { name: 'Franklin Templeton Investments (ME) Limited', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management'] },
+  { name: 'Invesco (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management'] },
+  { name: 'Schroders Wealth Management (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Wealth Management', 'Investment Advice'] },
+  { name: 'PIMCO Global Advisors (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Investment Management'] },
 
   // Insurance companies
-  { name: 'Zurich Insurance Company Ltd (DIFC Branch)', refNumber: 'F000300', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Insurance'] },
-  { name: 'AIG MEA Limited', refNumber: 'F000310', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Insurance'] },
-  { name: 'Lloyd\'s (DIFC Branch)', refNumber: 'F000320', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Insurance', 'Reinsurance'] },
+  { name: 'Zurich Insurance Company Ltd (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Insurance'] },
+  { name: 'AIG MEA Limited', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Insurance'] },
+  { name: 'Lloyd\'s (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Insurance', 'Reinsurance'] },
 
   // Payment / Fintech
-  { name: 'Visa Inc. (DIFC Branch)', refNumber: 'F000400', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services'] },
-  { name: 'Mastercard (DIFC) Ltd.', refNumber: 'F000410', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services'] },
-  { name: 'Network International (DIFC)', refNumber: 'F000420', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services', 'Processing'] },
+  { name: 'Visa Inc. (DIFC Branch)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services'] },
+  { name: 'Mastercard (DIFC) Ltd.', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services'] },
+  { name: 'Network International (DIFC)', firmType: 'Authorised Firm', status: 'Licensed', activities: ['Payment Services', 'Processing'] },
 ];
 
+function generateLicenseNumber(name: string, index: number): string {
+  // Generate a unique license number based on company name hash and index
+  const hash = name.toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .substring(0, 8)
+    .padEnd(8, '0');
+  return `DFSA-${hash}-${index.toString().padStart(3, '0')}`;
+}
+
 function buildKnownEntities(): ParsedEntity[] {
-  return KNOWN_FIRMS.map((firm) => ({
-    name: firm.name,
-    countryCode: 'AE',
-    country: 'United Arab Emirates',
-    licenseNumber: `DFSA-${firm.refNumber}`,
-    licenseType: firm.firmType,
-    status: firm.status,
-    regulator: 'DFSA (Dubai Financial Services Authority)',
-    activities: firm.activities ?? ['Financial Services'],
-    sourceUrl: `${FIRMS_URL}/${firm.refNumber.toLowerCase()}`,
-  }));
+  const entities: ParsedEntity[] = [];
+  const seenNames = new Set<string>();
+
+  KNOWN_FIRMS.forEach((firm, index) => {
+    // Skip duplicates based on normalized name
+    const normalizedName = firm.name.toLowerCase().trim();
+    if (seenNames.has(normalizedName)) {
+      logger.warn('ae-dfsa', `Skipping duplicate firm: ${firm.name}`);
+      return;
+    }
+    seenNames.add(normalizedName);
+
+    const entity: ParsedEntity = {
+      name: firm.name,
+      countryCode: 'AE',
+      country: 'United Arab Emirates',
+      licenseNumber: generateLicenseNumber(firm.name, index),
+      licenseType: firm.firmType,
+      status: firm.status,
+      regulator: 'DFSA (Dubai Financial Services Authority)',
+      activities: firm.activities ?? ['Financial Services'],
+      sourceUrl: FIRMS_URL,
+    };
+
+    entities.push(entity);
+  });
+
+  return entities;
 }
 
 /** Check if DFSA public register is accessible (non-403) */
@@ -157,9 +182,18 @@ export class AeDfsaParser implements RegistryParser {
       warnings.push('DFSA site blocked by WAF (403). Using known entities fallback.');
     }
 
-    // Build entities from known list
+    // Build entities from known list with deduplication
     const entities = buildKnownEntities();
-    logger.info(this.config.id, `Built ${entities.length} entities from known DFSA firms list`);
+    logger.info(this.config.id, `Built ${entities.length} unique entities from known DFSA firms list`);
+
+    // Validate no duplicate license numbers
+    const licenseNumbers = entities.map(e => e.licenseNumber);
+    const uniqueLicenseNumbers = new Set(licenseNumbers);
+    if (licenseNumbers.length !== uniqueLicenseNumbers.size) {
+      const duplicates = licenseNumbers.filter((item, index) => licenseNumbers.indexOf(item) !== index);
+      errors.push(`Found duplicate license numbers: ${duplicates.join(', ')}`);
+      logger.error(this.config.id, `Duplicate license numbers detected: ${duplicates.join(', ')}`);
+    }
 
     // Category breakdown
     const cryptoCount = entities.filter(e =>
@@ -194,6 +228,11 @@ async function main(): Promise<void> {
   if (result.warnings.length > 0) {
     console.log(`⚠️  Warnings:`);
     for (const w of result.warnings) console.log(`  - ${w}`);
+  }
+
+  if (result.errors.length > 0) {
+    console.log(`❌ Errors:`);
+    for (const e of result.errors) console.log(`  - ${e}`);
   }
 
   // Print by category
