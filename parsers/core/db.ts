@@ -25,10 +25,12 @@ let hasParserId = false;
 let hasRawData = false;
 let hasQualityColumns = false;
 
-/** Quality columns to preserve across DELETE+INSERT (INFRA-002) */
+/** Columns to preserve across DELETE+INSERT (INFRA-002) */
 const QUALITY_COLS = [
   'canonical_name', 'is_garbage', 'quality_score', 'quality_flags',
   'last_quality_at', 'crypto_status', 'dns_status', 'dns_checked_at', 'last_verified_at',
+  'enriched_at', 'description', 'linkedin_url', 'twitter_url', 'brand_name',
+  'website', 'sector', 'crypto_related',
 ] as const;
 
 /** Valid entity_status enum values in the database */
@@ -267,7 +269,15 @@ export async function upsertEntities(
           (row.crypto_status != null && row.crypto_status !== 'unknown') ||
           (row.dns_status != null && row.dns_status !== 'unknown') ||
           row.dns_checked_at != null ||
-          row.last_verified_at != null;
+          row.last_verified_at != null ||
+          row.enriched_at != null ||
+          (row.description != null && row.description !== '') ||
+          row.linkedin_url != null ||
+          row.twitter_url != null ||
+          row.brand_name != null ||
+          (row.website != null && row.website !== '') ||
+          row.sector != null ||
+          row.crypto_related === true;
 
         if (hasData) {
           const qData: Record<string, unknown> = {};
