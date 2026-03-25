@@ -30,11 +30,18 @@ import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '..
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
 
-/** The three SPK CASP list pages */
+/** The three SPK CASP list pages - updated URLs */
 const URLS = {
-  active: 'https://spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/faaliyette-bulunanlar-listesi',
-  liquidationDeclared: 'https://spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/tasfiyesi-ilan-edilenler-listesi',
-  liquidationInProgress: 'https://spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/tasfiye-halindekiler-listesi',
+  active: 'https://www.spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/faaliyette-bulunanlar-listesi',
+  liquidationDeclared: 'https://www.spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/tasfiyesi-ilan-edilenler-listesi',
+  liquidationInProgress: 'https://www.spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/tasfiye-halindekiler-listesi',
+} as const;
+
+// Backup URLs in case main ones fail
+const BACKUP_URLS = {
+  active: 'https://spk.gov.tr/SiteApps/Yayin/AltSayfa/12/4',
+  liquidationDeclared: 'https://spk.gov.tr/SiteApps/Yayin/AltSayfa/12/5',
+  liquidationInProgress: 'https://spk.gov.tr/SiteApps/Yayin/AltSayfa/12/6',
 } as const;
 
 type ListType = keyof typeof URLS;
@@ -70,6 +77,59 @@ function turkishNormalize(s: string): string {
 }
 
 /**
+ * Fetch URL with multiple fallback strategies
+ */
+async function fetchWithFallbacks(
+  primaryUrl: string,
+  backupUrl: string,
+  registryId: string,
+  rateLimit: number,
+): Promise<string> {
+  const headers = {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  };
+
+  // Try primary URL
+  try {
+    const html = await fetchWithRetry(primaryUrl, {
+      registryId,
+      rateLimit,
+      headers,
+    });
+    
+    if (html && html.trim().length > 100) {
+      return html;
+    }
+    logger.warn(registryId, `Primary URL returned minimal content (${html.length} bytes), trying backup`);
+  } catch (err) {
+    logger.warn(registryId, `Primary URL failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  // Try backup URL
+  try {
+    const html = await fetchWithRetry(backupUrl, {
+      registryId,
+      rateLimit,
+      headers,
+    });
+    
+    if (html && html.trim().length > 100) {
+      return html;
+    }
+    logger.warn(registryId, `Backup URL also returned minimal content (${html.length} bytes)`);
+  } catch (err) {
+    logger.warn(registryId, `Backup URL failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  throw new Error(`Both primary and backup URLs failed for registry ${registryId}`);
+}
+
+/**
  * Parse entities from an SPK list page HTML.
  *
  * Strategy (multiple fallbacks):
@@ -83,6 +143,11 @@ function parseListPage(
   listType: ListType,
   registryId: string,
 ): ParsedEntity[] {
+  if (!html || html.trim().length < 100) {
+    logger.warn(registryId, `[${listType}] HTML content is too short (${html.length} bytes)`);
+    return [];
+  }
+
   const $ = cheerio.load(html);
   const entities: ParsedEntity[] = [];
   const meta = LIST_META[listType];
@@ -167,7 +232,7 @@ function parseListPage(
   if (entities.length === 0) {
     logger.info(registryId, `[${listType}] No table entities found, trying list elements...`);
 
-    const listItems = $('ol li, ul li, .content li, .detail-content li, article li');
+    const listItems = $('ol li, ul li, .content li, .detail-content li, article li, .list-item, .company-item');
     listItems.each((_, li) => {
       const text = $(li).text().trim();
       if (!text || text.length < 3) return;
@@ -215,6 +280,8 @@ function parseListPage(
       'main',
       '.main-content',
       '#content',
+      '.spk-content',
+      '.yayin-content',
     ];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -268,24 +335,26 @@ function parseListPage(
     logger.info(registryId, `[${listType}] No structured entities found, trying regex extraction...`);
 
     const fullText = $('body').text();
-    // Match lines that look like company names (Turkish company suffixes)
-    const companyPattern = /([A-ZÇĞIİÖŞÜa-zçğıiöşü0-9][\w\s.,'&\-çğıiöşüÇĞİÖŞÜ]{3,80})\s*(Anonim\s+(?:Şirketi|Sirketi)|A\.?\s*Ş\.?|A\.?\s*S\.?)/gi;
+    if (fullText && fullText.length > 100) {
+      // Match lines that look like company names (Turkish company suffixes)
+      const companyPattern = /([A-ZÇĞIİÖŞÜa-zçğıiöşü0-9][\w\s.,'&\-çğıiöşüÇĞİÖŞÜ]{3,80})\s*(Anonim\s+(?:Şirketi|Sirketi)|A\.?\s*Ş\.?|A\.?\s*S\.?)/gi;
 
-    let match: RegExpExecArray | null;
-    while ((match = companyPattern.exec(fullText)) !== null) {
-      const name = (match[1] + ' ' + match[2]).replace(/\s+/g, ' ').trim();
-      if (name.length >= 5) {
-        entities.push({
-          name,
-          licenseNumber: `TR-SPK-${sanitizeName(name)}`,
-          countryCode: 'TR',
-          country: 'Turkey',
-          licenseType: meta.licenseType,
-          activities: ['Crypto Asset Exchange'],
-          status: meta.status,
-          regulator: 'SPK (Capital Markets Board)',
-          sourceUrl,
-        });
+      let match: RegExpExecArray | null;
+      while ((match = companyPattern.exec(fullText)) !== null) {
+        const name = (match[1] + ' ' + match[2]).replace(/\s+/g, ' ').trim();
+        if (name.length >= 5) {
+          entities.push({
+            name,
+            licenseNumber: `TR-SPK-${sanitizeName(name)}`,
+            countryCode: 'TR',
+            country: 'Turkey',
+            licenseType: meta.licenseType,
+            activities: ['Crypto Asset Exchange'],
+            status: meta.status,
+            regulator: 'SPK (Capital Markets Board)',
+            sourceUrl,
+          });
+        }
       }
     }
   }
@@ -301,7 +370,7 @@ export class TrSpkParser implements RegistryParser {
     countryCode: 'TR',
     country: 'Turkey',
     regulator: 'SPK (Capital Markets Board)',
-    url: 'https://spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/faaliyette-bulunanlar-listesi',
+    url: 'https://www.spk.gov.tr/kurumlar/kripto-varlik-hizmet-saglayicilar/faaliyette-bulunanlar-listesi',
     sourceType: 'html',
     rateLimit: 8_000,
     needsProxy: false,
@@ -318,15 +387,22 @@ export class TrSpkParser implements RegistryParser {
     for (const [listType, url] of Object.entries(URLS) as [ListType, string][]) {
       try {
         logger.info(this.config.id, `Fetching ${listType} list: ${url}`);
-        const html = await fetchWithRetry(url, {
-          registryId: this.config.id,
-          rateLimit: this.config.rateLimit,
-          headers: {
-            'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-          },
-        });
+        
+        const html = await fetchWithFallbacks(
+          url,
+          BACKUP_URLS[listType],
+          this.config.id,
+          this.config.rateLimit,
+        );
 
         logger.info(this.config.id, `Fetched ${listType} page (${html.length} bytes)`);
+
+        if (!html || html.trim().length < 100) {
+          const msg = `${listType} list returned insufficient content (${html?.length || 0} bytes)`;
+          logger.warn(this.config.id, msg);
+          warnings.push(msg);
+          continue;
+        }
 
         const entities = parseListPage(html, listType, this.config.id);
         allEntities.push(...entities);
@@ -342,6 +418,11 @@ export class TrSpkParser implements RegistryParser {
           warnings.push(msg);
         }
       }
+    }
+
+    // If we got no entities at all, add an error
+    if (allEntities.length === 0) {
+      errors.push('No entities found from any of the SPK lists - website may have changed structure');
     }
 
     // Deduplicate by normalized name (Turkish-aware)
