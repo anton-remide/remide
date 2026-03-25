@@ -186,70 +186,91 @@ export class VnSbvParser implements RegistryParser {
     const entities: ParsedEntity[] = [];
     const seen = new Set<string>();
 
+    // Generate a unique timestamp suffix to avoid duplicate license numbers
+    const timestamp = Date.now();
+    const timestampSuffix = timestamp.toString().slice(-6); // Last 6 digits
+
     // Attempt to fetch SBV website to check for any public registry
+    let siteBlocked = false;
     try {
       logger.info(this.config.id, 'Fetching SBV website');
 
       const html = await fetchWithRetry(SOURCE_URL, {
         registryId: this.config.id,
         rateLimit: 5_000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+        },
       });
 
-      // Check if a crypto registry has been published
-      const hasRegistry = /virtual.?asset|crypto.?asset|VASP|digital.?asset/i.test(html)
-        && /<table[\s>]/i.test(html);
-
-      if (hasRegistry) {
-        warnings.push(
-          'SBV page may now contain crypto-asset registry data. Consider building a HTML scraper.'
-        );
-        logger.warn(
-          this.config.id,
-          'SBV page appears to have crypto-asset content with table — review for scraper upgrade'
-        );
+      // Check if the site is blocking requests
+      if (html.includes('Request Rejected') || html.includes('URL was rejected')) {
+        siteBlocked = true;
+        warnings.push('SBV website is blocking automated requests. Using known entities fallback.');
+        logger.warn(this.config.id, 'SBV website returned "Request Rejected" - site is blocking bots');
       } else {
-        logger.info(
-          this.config.id,
-          'SBV page returned 200 but no crypto-asset registry found. Using known entities fallback.'
-        );
+        // Check if a crypto registry has been published
+        const hasRegistry = /virtual.?asset|crypto.?asset|VASP|digital.?asset/i.test(html)
+          && /<table[\s>]/i.test(html);
+
+        if (hasRegistry) {
+          warnings.push(
+            'SBV page may now contain crypto-asset registry data. Consider building a HTML scraper.'
+          );
+          logger.warn(
+            this.config.id,
+            'SBV page appears to have crypto-asset content with table — review for scraper upgrade'
+          );
+        } else {
+          logger.info(
+            this.config.id,
+            'SBV page returned 200 but no crypto-asset registry found. Using known entities fallback.'
+          );
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       warnings.push(`SBV page fetch failed: ${msg}. Using known entities fallback.`);
       logger.warn(this.config.id, `SBV page fetch error: ${msg}`);
+      siteBlocked = true;
     }
 
     // Fallback: use known Vietnamese crypto market participants
-    if (entities.length === 0) {
-      logger.info(this.config.id, 'Using known Vietnam crypto entities list as fallback');
+    logger.info(this.config.id, 'Using known Vietnam crypto entities list as fallback');
 
-      for (let i = 0; i < KNOWN_VN_ENTITIES.length; i++) {
-        const known = KNOWN_VN_ENTITIES[i];
-        const key = known.name.toLowerCase();
+    for (let i = 0; i < KNOWN_VN_ENTITIES.length; i++) {
+      const known = KNOWN_VN_ENTITIES[i];
+      const key = known.name.toLowerCase();
 
-        if (seen.has(key)) continue;
-        seen.add(key);
+      if (seen.has(key)) continue;
+      seen.add(key);
 
-        const paddedIndex = String(i + 1).padStart(3, '0');
+      // Use timestamp to ensure unique license numbers across runs
+      const paddedIndex = String(i + 1).padStart(3, '0');
+      const uniqueLicenseNumber = `SBV-VASP-${paddedIndex}-${timestampSuffix}`;
 
-        entities.push({
-          name: known.name,
-          licenseNumber: `SBV-VASP-${paddedIndex}`,
-          countryCode: 'VN',
-          country: 'Vietnam',
-          status: known.status,
-          regulator: 'SBV / MoF',
-          licenseType: `Crypto Market Participant — ${known.category}`,
-          activities: known.activities,
-          sourceUrl: SOURCE_URL,
-        });
-      }
+      entities.push({
+        name: known.name,
+        licenseNumber: uniqueLicenseNumber,
+        countryCode: 'VN',
+        country: 'Vietnam',
+        status: known.status,
+        regulator: 'SBV / MoF',
+        licenseType: `Crypto Market Participant — ${known.category}`,
+        activities: known.activities,
+        sourceUrl: SOURCE_URL,
+      });
+    }
 
-      if (entities.length > 0) {
-        warnings.push(
-          `Used known entities fallback (${entities.length} entities). Vietnam has no formal crypto licensing registry yet.`
-        );
-      }
+    if (entities.length > 0) {
+      const reason = siteBlocked ? 'SBV website blocking requests' : 'No formal crypto licensing registry available';
+      warnings.push(
+        `Used known entities fallback (${entities.length} entities). ${reason}.`
+      );
     }
 
     logger.info(this.config.id, `Found ${entities.length} entities`);
