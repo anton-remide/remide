@@ -19,10 +19,16 @@ import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '..
 import { logger } from '../core/logger.js';
 
 const SOURCE_URL = 'https://www.fincen.gov/msb-registrant-search';
+const ALTERNATIVE_URL = 'https://www.fincen.gov/resources/msb-state-selector';
 
 const DEFAULT_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.5',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'DNT': '1',
+  'Connection': 'keep-alive',
+  'Upgrade-Insecure-Requests': '1',
 };
 
 export class UsFincenParser implements RegistryParser {
@@ -45,50 +51,78 @@ export class UsFincenParser implements RegistryParser {
     const errors: string[] = [];
     const entities: ParsedEntity[] = [];
 
-    // FinCEN MSB search requires form submission
-    // Try to fetch and parse the search results for money transmitters
-    // (the most common category for crypto businesses)
-
     try {
       logger.info(this.config.id, 'Attempting to fetch FinCEN MSB search page');
 
-      const response = await fetch(SOURCE_URL, {
-        headers: DEFAULT_HEADERS,
-      });
+      // Try primary URL first
+      let response = await this.fetchWithRetry(SOURCE_URL);
+      let html = await response.text();
+      let $ = cheerio.load(html);
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      // Check if we got redirected or need to try alternative URL
+      const canonicalUrl = $('link[rel="canonical"]').attr('href');
+      if (canonicalUrl && canonicalUrl.includes('msb-state-selector')) {
+        logger.info(this.config.id, 'Detected redirect to state selector, trying alternative URL');
+        response = await this.fetchWithRetry(ALTERNATIVE_URL);
+        html = await response.text();
+        $ = cheerio.load(html);
       }
 
-      const html = await response.text();
-      const $ = cheerio.load(html);
+      // Look for iframes
+      const iframes = $('iframe');
+      logger.info(this.config.id, `Found ${iframes.length} iframe(s) on page`);
 
-      // Try to find the iframe source URL
-      const iframeSrc = $('iframe').attr('src') ?? '';
-      logger.info(this.config.id, `Found iframe: ${iframeSrc || 'none'}`);
-
-      // The actual search form is inside the iframe
-      // We need to submit it with appropriate parameters
-      if (iframeSrc) {
-        const formEntities = await this.searchViaForm(iframeSrc, warnings);
-        entities.push(...formEntities);
+      if (iframes.length > 0) {
+        for (let i = 0; i < iframes.length; i++) {
+          const iframe = iframes.eq(i);
+          const src = iframe.attr('src');
+          const dataSrc = iframe.attr('data-src');
+          const iframeSrc = src || dataSrc;
+          
+          if (iframeSrc) {
+            logger.info(this.config.id, `Processing iframe ${i + 1}: ${iframeSrc}`);
+            const formEntities = await this.searchViaForm(iframeSrc, warnings);
+            entities.push(...formEntities);
+          }
+        }
       }
+
+      // Also check for any embedded content or direct search functionality
+      const searchForms = $('form');
+      if (searchForms.length > 0) {
+        logger.info(this.config.id, `Found ${searchForms.length} form(s) on main page`);
+        const directEntities = await this.parseDirectForms($, warnings);
+        entities.push(...directEntities);
+      }
+
+      // Look for any MSB-related content in the page
+      const msbContent = this.extractMSBContentFromPage($, warnings);
+      entities.push(...msbContent);
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      warnings.push(`FinCEN search failed: ${msg}`);
+      errors.push(`FinCEN search failed: ${msg}`);
+      logger.error(this.config.id, `Parse error: ${msg}`);
     }
 
-    // If form-based search didn't work, try to scrape any listed entities from the main page
+    // Always add comprehensive guidance
     if (entities.length === 0) {
       warnings.push(
-        'FinCEN MSB search requires browser automation for comprehensive results. ' +
-        'The search form is embedded in an iframe and requires interactive form submission. ' +
-        'Consider using Playwright for production data collection.'
+        'FinCEN MSB Registry Notice: The MSB registrant search requires interactive browser automation. ' +
+        'FinCEN\'s search interface uses complex forms with CSRF protection and dynamic content loading. ' +
+        'For production use, implement Playwright/Selenium automation to: ' +
+        '1) Navigate to the search form, 2) Select search criteria (state, activity type), ' +
+        '3) Submit searches iteratively, 4) Parse paginated results. ' +
+        'The registry contains thousands of MSB registrations across all US states.'
+      );
+    } else {
+      warnings.push(
+        `Extracted ${entities.length} entities via automated parsing. ` +
+        'For comprehensive MSB data, browser automation is recommended to access the full search interface.'
       );
     }
 
-    logger.info(this.config.id, `Total entities: ${entities.length}`);
+    logger.info(this.config.id, `Parse completed. Entities: ${entities.length}, Warnings: ${warnings.length}, Errors: ${errors.length}`);
 
     return {
       registryId: this.config.id,
@@ -102,120 +136,198 @@ export class UsFincenParser implements RegistryParser {
     };
   }
 
+  private async fetchWithRetry(url: string, maxRetries: number = 2): Promise<Response> {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.info(this.config.id, `Fetching ${url} (attempt ${attempt}/${maxRetries})`);
+        
+        const response = await fetch(url, {
+          headers: DEFAULT_HEADERS,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return response;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        logger.warn(this.config.id, `Attempt ${attempt} failed: ${lastError.message}`);
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+        }
+      }
+    }
+
+    throw lastError || new Error('All fetch attempts failed');
+  }
+
   /** Attempt to submit the FinCEN search form programmatically */
   private async searchViaForm(formUrl: string, warnings: string[]): Promise<ParsedEntity[]> {
     const entities: ParsedEntity[] = [];
 
     try {
       // Resolve the full URL if relative
-      const url = formUrl.startsWith('http') ? formUrl : `https://www.fincen.gov${formUrl}`;
+      const url = formUrl.startsWith('http') ? formUrl : 
+                 formUrl.startsWith('//') ? `https:${formUrl}` :
+                 `https://www.fincen.gov${formUrl}`;
+
+      logger.info(this.config.id, `Attempting to access form at: ${url}`);
 
       // First, fetch the form to get any CSRF tokens or hidden fields
-      const formResponse = await fetch(url, {
-        headers: DEFAULT_HEADERS,
-      });
-
-      if (!formResponse.ok) {
-        warnings.push(`Form page HTTP ${formResponse.status}`);
-        return entities;
-      }
-
+      const formResponse = await this.fetchWithRetry(url);
       const formHtml = await formResponse.text();
       const $ = cheerio.load(formHtml);
 
-      // Try to find and submit the search form
-      // Look for form action URL
-      const form = $('form').first();
-      const action = form.attr('action') ?? '';
-      const method = (form.attr('method') ?? 'GET').toUpperCase();
+      // Check if this looks like an MSB search form
+      const pageText = $.text().toLowerCase();
+      const isMSBForm = pageText.includes('money service') || 
+                       pageText.includes('msb') || 
+                       pageText.includes('transmitter') ||
+                       pageText.includes('registrant');
 
-      logger.info(this.config.id, `Form action: ${action}, method: ${method}`);
-
-      // Collect form fields
-      const params = new URLSearchParams();
-      form.find('input, select').each((_, el) => {
-        const tagName = el.tagName?.toLowerCase();
-        const name = $(el).attr('name');
-        if (!name) return;
-
-        // Skip submit/reset controls.
-        const inputType = ($(el).attr('type') ?? '').toLowerCase();
-        if (tagName === 'input' && (inputType === 'submit' || inputType === 'reset' || inputType === 'button')) return;
-
-        // Set money transmitter on activity-like controls.
-        if (name.toLowerCase().includes('activity') || name.toLowerCase().includes('type')) {
-          params.set(name, 'Money Transmitter');
-          return;
-        }
-
-        if (tagName === 'select') {
-          const selected = $(el).find('option[selected]').first();
-          const firstOption = $(el).find('option').first();
-          const selectedValue = selected.attr('value') ?? selected.text().trim();
-          const fallbackValue = firstOption.attr('value') ?? firstOption.text().trim();
-          params.set(name, selectedValue || fallbackValue || '');
-          return;
-        }
-
-        const value = $(el).attr('value') ?? '';
-        params.set(name, value);
-      });
-
-      // Submit the form
-      const searchUrl = action ? new URL(action, url).toString() : url;
-
-      const searchResponse = await fetch(
-        method === 'GET' ? `${searchUrl}?${params.toString()}` : searchUrl,
-        {
-          method,
-          headers: method === 'POST'
-            ? { ...DEFAULT_HEADERS, 'Content-Type': 'application/x-www-form-urlencoded' }
-            : DEFAULT_HEADERS,
-          body: method === 'POST' ? params.toString() : undefined,
-        },
-      );
-
-      if (!searchResponse.ok) {
-        warnings.push(`Search response HTTP ${searchResponse.status}`);
+      if (!isMSBForm) {
+        warnings.push(`Form at ${url} does not appear to be MSB search interface`);
         return entities;
       }
 
-      const resultHtml = await searchResponse.text();
-      const $results = cheerio.load(resultHtml);
+      // Try to find and analyze the search form
+      const forms = $('form');
+      logger.info(this.config.id, `Found ${forms.length} form(s) in iframe`);
 
-      // Parse search results
-      const seen = new Set<string>();
-      $results('table tr').each((_, row) => {
-        const cells = $results(row).find('td');
-        if (cells.length < 2) return;
+      if (forms.length === 0) {
+        warnings.push('No forms found in iframe - may require JavaScript execution');
+        return entities;
+      }
 
-        const name = $results(cells[0]).text().trim();
-        if (!name || name.toLowerCase().includes('legal name')) return;
+      // Process each form
+      forms.each((_, formEl) => {
+        const form = $(formEl);
+        const action = form.attr('action') ?? '';
+        const method = (form.attr('method') ?? 'GET').toUpperCase();
 
-        const dba = cells.length > 1 ? $results(cells[1]).text().trim() : '';
-        const key = `${name.toLowerCase()}|${(dba || '').toLowerCase()}`;
-        if (seen.has(key)) return;
-        seen.add(key);
+        logger.info(this.config.id, `Form found - Action: ${action || 'none'}, Method: ${method}`);
 
-        entities.push({
-          name,
-          licenseNumber: `FINCEN-${name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 30)}`,
-          countryCode: 'US',
-          country: 'United States',
-          status: 'Registered',
-          regulator: 'FinCEN',
-          licenseType: 'MSB Registration',
-          activities: ['Money Transmitter'],
-          entityTypes: dba ? [dba] : undefined,
-          sourceUrl: SOURCE_URL,
+        // Look for MSB-specific form fields
+        const inputs = form.find('input, select, textarea');
+        let hasStateField = false;
+        let hasActivityField = false;
+        let hasNameField = false;
+
+        inputs.each((_, inputEl) => {
+          const input = $(inputEl);
+          const name = (input.attr('name') || '').toLowerCase();
+          const id = (input.attr('id') || '').toLowerCase();
+          const label = input.closest('label').text().toLowerCase() || 
+                       $(`label[for="${input.attr('id')}"]`).text().toLowerCase();
+
+          if (name.includes('state') || id.includes('state') || label.includes('state')) {
+            hasStateField = true;
+          }
+          if (name.includes('activity') || id.includes('activity') || label.includes('activity') ||
+              name.includes('type') || id.includes('type') || label.includes('transmitter')) {
+            hasActivityField = true;
+          }
+          if (name.includes('name') || id.includes('name') || label.includes('name')) {
+            hasNameField = true;
+          }
         });
+
+        if (hasStateField || hasActivityField || hasNameField) {
+          warnings.push(
+            `MSB search form detected with fields: State(${hasStateField}), Activity(${hasActivityField}), Name(${hasNameField}). ` +
+            'Form submission requires browser automation for CSRF tokens and dynamic validation.'
+          );
+        }
       });
+
+      // Try to extract any pre-populated results or example data
+      const tableRows = $('table tr, .result, .registrant');
+      if (tableRows.length > 0) {
+        tableRows.each((_, row) => {
+          const rowText = $(row).text().trim();
+          if (rowText.length > 10 && !rowText.toLowerCase().includes('no results')) {
+            const cells = $(row).find('td, .cell');
+            if (cells.length >= 1) {
+              const name = $(cells[0]).text().trim();
+              if (name && name.length > 2 && !name.toLowerCase().includes('name')) {
+                entities.push(this.createEntityFromName(name));
+              }
+            }
+          }
+        });
+      }
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      warnings.push(`Form submission failed: ${msg}`);
+      warnings.push(`Form processing failed: ${msg}`);
+      logger.warn(this.config.id, `Form search error: ${msg}`);
     }
 
     return entities;
+  }
+
+  /** Parse forms found directly on the main page */
+  private async parseDirectForms($: cheerio.CheerioAPI, warnings: string[]): Promise<ParsedEntity[]> {
+    const entities: ParsedEntity[] = [];
+
+    $('form').each((_, formEl) => {
+      const form = $(formEl);
+      const formText = form.text().toLowerCase();
+      
+      if (formText.includes('msb') || formText.includes('money service') || formText.includes('registrant')) {
+        warnings.push('Direct MSB search form found on main page - requires browser automation for interaction');
+      }
+    });
+
+    return entities;
+  }
+
+  /** Extract any MSB-related content from the page */
+  private extractMSBContentFromPage($: cheerio.CheerioAPI, warnings: string[]): ParsedEntity[] {
+    const entities: ParsedEntity[] = [];
+
+    // Look for any MSB-related content, lists, or embedded data
+    const pageText = $.text().toLowerCase();
+    
+    if (pageText.includes('money service business') || pageText.includes('msb registrant')) {
+      warnings.push('Page contains MSB-related content but requires interactive search to access registry data');
+    }
+
+    // Check for any structured data or lists
+    $('ul, ol, table').each((_, listEl) => {
+      const listText = $(listEl).text();
+      if (listText.toLowerCase().includes('transmitter') || 
+          listText.toLowerCase().includes('money service')) {
+        
+        $(listEl).find('li, tr').each((_, item) => {
+          const itemText = $(item).text().trim();
+          // Look for company names (basic heuristic)
+          if (itemText.length > 5 && 
+              /^[A-Z][a-zA-Z\s&,.-]+(?:Inc|LLC|Corp|Company|Ltd|Co\.|Corporation)/i.test(itemText)) {
+            entities.push(this.createEntityFromName(itemText));
+          }
+        });
+      }
+    });
+
+    return entities;
+  }
+
+  private createEntityFromName(name: string): ParsedEntity {
+    return {
+      name: name.trim(),
+      licenseNumber: `FINCEN-${name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20).toUpperCase()}`,
+      countryCode: 'US',
+      country: 'United States',
+      status: 'Registered',
+      regulator: 'FinCEN',
+      licenseType: 'MSB Registration',
+      activities: ['Money Services Business'],
+      sourceUrl: SOURCE_URL,
+    };
   }
 }
