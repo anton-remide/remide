@@ -33,6 +33,7 @@ dotenv.config({ path: '.env.local' });
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
+import crypto from 'crypto';
 
 const SOURCE_URL = 'https://www.cmfchile.cl/';
 
@@ -155,6 +156,14 @@ export class ClCmfParser implements RegistryParser {
     needsBrowser: false,
   };
 
+  private generateUniqueLicenseNumber(name: string, index: number): string {
+    // Create a deterministic hash based on entity name to ensure consistency
+    // but avoid simple incremental numbers that cause duplicates
+    const hash = crypto.createHash('md5').update(name.toLowerCase()).digest('hex');
+    const shortHash = hash.substring(0, 6).toUpperCase();
+    return `CMF-VASP-${shortHash}`;
+  }
+
   async parse(): Promise<ParseResult> {
     const startTime = Date.now();
     const warnings: string[] = [];
@@ -207,11 +216,11 @@ export class ClCmfParser implements RegistryParser {
         if (seen.has(key)) continue;
         seen.add(key);
 
-        const paddedIndex = String(i + 1).padStart(3, '0');
+        const licenseNumber = this.generateUniqueLicenseNumber(known.name, i);
 
         entities.push({
           name: known.name,
-          licenseNumber: `CMF-VASP-${paddedIndex}`,
+          licenseNumber: licenseNumber,
           countryCode: 'CL',
           country: 'Chile',
           status: 'Registered',
