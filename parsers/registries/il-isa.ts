@@ -18,7 +18,7 @@
  * that is not scrapable with static HTML fetch. We use a known entities
  * fallback (same pattern as bh-cbb.ts, kr-fiu.ts).
  *
- * License format: CMISA-FASP-{number} (Financial Asset Service Provider)
+ * License format: CMISA-FASP-{hash} (Financial Asset Service Provider)
  *
  * Usage:
  *   npx tsx parsers/registries/il-isa.ts --dry-run
@@ -31,6 +31,7 @@ dotenv.config({ path: '.env.local' });
 import type { RegistryParser, ParserConfig, ParseResult, ParsedEntity } from '../core/types.js';
 import { fetchWithRetry } from '../core/client.js';
 import { logger } from '../core/logger.js';
+import crypto from 'crypto';
 
 const SOURCE_URL = 'https://www.isa.gov.il/';
 
@@ -199,6 +200,21 @@ const KNOWN_IL_ENTITIES: KnownEntity[] = [
   },
 ];
 
+/**
+ * Generate a deterministic license number based on entity name
+ * This ensures the same entity always gets the same license number
+ */
+function generateLicenseNumber(entityName: string, entityType: string): string {
+  const hash = crypto.createHash('sha256')
+    .update(`${entityName}:${entityType}`)
+    .digest('hex')
+    .substring(0, 8)
+    .toUpperCase();
+  
+  const prefix = entityType === 'Bank' ? 'BOI-CRYPTO' : 'CMISA-FASP';
+  return `${prefix}-${hash}`;
+}
+
 export class IlIsaParser implements RegistryParser {
   config: ParserConfig = {
     id: 'il-isa',
@@ -221,13 +237,15 @@ export class IlIsaParser implements RegistryParser {
     const seen = new Set<string>();
 
     // Attempt to fetch the ISA page
-    // (expected to yield no parseable entity data — Hebrew JS-rendered site)
+    // (expected to yield no parseable entity data — Hebrew JS-rendered site or blocked)
     try {
       logger.info(this.config.id, 'Fetching ISA website');
 
       const html = await fetchWithRetry(SOURCE_URL, {
         registryId: this.config.id,
         rateLimit: 5_000,
+        retries: 2, // Reduce retries since we expect this to fail
+        timeout: 10_000,
       });
 
       // Check for any table/list content that might indicate a scrapable registry
@@ -255,37 +273,34 @@ export class IlIsaParser implements RegistryParser {
     }
 
     // Fallback: use known Israeli crypto-licensed / registered entities
-    if (entities.length === 0) {
-      logger.info(this.config.id, 'Using known Israel FASP entity list as fallback');
+    logger.info(this.config.id, 'Using known Israel FASP entity list as fallback');
 
-      for (let i = 0; i < KNOWN_IL_ENTITIES.length; i++) {
-        const known = KNOWN_IL_ENTITIES[i];
-        const key = known.name.toLowerCase();
+    for (const known of KNOWN_IL_ENTITIES) {
+      const key = known.name.toLowerCase();
 
-        if (seen.has(key)) continue;
-        seen.add(key);
+      if (seen.has(key)) continue;
+      seen.add(key);
 
-        const paddedIndex = String(i + 1).padStart(3, '0');
+      const licenseNumber = generateLicenseNumber(known.name, known.entityType);
 
-        entities.push({
-          name: known.name,
-          licenseNumber: `CMISA-FASP-${paddedIndex}`,
-          countryCode: 'IL',
-          country: 'Israel',
-          status: known.entityType === 'Bank' ? 'Licensed' : 'Licensed',
-          regulator: known.entityType === 'Bank' ? 'Bank of Israel / CMISA' : 'CMISA',
-          licenseType: known.licenseType,
-          entityTypes: [known.entityType],
-          activities: known.activities,
-          sourceUrl: SOURCE_URL,
-        });
-      }
+      entities.push({
+        name: known.name,
+        licenseNumber,
+        countryCode: 'IL',
+        country: 'Israel',
+        status: known.entityType === 'Bank' ? 'Licensed' : 'Licensed',
+        regulator: known.entityType === 'Bank' ? 'Bank of Israel / CMISA' : 'CMISA',
+        licenseType: known.licenseType,
+        entityTypes: [known.entityType],
+        activities: known.activities,
+        sourceUrl: SOURCE_URL,
+      });
+    }
 
-      if (entities.length > 0) {
-        warnings.push(
-          `Used known entities fallback (${entities.length} entities). ISA/CMISA registry requires JS rendering or is Hebrew-only.`
-        );
-      }
+    if (entities.length > 0) {
+      warnings.push(
+        `Used known entities fallback (${entities.length} entities). ISA/CMISA registry requires JS rendering, is Hebrew-only, or blocks automated requests.`
+      );
     }
 
     logger.info(this.config.id, `Found ${entities.length} entities`);
