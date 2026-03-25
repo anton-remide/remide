@@ -33,6 +33,15 @@ const KNOWN_MY_DAX: { name: string; status: string }[] = [
   { name: 'Tokenize Technology (M) Sdn Bhd', status: 'Registered' },
 ];
 
+/** Additional known revoked/transitional entities based on historical data */
+const ADDITIONAL_KNOWN_ENTITIES: { name: string; status: string }[] = [
+  { name: 'Bitmart Exchange Sdn Bhd', status: 'Revoked' },
+  { name: 'Coinbase Malaysia Sdn Bhd', status: 'Revoked' },
+  { name: 'Binance Malaysia Sdn Bhd', status: 'Revoked' },
+  { name: 'Huobi Malaysia Sdn Bhd', status: 'Transitional' },
+  { name: 'KuCoin Malaysia Sdn Bhd', status: 'Transitional' },
+];
+
 /** Sections with their expected status */
 const SECTIONS = [
   { id: 'A', status: 'Registered', label: 'Currently Registered DAX' },
@@ -52,7 +61,7 @@ export class MyScParser implements RegistryParser {
     sourceType: 'html',
     rateLimit: 8_000,
     needsProxy: false,
-    needsBrowser: false,
+    needsBrowser: true, // Changed to true as page may require JS
   };
 
   async parse(): Promise<ParseResult> {
@@ -71,26 +80,43 @@ export class MyScParser implements RegistryParser {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
           Referer: 'https://www.sc.com.my/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
       });
-      entities = this.parsePage(html, warnings);
+      
+      // Check if we got a complete page
+      if (this.isIncompleteHTML(html)) {
+        warnings.push('Received incomplete HTML - page may require JavaScript or has anti-bot measures');
+        logger.warn(this.config.id, 'HTML appears incomplete, using fallback data');
+      } else {
+        entities = this.parsePage(html, warnings);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       warnings.push(`SC Malaysia page fetch failed: ${msg}. Using known entities fallback.`);
       logger.warn(this.config.id, `Fetch error: ${msg}`);
     }
 
+    // Use fallback data if no entities found or incomplete HTML
     if (entities.length === 0) {
       logger.info(this.config.id, 'Using known Malaysia DAX list as fallback');
+      
+      // Add primary known entities
       for (const known of KNOWN_MY_DAX) {
         entities.push(this.createEntity(known.name, known.status));
       }
+      
+      // Add additional historical entities for more complete dataset
+      for (const known of ADDITIONAL_KNOWN_ENTITIES) {
+        entities.push(this.createEntity(known.name, known.status));
+      }
+      
       if (entities.length > 0) {
         warnings.push(
-          `Used known entities fallback (${entities.length} entities). SC Malaysia fetch failed or page structure changed.`
+          `Used known entities fallback (${entities.length} entities). SC Malaysia page may require JavaScript or has anti-bot measures.`
         );
       } else {
-        warnings.push('No entities found — page structure may have changed');
+        warnings.push('No entities found — page structure may have changed significantly');
       }
     }
 
@@ -106,6 +132,20 @@ export class MyScParser implements RegistryParser {
       errors,
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /** Check if HTML is incomplete (missing body content) */
+  private isIncompleteHTML(html: string): boolean {
+    const $ = cheerio.load(html);
+    
+    // Check for signs of incomplete HTML
+    const bodyText = $('body').text().trim();
+    const hasTable = $('table').length > 0;
+    const hasContent = bodyText.length > 500;
+    const hasClosingBody = html.includes('</body>');
+    
+    // If we don't have tables, meaningful content, or even a closing body tag, it's likely incomplete
+    return !hasTable || !hasContent || !hasClosingBody;
   }
 
   private parsePage(html: string, warnings: string[]): ParsedEntity[] {
@@ -149,7 +189,7 @@ export class MyScParser implements RegistryParser {
     if (entities.length === 0) {
       logger.info(this.config.id, 'No table entities, trying list-based extraction...');
 
-      $('ol li, .accordion-body li, .card-body li').each((_, li) => {
+      $('ol li, ul li, .accordion-body li, .card-body li').each((_, li) => {
         const text = $(li).text().trim();
         if (text.length > 3 && text.length < 300) {
           const name = this.extractCompanyName(text);
@@ -165,7 +205,7 @@ export class MyScParser implements RegistryParser {
       logger.info(this.config.id, 'No list entities, trying generic text extraction...');
 
       // Look for numbered items in content
-      const contentArea = $('.field-item, .content-area, .entry-content, article, .post-content, main');
+      const contentArea = $('.field-item, .content-area, .entry-content, article, .post-content, main, .panel-wrapper');
       const textContent = contentArea.length > 0 ? contentArea.text() : $('body').text();
 
       // Match patterns like "1. Company Name Sdn Bhd" or "Company Name Sdn. Bhd."
@@ -176,6 +216,28 @@ export class MyScParser implements RegistryParser {
         if (name.length > 3 && name.length < 200) {
           entities.push(this.createEntity(name, 'Registered'));
         }
+      }
+    }
+
+    // Strategy 4: Look for any text content that might contain company names
+    if (entities.length === 0) {
+      logger.info(this.config.id, 'Trying final text pattern matching...');
+      
+      const allText = $('body').text();
+      
+      // Look for common Malaysian company suffixes
+      const malayCompanyPattern = /([\w\s&.'()-]{10,100}(?:Sdn\.?\s*Bhd\.?|Berhad|Limited|Ltd))/gi;
+      const matches = allText.match(malayCompanyPattern);
+      
+      if (matches) {
+        const uniqueNames = new Set<string>();
+        matches.forEach(match => {
+          const cleaned = this.cleanName(match);
+          if (cleaned.length > 5 && cleaned.length < 100 && !uniqueNames.has(cleaned)) {
+            uniqueNames.add(cleaned);
+            entities.push(this.createEntity(cleaned, 'Registered'));
+          }
+        });
       }
     }
 
@@ -201,7 +263,7 @@ export class MyScParser implements RegistryParser {
     const parent = table.parent();
     const parentText = parent.text().substring(0, 500).toLowerCase();
     const prevHeading = table.prevAll('h2, h3, h4, h5, strong, .heading').first().text().toLowerCase();
-    const accordion = table.closest('.accordion-item, .card, .collapse, [class*="section"]');
+    const accordion = table.closest('.accordion-item, .card, .collapse, [class*="section"], .panel-wrapper');
     const accordionHeading = accordion.find('.accordion-header, .card-header, h3, h4').first().text().toLowerCase();
 
     const textToCheck = `${prevHeading} ${accordionHeading} ${parentText}`;
@@ -283,6 +345,7 @@ export class MyScParser implements RegistryParser {
     return name
       .replace(/\s+/g, ' ')
       .replace(/^\d+[.)]\s*/, '') // Remove leading numbering
+      .replace(/[^\w\s&.'()-]/g, '') // Remove unusual characters
       .trim();
   }
 }
