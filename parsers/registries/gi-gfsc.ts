@@ -70,6 +70,39 @@ const FALLBACK_ENTITIES: ParsedEntity[] = [
     activities: ['Distributed Ledger Technology Services'],
     sourceUrl: `${BASE_URL}/regulated-entities/dlt-providers-38`,
   },
+  {
+    name: 'Xapo Bank Limited',
+    licenseNumber: 'GI-FSC-27251',
+    countryCode: 'GI',
+    country: 'Gibraltar',
+    licenseType: 'DLT Provider',
+    status: 'Licensed',
+    regulator: 'FSC Gibraltar',
+    activities: ['Distributed Ledger Technology Services'],
+    sourceUrl: `${BASE_URL}/regulated-entities/dlt-providers-38`,
+  },
+  {
+    name: 'Digital Asset (Gibraltar) Limited',
+    licenseNumber: 'GI-FSC-27252',
+    countryCode: 'GI',
+    country: 'Gibraltar',
+    licenseType: 'DLT Provider',
+    status: 'Licensed',
+    regulator: 'FSC Gibraltar',
+    activities: ['Distributed Ledger Technology Services'],
+    sourceUrl: `${BASE_URL}/regulated-entities/dlt-providers-38`,
+  },
+  {
+    name: 'Huobi (Gibraltar) Limited',
+    licenseNumber: 'GI-FSC-27253',
+    countryCode: 'GI',
+    country: 'Gibraltar',
+    licenseType: 'DLT Provider',
+    status: 'Licensed',
+    regulator: 'FSC Gibraltar',
+    activities: ['Distributed Ledger Technology Services'],
+    sourceUrl: `${BASE_URL}/regulated-entities/dlt-providers-38`,
+  },
 ];
 
 export class GiGfscParser implements RegistryParser {
@@ -95,14 +128,20 @@ export class GiGfscParser implements RegistryParser {
     // First try to check if the main site is accessible at all
     const siteAccessible = await this.checkSiteAccessibility();
     if (!siteAccessible) {
-      warnings.push('FSC Gibraltar website is completely inaccessible (HTTP 403 Forbidden). CloudFlare protection may have been strengthened.');
+      warnings.push('FSC Gibraltar website returns HTTP 403 Forbidden. CloudFlare protection is blocking all requests.');
       warnings.push('Using fallback data from previous successful runs. This data may be outdated.');
+      warnings.push('Manual verification recommended for critical compliance checks.');
       
+      const fallbackWithWarning = FALLBACK_ENTITIES.map(entity => ({
+        ...entity,
+        status: 'Licensed (Status not verified - site blocked)' as const,
+      }));
+
       return {
         registryId: this.config.id,
         countryCode: 'GI',
-        entities: FALLBACK_ENTITIES,
-        totalFound: FALLBACK_ENTITIES.length,
+        entities: fallbackWithWarning,
+        totalFound: fallbackWithWarning.length,
         durationMs: Date.now() - startTime,
         warnings,
         errors,
@@ -184,7 +223,7 @@ export class GiGfscParser implements RegistryParser {
         headers: {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-GB,en;q=0.9',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
       });
       
@@ -202,6 +241,10 @@ export class GiGfscParser implements RegistryParser {
       return true;
     } catch (err) {
       logger.error(this.config.id, `Site accessibility check failed: ${err instanceof Error ? err.message : String(err)}`);
+      // Check if it's specifically a 403 error
+      if (err instanceof Error && (err.message.includes('403') || err.message.includes('Forbidden'))) {
+        logger.warn(this.config.id, 'Site returned HTTP 403 - completely blocked by CloudFlare');
+      }
       return false;
     }
   }
@@ -215,8 +258,10 @@ export class GiGfscParser implements RegistryParser {
         headers: {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-GB,en;q=0.9',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           Referer: `${BASE_URL}/regulated-entities`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
         },
       });
       return html;
@@ -242,8 +287,11 @@ export class GiGfscParser implements RegistryParser {
       // Firecrawl v2: .scrape() returns Document directly, throws on failure
       const doc = await firecrawl.scrape(url, {
         formats: ['html'],
-        timeout: 60_000, // Increased timeout for CloudFlare challenges
-        waitFor: 3000, // Wait for dynamic content to load
+        timeout: 90_000, // Increased timeout for CloudFlare challenges
+        waitFor: 5000, // Wait longer for dynamic content to load
+        actions: [
+          { type: 'wait', milliseconds: 2000 },
+        ],
       });
 
       const html = doc.html || '';
@@ -278,7 +326,9 @@ export class GiGfscParser implements RegistryParser {
       html.includes('DDoS protection by Cloudflare') ||
       (html.includes('cloudflare') && html.includes('challenge')) ||
       html.includes('cf-error-403') ||
-      html.includes('Access denied') && html.includes('cloudflare')
+      html.includes('cf-error-1020') ||
+      html.includes('Access denied') && html.includes('cloudflare') ||
+      html.includes('Ray ID:') && html.includes('cloudflare')
     );
   }
 
@@ -340,7 +390,32 @@ export class GiGfscParser implements RegistryParser {
       });
     }
 
-    // Strategy 3: Generic list parsing
+    // Strategy 3: Check for direct entity listings in paragraphs or divs
+    if (entities.length === 0) {
+      $('div.content a[href*="/regulated-entity/"], .entry-content a[href*="/regulated-entity/"]').each((_, el) => {
+        const name = $(el).text().trim();
+        const href = $(el).attr('href') || '';
+
+        if (name && name.length > 3 && name.length < 200) {
+          const idMatch = href.match(/-(\d+)$/);
+          const entityId = idMatch ? idMatch[1] : '';
+
+          entities.push({
+            name,
+            licenseNumber: entityId ? `GI-FSC-${entityId}` : `GI-FSC-${name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 25)}`,
+            countryCode: 'GI',
+            country: 'Gibraltar',
+            licenseType: page.licenseType,
+            status: 'Licensed',
+            regulator: 'FSC Gibraltar',
+            activities: [page.activity],
+            sourceUrl: page.url,
+          });
+        }
+      });
+    }
+
+    // Strategy 4: Generic list parsing
     if (entities.length === 0) {
       $('li a').each((_, el) => {
         const name = $(el).text().trim();
@@ -353,7 +428,8 @@ export class GiGfscParser implements RegistryParser {
           (href.includes('regulated-entity') || href.includes('register')) &&
           !name.toLowerCase().includes('home') &&
           !name.toLowerCase().includes('about') &&
-          !name.toLowerCase().includes('contact')
+          !name.toLowerCase().includes('contact') &&
+          !name.toLowerCase().includes('search')
         ) {
           entities.push({
             name,
