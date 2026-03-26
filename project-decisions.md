@@ -229,6 +229,7 @@
 - **Date:** 2026-03-26
 - **Context:** The `Fonts` section only exposed three hardcoded stacks, so typography roles could not reuse newly added families and there was no workable path for trying a Google Fonts link or a downloaded local font inside the same foundations workflow.
 - **Decision:** Add a first-class `fontLibrary` to the foundations registry. The `/ui/foundations` Fonts section now includes a shared library manager with two intake paths: Google Fonts URL parsing and local font upload into `public/fonts/uploaded/`. Every loaded family becomes available in all role pickers (`Body`, `Heading`, `Mono`), while CSS imports and `@font-face` blocks are generated from the registry instead of being hardcoded in runtime.
+- **Refinement:** The intake UI was then reduced to near-zero manual input: the top explainer block and bottom loaded-font gallery were removed, the Google and local upload cards are stacked vertically at the same width as the other font cards, and local uploads now infer family/fallback/style defaults from the file name instead of asking for manual metadata.
 - **Impact:** `public/design-system/foundation.registry.json`, `src/design-system/foundations.ts`, `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/styles/app.css`, `vite.config.ts`, and the relevant design-system tests now support library-backed typography iteration.
 
 ## DS-005: Remove Shadow Focus Token From Foundations and Runtime

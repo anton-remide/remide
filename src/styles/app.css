@@ -11106,9 +11106,8 @@ select.st-ds-foundations-input {
     width: 100%;
   }
 
-  .st-ds-font-library__intake,
-  .st-ds-font-library__local-grid {
-    grid-template-columns: 1fr;
+  .st-ds-font-library {
+    width: 100%;
   }
 
   .st-ds-foundations-list.is-token-grid,
@@ -11170,20 +11169,14 @@ select.st-ds-foundations-input {
   .st-ds-foundations-panel__header,
   .st-ds-foundations-card__top,
   .st-ds-foundations-card__bottom,
-  .st-ds-foundations-list__row,
-  .st-ds-font-library__top,
-  .st-ds-font-library__card-head,
-  .st-ds-font-library__card-foot {
+  .st-ds-foundations-list__row {
     width: 100%;
   }
 
   .st-ds-foundations-panel__header,
   .st-ds-foundations-card__top,
   .st-ds-foundations-card__bottom,
-  .st-ds-foundations-list__row,
-  .st-ds-font-library__top,
-  .st-ds-font-library__card-head,
-  .st-ds-font-library__card-foot {
+  .st-ds-foundations-list__row {
     flex-direction: column;
   }
 
@@ -11204,7 +11197,7 @@ select.st-ds-foundations-input {
   }
 
   .st-ds-font-library {
-    padding: var(--space-4);
+    width: 100%;
   }
 }
 

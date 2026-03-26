@@ -217,7 +217,6 @@ describe('DesignSystemFoundationsPage', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    expect(screen.getByText('DM Sans')).toBeInTheDocument();
     expect(screen.getAllByRole('option', { name: 'DM Sans • Sans' })).toHaveLength(3);
 
     const bodySelect = screen.getByRole('combobox', { name: 'Body project font' });
@@ -253,12 +252,6 @@ describe('DesignSystemFoundationsPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Fonts' })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Local font family name'), {
-      target: { value: 'Editorial New' },
-    });
-    fireEvent.change(screen.getByLabelText('Local font fallback'), {
-      target: { value: 'serif' },
-    });
     fireEvent.change(screen.getByLabelText('Local font file'), {
       target: {
         files: [new File(['fake-font'], 'editorial-new.woff2', { type: 'font/woff2' })],
@@ -270,8 +263,7 @@ describe('DesignSystemFoundationsPage', () => {
       expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
-    expect(screen.getByText('Editorial New')).toBeInTheDocument();
-    expect(screen.getAllByRole('option', { name: 'Editorial New • Serif' })).toHaveLength(3);
+    expect(screen.getAllByRole('option', { name: 'Editorial New • Sans' })).toHaveLength(3);
 
     const uploadCall = fetchMock.mock.calls[1];
     expect(String(uploadCall?.[0])).toBe('/__internal/foundations/fonts');
