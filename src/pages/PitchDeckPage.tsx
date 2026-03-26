@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { ArrowRight, Shield, Landmark, Network, Check, Zap, Globe, TrendingUp, Lock, Users, ChevronDown } from 'lucide-react';
-import { useReveal } from '../hooks/useAnimations';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { useTheme } from '../context/ThemeProvider';
 import type { Theme } from '../context/ThemeProvider';
@@ -22,16 +21,43 @@ function useForceDarkTheme() {
   }, []);
 }
 
+/** Simple IntersectionObserver-based fade-in for .pitch-fade elements */
+function usePitchReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const els = ref.current.querySelectorAll('.pitch-fade');
+    if (!els.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            (entry.target as HTMLElement).classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+}
+
 /** Track which slide is in view */
 function useActiveSlide() {
   const [active, setActive] = useState(0);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     const slides = document.querySelectorAll('.st-pitch-slide');
     if (!slides.length) return;
 
-    observerRef.current = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
@@ -43,8 +69,8 @@ function useActiveSlide() {
       { threshold: 0.5 }
     );
 
-    slides.forEach((s) => observerRef.current!.observe(s));
-    return () => observerRef.current?.disconnect();
+    slides.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
   }, []);
 
   return active;
@@ -77,27 +103,27 @@ export default function PitchDeckPage() {
     path: '/pitch',
   });
 
-  const revealRef = useReveal();
+  const containerRef = usePitchReveal();
   const activeSlide = useActiveSlide();
 
   return (
-    <div ref={revealRef} className="st-pitch">
+    <div ref={containerRef} className="st-pitch">
       <SlideNav active={activeSlide} />
 
       {/* ── Slide 1: Title ── */}
       <section className="st-pitch-slide st-pitch-slide--title" id="slide-0" data-slide={0}>
-        <div className="st-pitch-slide-inner">
-          <div className="st-pitch-badge reveal">PRE-SEED · $1.7M · Q1 2026</div>
-          <img src="/logo-full.svg" alt="RemiDe" className="st-pitch-logo reveal" />
-          <h1 className="st-pitch-title reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <div className="st-pitch-badge">PRE-SEED &middot; $1.7M &middot; Q1 2026</div>
+          <img src="/logo-full.svg" alt="RemiDe" className="st-pitch-logo" />
+          <h1 className="st-pitch-title">
             The clearing layer for institutional stablecoin payments.
           </h1>
-          <div className="st-pitch-taglines reveal">
-            <p><span className="st-pitch-accent">Unlocking Global Connectivity</span> — One integration for a compliant, cross-border financial network.</p>
-            <p><span className="st-pitch-accent">Delivering Institutional Grade Infra</span> — Built for compliance, speed, and seamless settlement.</p>
-            <p><span className="st-pitch-accent">Eliminating Clearing Friction</span> — The essential infrastructure to enable frictionless stablecoin clearing.</p>
+          <div className="st-pitch-taglines">
+            <p><span className="st-pitch-accent">Unlocking Global Connectivity</span> &mdash; One integration for a compliant, cross-border financial network.</p>
+            <p><span className="st-pitch-accent">Delivering Institutional Grade Infra</span> &mdash; Built for compliance, speed, and seamless settlement.</p>
+            <p><span className="st-pitch-accent">Eliminating Clearing Friction</span> &mdash; The essential infrastructure to enable frictionless stablecoin clearing.</p>
           </div>
-          <div className="st-pitch-scroll-hint reveal">
+          <div className="st-pitch-scroll-hint">
             <ChevronDown size={24} />
           </div>
         </div>
@@ -105,19 +131,19 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 2: Problem ── */}
       <section className="st-pitch-slide" id="slide-1" data-slide={1}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">1</span>
-          <h2 className="st-pitch-heading reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">1</span>
+          <h2 className="st-pitch-heading">
             The Stablecoin Reality:<br />High Volume, No Infrastructure
           </h2>
-          <div className="st-pitch-stat-hero reveal">
+          <div className="st-pitch-stat-hero">
             <span className="st-pitch-stat-value">$27T</span>
             <span className="st-pitch-stat-label">in stablecoin volume processed</span>
           </div>
-          <p className="st-pitch-body reveal">
+          <p className="st-pitch-body">
             But real-world payments remain limited because financial institutions lack a standardized way to send compliant payments to each other.
           </p>
-          <div className="st-pitch-grid st-pitch-grid--3 reveal">
+          <div className="st-pitch-grid st-pitch-grid--3">
             <div className="st-pitch-card clip-lg">
               <Shield size={28} className="st-pitch-card-icon" />
               <h3>A Compliance Protocol</h3>
@@ -139,12 +165,12 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 3: Missing Piece ── */}
       <section className="st-pitch-slide" id="slide-2" data-slide={2}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">2</span>
-          <h2 className="st-pitch-heading reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">2</span>
+          <h2 className="st-pitch-heading">
             The Missing Piece:<br />A Clearing Layer for Stablecoins
           </h2>
-          <div className="st-pitch-comparison reveal">
+          <div className="st-pitch-comparison">
             <div className="st-pitch-comparison-col">
               <h3 className="st-pitch-comparison-title">TradFi Fiat Payments</h3>
               <div className="st-pitch-layer st-pitch-layer--messaging">
@@ -187,13 +213,13 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 4: Regulatory Timing ── */}
       <section className="st-pitch-slide" id="slide-3" data-slide={3}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">3</span>
-          <h2 className="st-pitch-heading reveal">The Time is Now</h2>
-          <p className="st-pitch-body st-pitch-body--lead reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">3</span>
+          <h2 className="st-pitch-heading">The Time is Now</h2>
+          <p className="st-pitch-body st-pitch-body--lead">
             There is an urgent need for infrastructure that can coordinate stablecoin payments at scale.
           </p>
-          <div className="st-pitch-grid st-pitch-grid--3 reveal">
+          <div className="st-pitch-grid st-pitch-grid--3">
             <div className="st-pitch-card clip-lg">
               <Landmark size={28} className="st-pitch-card-icon" />
               <h3>Regulatory Permission</h3>
@@ -215,13 +241,13 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 5: Solution ── */}
       <section className="st-pitch-slide" id="slide-4" data-slide={4}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">4</span>
-          <h2 className="st-pitch-heading reveal">The RemiDe Solution</h2>
-          <p className="st-pitch-body st-pitch-body--lead reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">4</span>
+          <h2 className="st-pitch-heading">The RemiDe Solution</h2>
+          <p className="st-pitch-body st-pitch-body--lead">
             A network model that replaces bilateral integrations and extends to end users.
           </p>
-          <div className="st-pitch-grid st-pitch-grid--2 reveal">
+          <div className="st-pitch-grid st-pitch-grid--2">
             <div className="st-pitch-card st-pitch-card--product clip-lg">
               <div className="st-pitch-product-badge">B2B Payments</div>
               <h3>RemiDe Match</h3>
@@ -250,10 +276,10 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 6: How It Works ── */}
       <section className="st-pitch-slide" id="slide-5" data-slide={5}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">5</span>
-          <h2 className="st-pitch-heading reveal">RemiDe Match: How It Works</h2>
-          <div className="st-pitch-flow reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">5</span>
+          <h2 className="st-pitch-heading">RemiDe Match: How It Works</h2>
+          <div className="st-pitch-flow">
             <div className="st-pitch-flow-step">
               <div className="st-pitch-flow-node">OFI</div>
               <div className="st-pitch-flow-label">Payment Intent</div>
@@ -276,7 +302,7 @@ export default function PitchDeckPage() {
             <div className="st-pitch-flow-connector" />
             <div className="st-pitch-flow-step">
               <div className="st-pitch-flow-node">Pre-Cleared Transaction</div>
-              <div className="st-pitch-flow-label">Stablecoin Transfer (OFI → DFI)</div>
+              <div className="st-pitch-flow-label">Stablecoin Transfer (OFI &rarr; DFI)</div>
             </div>
             <div className="st-pitch-flow-connector" />
             <div className="st-pitch-flow-step">
@@ -284,20 +310,20 @@ export default function PitchDeckPage() {
               <div className="st-pitch-flow-label">Beneficiary Paid</div>
             </div>
           </div>
-          <div className="st-pitch-flow-footer reveal">
-            <div className="st-pitch-flow-footer-item"><strong>1. Connect</strong> — Join network, contribute corridors</div>
-            <div className="st-pitch-flow-footer-item"><strong>2. Match</strong> — Compliance collected, counterparties verified</div>
-            <div className="st-pitch-flow-footer-item"><strong>3. Settle</strong> — Funds move directly, full audit trail</div>
+          <div className="st-pitch-flow-footer">
+            <div className="st-pitch-flow-footer-item"><strong>1. Connect</strong> &mdash; Join network, contribute corridors</div>
+            <div className="st-pitch-flow-footer-item"><strong>2. Match</strong> &mdash; Compliance collected, counterparties verified</div>
+            <div className="st-pitch-flow-footer-item"><strong>3. Settle</strong> &mdash; Funds move directly, full audit trail</div>
           </div>
         </div>
       </section>
 
       {/* ── Slide 7: Match Detail ── */}
       <section className="st-pitch-slide" id="slide-6" data-slide={6}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">6</span>
-          <h2 className="st-pitch-heading reveal">Bilateral vs. Network Model</h2>
-          <div className="st-pitch-grid st-pitch-grid--2 reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">6</span>
+          <h2 className="st-pitch-heading">Bilateral vs. Network Model</h2>
+          <div className="st-pitch-grid st-pitch-grid--2">
             <div className="st-pitch-card clip-lg st-pitch-card--dim">
               <h3>Bilateral Model <span className="st-pitch-muted">(Today)</span></h3>
               <ul className="st-pitch-plain-list">
@@ -307,7 +333,7 @@ export default function PitchDeckPage() {
                 <li>Build Integration</li>
                 <li>Repeat Per Corridor</li>
               </ul>
-              <p className="st-pitch-card-note">Establish corridors → Collect compliance → Send transactions → Payout → Settlement onchain</p>
+              <p className="st-pitch-card-note">Establish corridors &rarr; Collect compliance &rarr; Send transactions &rarr; Payout &rarr; Settlement onchain</p>
             </div>
             <div className="st-pitch-card clip-lg st-pitch-card--highlight">
               <h3>Network Model <span className="st-pitch-accent">(with RemiDe)</span></h3>
@@ -320,7 +346,7 @@ export default function PitchDeckPage() {
                   <span>DFI 3</span>
                 </div>
               </div>
-              <p className="st-pitch-card-note">One integration → Match counterparty → Pre-clear → Settlement onchain → Payout</p>
+              <p className="st-pitch-card-note">One integration &rarr; Match counterparty &rarr; Pre-clear &rarr; Settlement onchain &rarr; Payout</p>
             </div>
           </div>
         </div>
@@ -328,27 +354,27 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 8: Traction ── */}
       <section className="st-pitch-slide" id="slide-7" data-slide={7}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">7</span>
-          <h2 className="st-pitch-heading reveal">Targets & Early Traction</h2>
-          <div className="st-pitch-grid st-pitch-grid--2 reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">7</span>
+          <h2 className="st-pitch-heading">Targets &amp; Early Traction</h2>
+          <div className="st-pitch-grid st-pitch-grid--2">
             <div className="st-pitch-card clip-lg">
-              <div className="st-pitch-traction-icon">🚀</div>
+              <Zap size={28} className="st-pitch-card-icon" />
               <h3>Production-Ready MVP</h3>
               <p>Core payment and compliance flow in final development.</p>
             </div>
             <div className="st-pitch-card clip-lg">
-              <div className="st-pitch-traction-icon">🌍</div>
+              <Globe size={28} className="st-pitch-card-icon" />
               <h3>Regulatory Fast-Track</h3>
               <p>Kenya sandbox engagement secured for rapid corridor activation.</p>
             </div>
             <div className="st-pitch-card clip-lg">
-              <div className="st-pitch-traction-icon">🏦</div>
+              <Landmark size={28} className="st-pitch-card-icon" />
               <h3>Institutional Pilots</h3>
               <p>Deploying live testing with key remittance partners.</p>
             </div>
             <div className="st-pitch-card clip-lg">
-              <div className="st-pitch-traction-icon">📈</div>
+              <TrendingUp size={28} className="st-pitch-card-icon" />
               <h3>Organic Demand</h3>
               <p>High-intent lead generation via the Clearing Institute.</p>
             </div>
@@ -358,28 +384,28 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 9: Roadmap ── */}
       <section className="st-pitch-slide" id="slide-8" data-slide={8}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">8</span>
-          <h2 className="st-pitch-heading reveal">Roadmap</h2>
-          <div className="st-pitch-roadmap reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">8</span>
+          <h2 className="st-pitch-heading">Roadmap</h2>
+          <div className="st-pitch-roadmap">
             <div className="st-pitch-roadmap-phase st-pitch-roadmap-phase--done">
               <div className="st-pitch-roadmap-marker" />
-              <h3>Phase 1 — Foundation</h3>
+              <h3>Phase 1 &mdash; Foundation</h3>
               <p>Core clearing protocol, compliance engine, counterparty matching MVP.</p>
             </div>
             <div className="st-pitch-roadmap-phase st-pitch-roadmap-phase--active">
               <div className="st-pitch-roadmap-marker" />
-              <h3>Phase 2 — Launch</h3>
+              <h3>Phase 2 &mdash; Launch</h3>
               <p>First live corridors (Kenya sandbox), institutional pilot integrations, Travel Rule exchange.</p>
             </div>
             <div className="st-pitch-roadmap-phase">
               <div className="st-pitch-roadmap-marker" />
-              <h3>Phase 3 — Scale</h3>
+              <h3>Phase 3 &mdash; Scale</h3>
               <p>Multi-corridor expansion, RemiDe Direct (user payments), additional jurisdictions.</p>
             </div>
             <div className="st-pitch-roadmap-phase">
               <div className="st-pitch-roadmap-marker" />
-              <h3>Phase 4 — Network Effects</h3>
+              <h3>Phase 4 &mdash; Network Effects</h3>
               <p>Industry standard protocol, global clearing network, revenue compounding.</p>
             </div>
           </div>
@@ -388,18 +414,18 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 10: Economics ── */}
       <section className="st-pitch-slide" id="slide-9" data-slide={9}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">9</span>
-          <h2 className="st-pitch-heading reveal">Infrastructure Economics</h2>
-          <div className="st-pitch-econ-hero reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">9</span>
+          <h2 className="st-pitch-heading">Infrastructure Economics</h2>
+          <div className="st-pitch-econ-hero">
             <h3>Scalable Fee Model</h3>
             <div className="st-pitch-stat-hero">
-              <span className="st-pitch-stat-value">0.1–0.9%</span>
+              <span className="st-pitch-stat-value">0.1&ndash;0.9%</span>
               <span className="st-pitch-stat-label">captured per transaction</span>
             </div>
             <p className="st-pitch-body">Our infrastructure model converts growing network volume into high-margin, compounding revenue.</p>
           </div>
-          <div className="st-pitch-grid st-pitch-grid--3 reveal">
+          <div className="st-pitch-grid st-pitch-grid--3">
             <div className="st-pitch-card clip-lg">
               <TrendingUp size={28} className="st-pitch-card-icon" />
               <h3>Network Effect</h3>
@@ -421,13 +447,13 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 11: Moat ── */}
       <section className="st-pitch-slide" id="slide-10" data-slide={10}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">10</span>
-          <h2 className="st-pitch-heading reveal">RemiDe's Moat</h2>
-          <p className="st-pitch-body st-pitch-body--lead reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">10</span>
+          <h2 className="st-pitch-heading">RemiDe&rsquo;s Moat</h2>
+          <p className="st-pitch-body st-pitch-body--lead">
             We provide the infrastructure layer, creating a durable competitive position through neutrality and network effects.
           </p>
-          <div className="st-pitch-grid st-pitch-grid--3 reveal">
+          <div className="st-pitch-grid st-pitch-grid--3">
             <div className="st-pitch-card clip-lg">
               <div className="st-pitch-moat-num">1</div>
               <h3>Unrivaled Neutrality</h3>
@@ -444,7 +470,7 @@ export default function PitchDeckPage() {
               <p>We define the protocol; late entrants must conform to our existing standard.</p>
             </div>
           </div>
-          <div className="st-pitch-callout clip-lg reveal">
+          <div className="st-pitch-callout clip-lg">
             <h4>Why Neutral Players Win</h4>
             <p>Like SWIFT, our strength lies in our independence. Banks and stablecoin issuers cannot credibly own shared compliance infrastructure due to inherent conflicts of interest. Once corridors route through RemiDe, rebuilding outside our network becomes commercially unviable.</p>
           </div>
@@ -453,10 +479,10 @@ export default function PitchDeckPage() {
 
       {/* ── Slide 12: Team & Raise ── */}
       <section className="st-pitch-slide st-pitch-slide--final" id="slide-11" data-slide={11}>
-        <div className="st-pitch-slide-inner">
-          <span className="st-pitch-slide-num reveal">11</span>
-          <h2 className="st-pitch-heading reveal">Team & Raise</h2>
-          <div className="st-pitch-grid st-pitch-grid--2 reveal">
+        <div className="st-pitch-slide-inner pitch-fade">
+          <span className="st-pitch-slide-num">11</span>
+          <h2 className="st-pitch-heading">Team &amp; Raise</h2>
+          <div className="st-pitch-grid st-pitch-grid--2">
             <div className="st-pitch-team-card clip-lg">
               <img src="/anton-titov.png" alt="Anton Titov" className="st-pitch-team-photo" />
               <h3>Anton Titov</h3>
@@ -472,10 +498,10 @@ export default function PitchDeckPage() {
               <p>Systems architect. Scaled high-throughput payment engines processing 50M+ daily events.</p>
             </div>
           </div>
-          <div className="st-pitch-backers reveal">
-            Backed by operators from: <strong>N26 · Chainalysis · Kraken · KuCoin</strong>
+          <div className="st-pitch-backers">
+            Backed by operators from: <strong>N26 &middot; Chainalysis &middot; Kraken &middot; KuCoin</strong>
           </div>
-          <div className="st-pitch-raise-card clip-lg reveal">
+          <div className="st-pitch-raise-card clip-lg">
             <div className="st-pitch-raise-amount">$1.7M</div>
             <div className="st-pitch-raise-label">Pre-Seed</div>
             <p>Fueling live corridors, MVP completion, and institutional onboarding.</p>
@@ -485,11 +511,11 @@ export default function PitchDeckPage() {
             href="https://t.me/antotitov"
             target="_blank"
             rel="noopener noreferrer"
-            className="st-pitch-cta reveal"
+            className="st-pitch-cta"
           >
             Book a Discovery Call <ArrowRight size={18} />
           </a>
-          <div className="st-pitch-contact reveal">
+          <div className="st-pitch-contact">
             Telegram: @antotitov
           </div>
         </div>

@@ -9592,10 +9592,15 @@ article.st-page:has(.st-floating-cta) {
   position: relative;
 }
 
-/* Override reveal opacity inside pitch — ensures content shows even if GSAP delays */
-.st-pitch .reveal,
-.st-pitch .stagger-in {
-  animation-delay: 0.3s;
+/* Pitch deck fade-in (CSS-only, no GSAP dependency) */
+.st-pitch .pitch-fade {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.st-pitch .pitch-fade.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* ── Slide Section ── */
