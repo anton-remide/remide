@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "updatedAt": "2026-03-24T15:14:51.961Z",
+    "updatedAt": "2026-03-25T11:29:55.685Z",
     "defaultTheme": "tracker",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
   },
@@ -181,9 +181,9 @@
           "usage": "Inputs, cards, dividers.",
           "preview": "color",
           "values": {
-            "tracker": "rgba(33, 32, 28, 0.08)",
-            "institute": "rgba(255, 255, 250, 0.08)",
-            "main-site": "rgba(255, 255, 250, 0.06)"
+            "tracker": "#21201C14",
+            "institute": "#FFFFFA14",
+            "main-site": "#FFFFFA0F"
           }
         },
         {
@@ -195,9 +195,9 @@
           "usage": "NearBlack surfaces, emphasis borders.",
           "preview": "color",
           "values": {
-            "tracker": "rgba(33, 32, 28, 0.15)",
-            "institute": "rgba(255, 255, 250, 0.14)",
-            "main-site": "rgba(255, 255, 250, 0.10)"
+            "tracker": "#21201C26",
+            "institute": "#FFFFFA24",
+            "main-site": "#FFFFFA1A"
           }
         },
         {
@@ -209,7 +209,7 @@
           "usage": "Buttons, highlights, active states.",
           "preview": "color",
           "values": {
-            "tracker": "#F355D6",
+            "tracker": "#FF7A33",
             "institute": "#FF7A33",
             "main-site": "#FF7A33"
           }
@@ -223,7 +223,7 @@
           "usage": "Interactive hover states.",
           "preview": "color",
           "values": {
-            "tracker": "#E34DC7",
+            "tracker": "#FF8F52",
             "institute": "#FF8F52",
             "main-site": "#FF8F52"
           }
@@ -237,9 +237,9 @@
           "usage": "Pills, callouts, lightweight emphasis.",
           "preview": "color",
           "values": {
-            "tracker": "#FBE7F7",
-            "institute": "rgba(255, 95, 15, 0.12)",
-            "main-site": "rgba(255, 95, 15, 0.15)"
+            "tracker": "#FF5F0F1F",
+            "institute": "#FF5F0F1F",
+            "main-site": "#FF5F0F26"
           }
         },
         {
@@ -251,9 +251,9 @@
           "usage": "Positive state text and icons.",
           "preview": "color",
           "values": {
-            "tracker": "#2B7A4B",
-            "institute": "#3ECF71",
-            "main-site": "#3ECF71"
+            "tracker": "#08BA3D",
+            "institute": "#08BA3D",
+            "main-site": "#08BA3D"
           }
         },
         {
@@ -266,8 +266,8 @@
           "preview": "color",
           "values": {
             "tracker": "#F0FDF4",
-            "institute": "rgba(62, 207, 113, 0.10)",
-            "main-site": "rgba(62, 207, 113, 0.10)"
+            "institute": "#3ECF711A",
+            "main-site": "#3ECF711A"
           }
         },
         {
@@ -294,8 +294,8 @@
           "preview": "color",
           "values": {
             "tracker": "#FFFBEB",
-            "institute": "rgba(232, 163, 23, 0.10)",
-            "main-site": "rgba(232, 163, 23, 0.10)"
+            "institute": "#E8A3171A",
+            "main-site": "#E8A3171A"
           }
         },
         {
@@ -322,8 +322,8 @@
           "preview": "color",
           "values": {
             "tracker": "#FEF2F2",
-            "institute": "rgba(239, 83, 80, 0.10)",
-            "main-site": "rgba(239, 83, 80, 0.10)"
+            "institute": "#EF53501A",
+            "main-site": "#EF53501A"
           }
         },
         {
@@ -350,8 +350,8 @@
           "preview": "color",
           "values": {
             "tracker": "#EEF2FF",
-            "institute": "rgba(129, 140, 248, 0.10)",
-            "main-site": "rgba(129, 140, 248, 0.10)"
+            "institute": "#818CF81A",
+            "main-site": "#818CF81A"
           }
         },
         {
@@ -378,8 +378,8 @@
           "preview": "color",
           "values": {
             "tracker": "#F1F5F9",
-            "institute": "rgba(155, 155, 151, 0.08)",
-            "main-site": "rgba(155, 155, 151, 0.08)"
+            "institute": "#9B9B9714",
+            "main-site": "#9B9B9714"
           }
         }
       ]
@@ -412,7 +412,7 @@
           "usage": "Hero and page-opening headlines.",
           "preview": "text",
           "values": {
-            "base": "clamp(36px, 5vw, 56px)"
+            "base": "48px"
           }
         },
         {
@@ -424,7 +424,7 @@
           "usage": "Page titles and strong section headings.",
           "preview": "text",
           "values": {
-            "base": "clamp(26px, 3.5vw, 36px)"
+            "base": "32px"
           }
         },
         {
@@ -837,9 +837,9 @@
           "usage": "Interactive focus states.",
           "preview": "shadow",
           "values": {
-            "tracker": "0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-            "institute": "0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent)",
-            "main-site": "0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent)"
+            "tracker": "0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent)",
+            "institute": "0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)",
+            "main-site": "0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent)"
           }
         }
       ]
@@ -1013,10 +1013,10 @@
           "description": "Caption and metadata copy.",
           "previewText": "Caption text",
           "properties": {
-            "font": "var(--font-body)",
+            "font": "var(--font-mono)",
             "size": "var(--type-caption)",
             "line-height": "1.5",
-            "weight": "500",
+            "weight": "600",
             "letter-spacing": "0"
           }
         },
@@ -1027,10 +1027,10 @@
           "description": "Microcopy and compact label copy.",
           "previewText": "Micro text",
           "properties": {
-            "font": "var(--font-body)",
+            "font": "var(--font-mono)",
             "size": "var(--type-micro)",
             "line-height": "1.45",
-            "weight": "500",
+            "weight": "600",
             "letter-spacing": "0"
           }
         },
@@ -1041,11 +1041,11 @@
           "description": "Label / eyebrow pattern.",
           "previewText": "Label",
           "properties": {
-            "font": "var(--font-body)",
+            "font": "var(--font-mono)",
             "size": "var(--type-micro)",
             "line-height": "1",
             "weight": "600",
-            "letter-spacing": "0"
+            "letter-spacing": "1.1px"
           }
         }
       ]

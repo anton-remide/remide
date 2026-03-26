@@ -23,7 +23,8 @@ const COLOR_SECTION_ID = 'colors';
 const FONTS_SECTION_ID = 'fonts';
 const TYPOGRAPHY_RULES_SECTION_ID = 'typography-rules';
 const TYPOGRAPHY_SCALE_SECTION_ID = 'typography-scale';
-const TYPOGRAPHY_SECTION_IDS = new Set([TYPOGRAPHY_SCALE_SECTION_ID, TYPOGRAPHY_RULES_SECTION_ID]);
+const CORE_LEDGER_SECTION_IDS = new Set([COLOR_SECTION_ID, 'spacing', 'radii', 'shadows']);
+const TYPOGRAPHY_SECTION_IDS = new Set([FONTS_SECTION_ID, TYPOGRAPHY_SCALE_SECTION_ID, TYPOGRAPHY_RULES_SECTION_ID]);
 const SECTION_NAV_ORDER = [
   'colors',
   'spacing',
@@ -35,12 +36,129 @@ const SECTION_NAV_ORDER = [
 ];
 type ProjectFontCategory = 'sans' | 'serif' | 'mono';
 type ProjectFontSource = 'google' | 'local';
+type ColorsView = 'active' | 'basic';
 const FOUNDATION_THEME_ORDER: Theme[] = ['tracker', 'institute', 'main-site'];
 const FOUNDATION_THEME_LABELS: Record<Theme, string> = {
   tracker: 'Tracker',
   institute: 'Institute',
   'main-site': 'Main site',
 };
+const BASIC_COLOR_STEPS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'] as const;
+const BASIC_COLOR_PALETTES = [
+  {
+    id: 'malachite',
+    label: 'Malachite',
+    colors: {
+      '50': { hex: '#F1FDF3', oklch: 'oklch(98.24% 0.0193 150.603)' },
+      '100': { hex: '#DDFCE3', oklch: 'oklch(96.25% 0.0463 151.584)' },
+      '200': { hex: '#BCF8C9', oklch: 'oklch(92.63% 0.0882 151.104)' },
+      '300': { hex: '#84F29E', oklch: 'oklch(87.35% 0.1545 149.939)' },
+      '400': { hex: '#3AE066', oklch: 'oklch(79.68% 0.2118 147.683)' },
+      '500': { hex: '#08BA3D', oklch: 'oklch(68.7% 0.2085 145.955)' },
+      '600': { hex: '#00A532', oklch: 'oklch(62.93% 0.1943 145.632)' },
+      '700': { hex: '#0D812D', oklch: 'oklch(52.75% 0.1543 146.469)' },
+      '800': { hex: '#15662A', oklch: 'oklch(44.85% 0.1195 147.541)' },
+      '900': { hex: '#175427', oklch: 'oklch(39.42% 0.0956 148.643)' },
+      '950': { hex: '#072E13', oklch: 'oklch(26.68% 0.0657 149.105)' },
+    },
+  },
+  {
+    id: 'havelockblue',
+    label: 'Havelockblue',
+    colors: {
+      '50': { hex: '#F0F8FF', oklch: 'oklch(97.57% 0.0128 240.129)' },
+      '100': { hex: '#DFF1FF', oklch: 'oklch(94.78% 0.027 242.068)' },
+      '200': { hex: '#BAE4FF', oklch: 'oklch(89.76% 0.0577 236.358)' },
+      '300': { hex: '#7BD1FF', oklch: 'oklch(82.29% 0.1059 233.495)' },
+      '400': { hex: '#18B6FF', oklch: 'oklch(73.71% 0.1564 236.845)' },
+      '500': { hex: '#00A6FD', oklch: 'oklch(69.7% 0.1692 243.198)' },
+      '600': { hex: '#007EDA', oklch: 'oklch(58.56% 0.1671 250.304)' },
+      '700': { hex: '#0065B4', oklch: 'oklch(50.22% 0.1474 251.335)' },
+      '800': { hex: '#005593', oklch: 'oklch(44.23% 0.122 249.008)' },
+      '900': { hex: '#054876', oklch: 'oklch(38.9% 0.0995 247.115)' },
+      '950': { hex: '#092D4D', oklch: 'oklch(29.11% 0.0702 249.418)' },
+    },
+  },
+  {
+    id: 'blazeorange',
+    label: 'Blazeorange',
+    colors: {
+      '50': { hex: '#FFF6EE', oklch: 'oklch(97.73% 0.014 60.728)' },
+      '100': { hex: '#FFEAD8', oklch: 'oklch(94.82% 0.0334 62.265)' },
+      '200': { hex: '#FFD2B1', oklch: 'oklch(89.48% 0.067 58.251)' },
+      '300': { hex: '#FFB27C', oklch: 'oklch(82.47% 0.1142 55.255)' },
+      '400': { hex: '#FF813B', oklch: 'oklch(73.57% 0.1737 46.685)' },
+      '500': { hex: '#FF5F0F', oklch: 'oklch(68.75% 0.2086 40.593)' },
+      '600': { hex: '#EF4200', oklch: 'oklch(62.99% 0.2165 35.852)' },
+      '700': { hex: '#C53108', oklch: 'oklch(54.17% 0.1899 34.066)' },
+      '800': { hex: '#9D2A14', oklch: 'oklch(46.39% 0.1541 33.081)' },
+      '900': { hex: '#7D2917', oklch: 'oklch(40.52% 0.1213 33.469)' },
+      '950': { hex: '#43120A', oklch: 'oklch(26.41% 0.0782 32.08)' },
+    },
+  },
+  {
+    id: 'mediumpurple',
+    label: 'Mediumpurple',
+    colors: {
+      '50': { hex: '#F8F5FD', oklch: 'oklch(97.49% 0.0118 303.69)' },
+      '100': { hex: '#F0E9FC', oklch: 'oklch(94.52% 0.0259 303.074)' },
+      '200': { hex: '#E4D7FA', oklch: 'oklch(89.99% 0.0498 302.386)' },
+      '300': { hex: '#D0B7F9', oklch: 'oklch(82.28% 0.0947 302.224)' },
+      '400': { hex: '#AF82F5', oklch: 'oklch(69.82% 0.1675 300.165)' },
+      '500': { hex: '#9D5EF0', oklch: 'oklch(62.15% 0.2114 300.165)' },
+      '600': { hex: '#8940E3', oklch: 'oklch(55.36% 0.2317 299.073)' },
+      '700': { hex: '#7632C8', oklch: 'oklch(49.47% 0.2156 298.668)' },
+      '800': { hex: '#632CA3', oklch: 'oklch(43.64% 0.1795 300.046)' },
+      '900': { hex: '#512782', oklch: 'oklch(38.07% 0.1453 301.237)' },
+      '950': { hex: '#35155C', oklch: 'oklch(28.89% 0.119 298.866)' },
+    },
+  },
+  {
+    id: 'ironsidegray',
+    label: 'Ironsidegray',
+    colors: {
+      '50': { hex: '#FAFAFA', oklch: 'oklch(98.49% 0.0007 145.775)' },
+      '100': { hex: '#F4F5F4', oklch: 'oklch(96.97% 0.0012 145.803)' },
+      '200': { hex: '#E6E6E4', oklch: 'oklch(92.42% 0.0026 98.679)' },
+      '300': { hex: '#D4D4D1', oklch: 'oklch(86.96% 0.0042 104.674)' },
+      '400': { hex: '#A2A29D', oklch: 'oklch(71.06% 0.0071 105.113)' },
+      '500': { hex: '#74746E', oklch: 'oklch(55.71% 0.0083 106.679)' },
+      '600': { hex: '#63635E', oklch: 'oklch(49.81% 0.0078 106.679)' },
+      '700': { hex: '#41423E', oklch: 'oklch(37.66% 0.0068 114.407)' },
+      '800': { hex: '#282724', oklch: 'oklch(27.3% 0.0055 86.957)' },
+      '900': { hex: '#1A1A18', oklch: 'oklch(21.82% 0.0051 105.936)' },
+      '950': { hex: '#0B0B09', oklch: 'oklch(14.67% 0.0042 100.072)' },
+    },
+  },
+] as const;
+const BASIC_BADGE_COLORS = [
+  '#B4A534',
+  '#F19F38',
+  '#9B60F6',
+  '#3B8299',
+  '#EC443A',
+  '#D243AD',
+  '#91D243',
+  '#2A64F6',
+] as const;
+
+function getFoundationModeLabel(mode: string) {
+  if (mode === 'base') {
+    return 'Base';
+  }
+
+  return FOUNDATION_THEME_LABELS[mode as Theme] ?? mode;
+}
+
+function getSpacingPreviewWidth(value: string) {
+  const parsed = Number.parseFloat(value);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 0;
+  }
+
+  return Math.max(3, Math.min(12, Math.round((parsed / 96) * 12)));
+}
 type DisplayFoundationItem =
   | { kind: 'token'; sectionId: string; item: FoundationToken; mode: string }
   | { kind: 'rule'; sectionId: string; item: FoundationRuleItem };
@@ -82,6 +200,143 @@ const PROJECT_FONT_OPTIONS: ProjectFontOption[] = [
 
 function cloneRegistry(registry: FoundationRegistry) {
   return JSON.parse(JSON.stringify(registry)) as FoundationRegistry;
+}
+
+function clampColorChannel(value: number) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function toHexChannel(value: number) {
+  return clampColorChannel(value).toString(16).padStart(2, '0').toUpperCase();
+}
+
+function normalizeHexColorValue(value: string) {
+  const trimmed = value.trim();
+  const shortHexMatch = trimmed.match(/^#([0-9a-f]{3}|[0-9a-f]{4})$/i);
+
+  if (shortHexMatch) {
+    const expanded = shortHexMatch[1]
+      .split('')
+      .map((char) => `${char}${char}`)
+      .join('')
+      .toUpperCase();
+
+    return expanded.endsWith('FF') ? `#${expanded.slice(0, 6)}` : `#${expanded}`;
+  }
+
+  const longHexMatch = trimmed.match(/^#([0-9a-f]{6}|[0-9a-f]{8})$/i);
+
+  if (!longHexMatch) {
+    return null;
+  }
+
+  const normalized = longHexMatch[1].toUpperCase();
+  return normalized.endsWith('FF') && normalized.length === 8 ? `#${normalized.slice(0, 6)}` : `#${normalized}`;
+}
+
+function parseRgbChannelValue(value: string) {
+  const trimmed = value.trim();
+
+  if (trimmed.endsWith('%')) {
+    const percentage = Number.parseFloat(trimmed.slice(0, -1));
+    if (!Number.isFinite(percentage)) {
+      return null;
+    }
+
+    return clampColorChannel((percentage / 100) * 255);
+  }
+
+  const numeric = Number.parseFloat(trimmed);
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+
+  return clampColorChannel(numeric);
+}
+
+function parseAlphaChannelValue(value: string) {
+  const trimmed = value.trim();
+
+  if (trimmed.endsWith('%')) {
+    const percentage = Number.parseFloat(trimmed.slice(0, -1));
+    if (!Number.isFinite(percentage)) {
+      return null;
+    }
+
+    return clampColorChannel((percentage / 100) * 255);
+  }
+
+  const numeric = Number.parseFloat(trimmed);
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
+
+  return clampColorChannel(numeric <= 1 ? numeric * 255 : numeric);
+}
+
+function normalizeRgbColorValue(value: string) {
+  const match = value.trim().match(/^rgba?\((.+)\)$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  const parts = match[1].split(',').map((part) => part.trim()).filter(Boolean);
+
+  if (parts.length !== 3 && parts.length !== 4) {
+    return null;
+  }
+
+  const [red, green, blue, alpha] = parts;
+  const channels = [red, green, blue].map(parseRgbChannelValue);
+
+  if (channels.some((channel) => channel === null)) {
+    return null;
+  }
+
+  const alphaChannel = alpha ? parseAlphaChannelValue(alpha) : 255;
+
+  if (alphaChannel === null) {
+    return null;
+  }
+
+  const [r, g, b] = channels as number[];
+  const hex = `#${toHexChannel(r)}${toHexChannel(g)}${toHexChannel(b)}`;
+
+  return alphaChannel === 255 ? hex : `${hex}${toHexChannel(alphaChannel)}`;
+}
+
+function normalizeAnyColorValue(value: string) {
+  return normalizeHexColorValue(value) ?? normalizeRgbColorValue(value);
+}
+
+function normalizeColorRegistry(registry: FoundationRegistry) {
+  const colorsCollection = registry.collections.find((entry) => entry.id === COLOR_SECTION_ID);
+
+  if (!colorsCollection) {
+    return registry;
+  }
+
+  let changed = false;
+  const nextRegistry = cloneRegistry(registry);
+  const nextColorsCollection = nextRegistry.collections.find((entry) => entry.id === COLOR_SECTION_ID);
+
+  if (!nextColorsCollection) {
+    return registry;
+  }
+
+  for (const token of nextColorsCollection.tokens) {
+    for (const [mode, value] of Object.entries(token.values)) {
+      const normalized = normalizeAnyColorValue(value);
+
+      if (normalized && normalized !== value) {
+        token.values[mode] = normalized;
+        changed = true;
+      }
+    }
+  }
+
+  return changed ? nextRegistry : registry;
 }
 
 function getColorCellKey(sectionId: string, tokenId: string, mode: string) {
@@ -128,7 +383,8 @@ async function fetchFoundationRegistry() {
     throw new Error(`Failed to load foundations (${response.status})`);
   }
 
-  return response.json() as Promise<FoundationRegistry>;
+  const registry = await response.json() as FoundationRegistry;
+  return normalizeColorRegistry(registry);
 }
 
 async function saveFoundationRegistry(registry: FoundationRegistry) {
@@ -136,10 +392,11 @@ async function saveFoundationRegistry(registry: FoundationRegistry) {
     throw new Error('Local Save is available only in the Vite dev server.');
   }
 
+  const normalizedRegistry = normalizeColorRegistry(registry);
   const response = await fetch(FOUNDATION_ENDPOINT, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ registry }),
+    body: JSON.stringify({ registry: normalizedRegistry }),
   });
 
   const payload = await response.json() as { error?: string } & FoundationRegistry;
@@ -148,7 +405,7 @@ async function saveFoundationRegistry(registry: FoundationRegistry) {
     throw new Error(payload.error || `Failed to save foundations (${response.status})`);
   }
 
-  return payload as FoundationRegistry;
+  return normalizeColorRegistry(payload as FoundationRegistry);
 }
 
 function tokenPreviewStyle(token: FoundationToken, mode: string) {
@@ -215,20 +472,14 @@ function getTokenValue(registry: FoundationRegistry, collectionId: string, token
   return token?.values[mode] ?? '';
 }
 
-function isCssColorValue(value: string) {
-  if (value.trim().length === 0) {
-    return false;
-  }
-
-  if (typeof CSS === 'undefined' || typeof CSS.supports !== 'function') {
-    return true;
-  }
-
-  return CSS.supports('color', value);
+function isHexColorValue(value: string) {
+  return normalizeHexColorValue(value) !== null;
 }
 
 function colorSwatchStyle(value: string, isInvalid = false) {
-  if (isInvalid || !isCssColorValue(value)) {
+  const normalized = normalizeAnyColorValue(value);
+
+  if (isInvalid || !normalized) {
     return {
       background:
         'repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent) 0 8px, transparent 8px 16px)',
@@ -237,7 +488,7 @@ function colorSwatchStyle(value: string, isInvalid = false) {
   }
 
   return {
-    background: value,
+    background: normalized,
     borderColor: 'var(--color-border-strong)',
   };
 }
@@ -327,6 +578,8 @@ export default function DesignSystemFoundationsPage() {
   const [editingColorCellKey, setEditingColorCellKey] = useState<string | null>(null);
   const [colorCellDrafts, setColorCellDrafts] = useState<Record<string, string>>({});
   const [colorCellErrors, setColorCellErrors] = useState<Record<string, string>>({});
+  const [activeColorsView, setActiveColorsView] = useState<ColorsView>('active');
+  const [copiedBasicColorKey, setCopiedBasicColorKey] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -400,6 +653,18 @@ export default function DesignSystemFoundationsPage() {
     }
   }, [selectedSectionId, visibleSections]);
 
+  useEffect(() => {
+    if (!copiedBasicColorKey) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setCopiedBasicColorKey(null);
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [copiedBasicColorKey]);
+
   const activeSection = useMemo(
     () => visibleSections.find((section) => section.id === selectedSectionId) ?? visibleSections[0] ?? null,
     [selectedSectionId, visibleSections],
@@ -408,6 +673,7 @@ export default function DesignSystemFoundationsPage() {
   const activeMode = activeSection && isTokenSection(activeSection)
     ? resolveTokenMode(activeSection, theme)
     : undefined;
+  const isColorsSectionActive = activeSection?.id === COLOR_SECTION_ID && isTokenSection(activeSection);
 
   const dirty = useMemo(() => {
     if (!savedRegistry || !draftRegistry) {
@@ -643,19 +909,21 @@ export default function DesignSystemFoundationsPage() {
     const cellKey = getColorCellKey(sectionId, tokenId, mode);
     const itemKey = getFoundationItemKey(sectionId, tokenId);
     const nextValue = colorCellDrafts[cellKey] ?? getTokenValue(draftRegistry, sectionId, tokenId, mode);
-    const savedValue = getTokenValue(savedRegistry, sectionId, tokenId, mode);
+    const normalizedValue = normalizeHexColorValue(nextValue);
+    const savedValue = normalizeAnyColorValue(getTokenValue(savedRegistry, sectionId, tokenId, mode))
+      ?? getTokenValue(savedRegistry, sectionId, tokenId, mode).trim();
 
-    if (nextValue === savedValue) {
+    if (normalizedValue && normalizedValue === savedValue) {
       clearColorCellDraft(cellKey);
       clearColorCellError(cellKey);
       setEditingColorCellKey((current) => (current === cellKey ? null : current));
       return;
     }
 
-    if (!isCssColorValue(nextValue)) {
+    if (!normalizedValue || !isHexColorValue(nextValue)) {
       setColorCellErrors((current) => ({
         ...current,
-        [cellKey]: 'Enter a valid CSS color.',
+        [cellKey]: 'Enter a HEX color as #RRGGBB or #RRGGBBAA.',
       }));
       return;
     }
@@ -672,10 +940,32 @@ export default function DesignSystemFoundationsPage() {
       return;
     }
 
-    token.values[mode] = nextValue;
+    token.values[mode] = normalizedValue;
     setDraftRegistry(nextDraft);
 
     await saveItemFromDraft(nextDraft, sectionId, tokenId, itemKey);
+  }
+
+  async function copyBasicColorHex(copyKey: string, hex: string) {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(hex);
+      } else if (typeof document !== 'undefined') {
+        const input = document.createElement('textarea');
+        input.value = hex;
+        input.setAttribute('readonly', '');
+        input.style.position = 'absolute';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+      }
+
+      setCopiedBasicColorKey(copyKey);
+    } catch {
+      setCopiedBasicColorKey(null);
+    }
   }
 
   function renderColorsLedger(section: FoundationTokenCollection) {
@@ -684,7 +974,7 @@ export default function DesignSystemFoundationsPage() {
         <div className="st-ds-colors-ledger clip-lg">
           <div className="st-ds-colors-ledger__row st-ds-colors-ledger__row--header">
             <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-col--header">
-              <span className="sr-only">Name</span>
+              Token
             </div>
             {FOUNDATION_THEME_ORDER.map((mode) => (
               <div key={mode} className="st-ds-colors-ledger__header-cell">
@@ -758,6 +1048,10 @@ export default function DesignSystemFoundationsPage() {
                                   className="st-ds-colors-ledger__input"
                                   aria-label={inputLabel}
                                   value={value}
+                                  placeholder="#RRGGBB"
+                                  maxLength={9}
+                                  spellCheck={false}
+                                  autoCapitalize="characters"
                                   autoFocus
                                   disabled={tokenLocked || savingItemKey !== null}
                                   onChange={(event) => updateColorCellDraft(section.id, token.id, mode, event.target.value)}
@@ -814,6 +1108,244 @@ export default function DesignSystemFoundationsPage() {
     );
   }
 
+  function renderBasicColorsLedger() {
+    return (
+      <div className="st-ds-basic-colors-stack">
+        <div className="st-ds-basic-colors-ledger-wrap">
+          <div className="st-ds-basic-colors-ledger clip-lg">
+            <div className="st-ds-basic-colors-ledger__row st-ds-basic-colors-ledger__row--header">
+              <div className="st-ds-basic-colors-ledger__tone-col st-ds-basic-colors-ledger__tone-col--header">
+                Step
+              </div>
+              {BASIC_COLOR_PALETTES.map((palette) => (
+                <div key={palette.id} className="st-ds-basic-colors-ledger__header-cell">
+                  {palette.label}
+                </div>
+              ))}
+            </div>
+
+            {BASIC_COLOR_STEPS.map((step) => (
+              <div key={step} className="st-ds-basic-colors-ledger__row">
+                <div className="st-ds-basic-colors-ledger__tone-col">
+                  <span className="st-ds-basic-colors-ledger__tone-value">{step}</span>
+                </div>
+
+                {BASIC_COLOR_PALETTES.map((palette) => {
+                  const color = palette.colors[step];
+                  const copyKey = `${palette.id}-${step}`;
+                  const isCopied = copiedBasicColorKey === copyKey;
+
+                  return (
+                    <div key={copyKey} className="st-ds-basic-colors-ledger__cell-shell">
+                      <button
+                        type="button"
+                        className="st-ds-basic-colors-ledger__cell"
+                        aria-label={`Copy ${palette.label} ${step} hex ${color.hex}`}
+                        onClick={() => {
+                          void copyBasicColorHex(copyKey, color.hex);
+                        }}
+                      >
+                        <span
+                          className="st-ds-basic-colors-ledger__swatch"
+                          style={{ background: color.hex }}
+                          aria-hidden="true"
+                        />
+                        <code className="st-ds-basic-colors-ledger__hex">{color.hex}</code>
+                        {isCopied && <span className="st-ds-foundations-list__badge">Copied</span>}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <section className="st-ds-basic-colors-badges">
+          <div className="st-ds-basic-colors-badges__header">
+            <span className="st-ds-foundations-group__title">For badges</span>
+          </div>
+          <div className="st-ds-basic-colors-badges__grid">
+            {BASIC_BADGE_COLORS.map((hex) => {
+              const copyKey = `badge-${hex}`;
+              const isCopied = copiedBasicColorKey === copyKey;
+
+              return (
+                <button
+                  key={hex}
+                  type="button"
+                  className="st-ds-basic-colors-badges__item clip-lg"
+                  aria-label={`Copy badge hex ${hex}`}
+                  onClick={() => {
+                    void copyBasicColorHex(copyKey, hex);
+                  }}
+                >
+                  <span
+                    className="st-ds-basic-colors-badges__swatch"
+                    style={{ background: hex }}
+                    aria-hidden="true"
+                  />
+                  <code className="st-ds-basic-colors-badges__hex">{hex}</code>
+                  {isCopied && <span className="st-ds-foundations-list__badge">Copied</span>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  function renderCoreTokenPreview(token: FoundationToken, mode: string) {
+    if (token.preview === 'spacing') {
+      const indicatorWidth = getSpacingPreviewWidth(token.values[mode] ?? '');
+
+      return (
+        <span className="st-ds-token-ledger__swatch st-ds-token-ledger__swatch--spacing" aria-hidden="true">
+          {indicatorWidth > 0 && (
+            <span className="st-ds-token-ledger__spacing-indicator" style={{ width: `${indicatorWidth}px` }} />
+          )}
+        </span>
+      );
+    }
+
+    return (
+      <span
+        className={[
+          'st-ds-token-ledger__swatch',
+          token.preview === 'shadow' && 'st-ds-token-ledger__swatch--shadow',
+        ].filter(Boolean).join(' ')}
+        style={{
+          ...tokenPreviewStyle(token, mode),
+          ...(token.preview === 'shadow' ? { border: 'none' } : {}),
+        }}
+        aria-hidden="true"
+      />
+    );
+  }
+
+  function renderCoreTokenLedger(section: FoundationTokenCollection) {
+    const isCompactSection = section.id === 'spacing' || section.id === 'radii';
+
+    return (
+      <div
+        className={[
+          'st-ds-colors-ledger-wrap',
+          isCompactSection && 'st-ds-colors-ledger-wrap--compact',
+        ].filter(Boolean).join(' ')}
+      >
+        <div
+          className={[
+            'st-ds-colors-ledger',
+            'st-ds-colors-ledger--token',
+            isCompactSection && 'st-ds-colors-ledger--compact',
+            'clip-lg',
+          ].filter(Boolean).join(' ')}
+        >
+          <div className="st-ds-colors-ledger__row st-ds-colors-ledger__row--header">
+            <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-col--header">
+              Token
+            </div>
+            {section.modes.map((mode) => (
+              <div key={mode} className="st-ds-colors-ledger__header-cell">
+                {getFoundationModeLabel(mode)}
+              </div>
+            ))}
+          </div>
+
+          {section.groups.map((group) => {
+            const tokens = section.tokens.filter((item) => item.group === group.id);
+
+            if (tokens.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={group.id} className="st-ds-colors-ledger__group">
+                <div className="st-ds-colors-ledger__group-label">{group.label}</div>
+
+                {tokens.map((token) => {
+                  const itemKey = getFoundationItemKey(section.id, token.id);
+                  const isDirty = dirtyItemKeys.has(itemKey);
+                  const isSavingItem = savingItemKey === itemKey;
+                  const itemError = itemErrorMessages[itemKey];
+                  const tokenLocked = token.editable === false;
+                  const actionsDisabled = savingItemKey !== null;
+
+                  return (
+                    <div
+                      key={token.id}
+                      className={[
+                        'st-ds-colors-ledger__row',
+                        isDirty && 'is-dirty',
+                        isSavingItem && 'is-saving',
+                      ].filter(Boolean).join(' ')}
+                    >
+                      <div className="st-ds-colors-ledger__name-col st-ds-colors-ledger__name-cell">
+                        <div className="st-ds-colors-ledger__name-top">
+                          <span className="st-ds-colors-ledger__token-label">{token.label}</span>
+                          <span className="st-ds-colors-ledger__row-badges">
+                            {tokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
+                            {isSavingItem && <span className="st-ds-foundations-list__badge">Saving…</span>}
+                            {isDirty && !isSavingItem && <span className="st-ds-foundations-list__badge">Edited</span>}
+                          </span>
+                        </div>
+                        <code className="st-ds-colors-ledger__token-code">{token.name}</code>
+                        {itemError && (
+                          <div className="st-ds-colors-ledger__row-error" role="alert">
+                            {itemError}
+                          </div>
+                        )}
+                        {isDirty && (
+                          <div className="st-ds-foundations-card__actions">
+                            <div className="st-ds-foundations-card__actions-row" role="group" aria-label={`${token.label} unsaved changes`}>
+                              <button
+                                type="button"
+                                className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+                                onClick={() => handleDiscardItem(section.id, token.id, itemKey)}
+                                disabled={actionsDisabled}
+                              >
+                                Discard
+                              </button>
+                              <button
+                                type="button"
+                                className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+                                onClick={() => handleSaveItem(section.id, token.id, itemKey)}
+                                disabled={actionsDisabled}
+                              >
+                                {isSavingItem ? 'Saving…' : 'Save'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {section.modes.map((mode) => (
+                        <div key={`${token.id}-${mode}`} className="st-ds-colors-ledger__cell-shell">
+                          <label className="st-ds-token-ledger__field">
+                            <span className="sr-only">{`${token.label} ${getFoundationModeLabel(mode)} value`}</span>
+                            {!isCompactSection && renderCoreTokenPreview(token, mode)}
+                            <input
+                              className="st-ds-foundations-input st-ds-foundations-input--inline st-ds-token-ledger__input"
+                              aria-label={`${token.label} ${getFoundationModeLabel(mode)} value`}
+                              value={token.values[mode] ?? ''}
+                              readOnly={tokenLocked}
+                              onChange={(event) => updateTokenValue(section.id, token.id, mode, event.target.value)}
+                            />
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="st-ds-content st-ds-foundations">
@@ -836,50 +1368,97 @@ export default function DesignSystemFoundationsPage() {
 
   function renderNavButton(section: FoundationSection) {
     return (
-      <button
-        key={section.id}
-        type="button"
-        onClick={() => setSelectedSectionId(section.id)}
-        className={['st-ds-foundations-nav__item', activeSection.id === section.id && 'is-active'].filter(Boolean).join(' ')}
-      >
-        <span className="st-ds-foundations-nav__title">
-          {section.label}
+      <li key={section.id}>
+        <button
+          type="button"
+          onClick={() => setSelectedSectionId(section.id)}
+          aria-pressed={activeSection.id === section.id}
+          className={[
+            'st-ds-sidebar__link',
+            'st-ds-foundations-sidebar__button',
+            activeSection.id === section.id && 'is-active',
+          ].filter(Boolean).join(' ')}
+        >
+          <span className="st-ds-foundations-sidebar__label">{section.label}</span>
           {isSectionDirty(section.id) && <span className="st-ds-foundations-nav__badge">Edited</span>}
-        </span>
-      </button>
+        </button>
+      </li>
+    );
+  }
+
+  function renderSidebarGroup(title: string, sections: FoundationSection[]) {
+    if (sections.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="st-ds-sidebar__group">
+        <div className="st-ds-sidebar__group-title">{title}</div>
+        <ul className="st-ds-sidebar__list">
+          {sections.map(renderNavButton)}
+        </ul>
+      </div>
     );
   }
 
   return (
-    <div className="st-ds-content st-ds-foundations">
-      <div className="st-ds-foundations-workspace">
-        <aside className="st-ds-foundations-panel st-ds-foundations-panel--sidebar">
-          <div className="st-ds-foundations-nav">
-            <div className="st-ds-foundations-nav__group">
-              {primaryNavSections.map(renderNavButton)}
-            </div>
-            {typographyNavSections.length > 0 && (
-              <div className="st-ds-foundations-nav__group st-ds-foundations-nav__group--secondary">
-                {typographyNavSections.map(renderNavButton)}
-              </div>
-            )}
-          </div>
-        </aside>
+    <div className="st-ds-atoms-root st-ds-foundations-shell">
+      <aside className="st-ds-sidebar st-ds-sidebar--foundations" aria-label="Foundations">
+        {renderSidebarGroup('Core', primaryNavSections)}
+        {renderSidebarGroup('Typography', typographyNavSections)}
+      </aside>
 
+      <div className="st-ds-content st-ds-foundations">
         <section
           className={[
             'st-ds-foundations-panel',
             'st-ds-foundations-panel--main',
-            activeSection.id === 'typography-rules' && 'is-typography-rules',
+            (activeSection.id === FONTS_SECTION_ID || activeSection.id === TYPOGRAPHY_SCALE_SECTION_ID) && 'is-compact-token-stack',
+            activeSection.id === FONTS_SECTION_ID && 'is-fonts',
+            activeSection.id === TYPOGRAPHY_RULES_SECTION_ID && 'is-typography-rules',
           ].filter(Boolean).join(' ')}
         >
-          <div className="st-ds-foundations-panel__header">
+          <div
+            className={[
+              'st-ds-foundations-panel__header',
+              isColorsSectionActive && 'st-ds-foundations-panel__header--colors-modes',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
             <div className="st-ds-foundations-panel__header-copy">
               <Heading level={2}>{activeSection.label}</Heading>
             </div>
+            {isColorsSectionActive && (
+              <div className="st-ds-foundations-panel__header-meta">
+                <div className="st-ds-foundations-modes" role="tablist" aria-label="Colors views">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeColorsView === 'active'}
+                    className={['st-ds-foundations-modes__btn', activeColorsView === 'active' && 'is-active'].filter(Boolean).join(' ')}
+                    onClick={() => setActiveColorsView('active')}
+                  >
+                    Theme
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeColorsView === 'basic'}
+                    className={['st-ds-foundations-modes__btn', activeColorsView === 'basic' && 'is-active'].filter(Boolean).join(' ')}
+                    onClick={() => setActiveColorsView('basic')}
+                  >
+                    Basic colors
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {activeSection.id === COLOR_SECTION_ID && isTokenSection(activeSection) ? renderColorsLedger(activeSection) : (
+          {isColorsSectionActive ? (
+            activeColorsView === 'active' ? renderColorsLedger(activeSection) : renderBasicColorsLedger()
+          ) : (
+            isTokenSection(activeSection) && CORE_LEDGER_SECTION_IDS.has(activeSection.id) ? renderCoreTokenLedger(activeSection) : (
             <div className="st-ds-foundations-groups">
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
@@ -934,31 +1513,35 @@ export default function DesignSystemFoundationsPage() {
                             {isFontRoleCard ? (
                               <label className="st-ds-foundations-inline-field">
                                 <span className="sr-only">Project Font</span>
-                                <select
-                                  className="st-ds-foundations-input"
-                                  aria-label={`${token.label} project font`}
-                                  value={selectedFontOption?.value ?? ''}
-                                  disabled={tokenLocked}
-                                  onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
-                                >
-                                  {!selectedFontOption && <option value="">Unsupported Current Stack</option>}
-                                  {fontRoleOptions.map((option) => (
-                                    <option key={`${token.id}-${option.value}`} value={option.value}>
-                                      {option.label}
-                                    </option>
-                                  ))}
-                                </select>
+                                <span className={['st-ds-foundations-control', tokenLocked && 'is-readonly'].filter(Boolean).join(' ')}>
+                                  <select
+                                    className="st-ds-foundations-input"
+                                    aria-label={`${token.label} project font`}
+                                    value={selectedFontOption?.value ?? ''}
+                                    disabled={tokenLocked}
+                                    onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
+                                  >
+                                    {!selectedFontOption && <option value="">Unsupported Current Stack</option>}
+                                    {fontRoleOptions.map((option) => (
+                                      <option key={`${token.id}-${option.value}`} value={option.value}>
+                                        {option.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </span>
                               </label>
                             ) : (
                               <label className="st-ds-foundations-inline-field">
                                 <span className="sr-only">Value ({tokenMode})</span>
-                                <input
-                                  className="st-ds-foundations-input st-ds-foundations-input--inline"
-                                  aria-label={`${token.label} value (${tokenMode})`}
-                                  value={token.values[tokenMode] ?? ''}
-                                  readOnly={tokenLocked}
-                                  onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
-                                />
+                                <span className={['st-ds-foundations-control', tokenLocked && 'is-readonly'].filter(Boolean).join(' ')}>
+                                  <input
+                                    className="st-ds-foundations-input st-ds-foundations-input--inline"
+                                    aria-label={`${token.label} value (${tokenMode})`}
+                                    value={token.values[tokenMode] ?? ''}
+                                    readOnly={tokenLocked}
+                                    onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
+                                  />
+                                </span>
                               </label>
                             )}
                           </div>
@@ -1046,11 +1629,13 @@ export default function DesignSystemFoundationsPage() {
                           {Object.entries(rule.properties).map(([property, value]) => (
                             <label key={property} className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
                               <span className="st-ds-foundations-list__value-label">{property}</span>
-                              <input
-                                className="st-ds-foundations-input"
-                                value={value}
-                                onChange={(event) => updateRuleProperty(entry.sectionId, rule.id, property, event.target.value)}
-                              />
+                              <span className="st-ds-foundations-control">
+                                <input
+                                  className="st-ds-foundations-input"
+                                  value={value}
+                                  onChange={(event) => updateRuleProperty(entry.sectionId, rule.id, property, event.target.value)}
+                                />
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -1096,10 +1681,10 @@ export default function DesignSystemFoundationsPage() {
                     );
                   })}
                 </div>
-              </div>
-            ))}
+                </div>
+              ))}
             </div>
-          )}
+          ))}
         </section>
       </div>
     </div>
