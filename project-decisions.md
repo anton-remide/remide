@@ -218,6 +218,13 @@
 - **Impact:** `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/design-system/foundations.ts`, `src/design-system/foundations.test.ts`, and `src/styles/app.css` now follow a card-first editing model with unsaved-change protection (`beforeunload`), inline dirty markers, and no visible `description` / `usage` editing surface in the main UX.
 
 ## DS-003: Foundations Colors Use Tri-Palette Ledger and Theme IDs Match Product Names
+
+## DS-004: Foundations Fonts Use a Shared Library With Google URL + Local Upload Intake
+- **Category:** UX-UI
+- **Date:** 2026-03-26
+- **Context:** The `Fonts` section only exposed three hardcoded stacks, so typography roles could not reuse newly added families and there was no workable path for trying a Google Fonts link or a downloaded local font inside the same foundations workflow.
+- **Decision:** Add a first-class `fontLibrary` to the foundations registry. The `/ui/foundations` Fonts section now includes a shared library manager with two intake paths: Google Fonts URL parsing and local font upload into `public/fonts/uploaded/`. Every loaded family becomes available in all role pickers (`Body`, `Heading`, `Mono`), while CSS imports and `@font-face` blocks are generated from the registry instead of being hardcoded in runtime.
+- **Impact:** `public/design-system/foundation.registry.json`, `src/design-system/foundations.ts`, `src/pages/design-system/DesignSystemFoundationsPage.tsx`, `src/styles/app.css`, `vite.config.ts`, and the relevant design-system tests now support library-backed typography iteration.
 - **Category:** UX-UI
 - **Date:** 2026-03-25
 - **Context:** The card-first foundations editor worked for single-mode editing, but `Colors` needed side-by-side comparison and faster token maintenance across all three palettes. Legacy theme ids (`main`, `darkgray`, `nearblack`) also no longer matched product language.

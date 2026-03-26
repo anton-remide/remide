@@ -787,7 +787,6 @@ a.st-content-card:hover {
   color: var(--black);
   text-decoration: none;
   transition: color 200ms ease;
-  position: relative;
   letter-spacing: 0.005em;
 }
 
@@ -803,16 +802,6 @@ a.st-content-card:hover {
 
 .st-header-nav a.st-btn:hover {
   color: var(--white);
-}
-
-.st-header-nav a.active::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: var(--black);
 }
 
 /* Avatar Dropdown Menu */
@@ -6878,18 +6867,17 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
 
 .st-header-nav a {
   font-size: var(--type-body-sm);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
-.st-header-nav a:hover,
-.st-header-nav a.active {
+.st-header-nav a:hover {
   color: var(--black);
 }
 
-.st-header-nav a.active::after {
-  background: var(--black);
-  height: 1px;
+.st-header-nav a.active {
+  color: var(--black);
+  font-weight: 700;
 }
 
 .st-header-auth-link {
@@ -10134,6 +10122,158 @@ article.st-page:has(.st-floating-cta) {
   color: var(--color-text-secondary);
 }
 
+.st-ds-font-library {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(100%, 960px);
+  padding: var(--space-5);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, transparent), var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 14%, var(--color-border));
+  box-shadow: var(--shadow-sm);
+}
+
+.st-ds-font-library__top,
+.st-ds-font-library__card-head,
+.st-ds-font-library__card-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.st-ds-font-library__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 62ch;
+}
+
+.st-ds-font-library__lede {
+  margin: 0;
+  font-size: var(--type-body-sm);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.st-ds-font-library__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.st-ds-font-library__intake {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.st-ds-font-library__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface-raised) 88%, transparent);
+}
+
+.st-ds-font-library__panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.st-ds-font-library__local-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.st-ds-foundations-control--file {
+  justify-content: space-between;
+  padding-right: var(--space-3);
+}
+
+.st-ds-font-library__file-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.st-ds-font-library__file-label {
+  min-width: 0;
+  font-size: var(--type-body-sm);
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.st-ds-font-library__feedback {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-accent-subtle) 62%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  font-size: var(--type-body-sm);
+  color: var(--color-text-main);
+}
+
+.st-ds-font-library__feedback.is-error {
+  background: color-mix(in srgb, var(--color-danger-subtle) 80%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-danger) 20%, var(--color-border));
+  color: var(--color-danger);
+}
+
+.st-ds-font-library__feedback.is-success {
+  background: color-mix(in srgb, var(--color-success-subtle) 80%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-success) 20%, var(--color-border));
+  color: color-mix(in srgb, var(--color-success) 82%, var(--color-text-main));
+}
+
+.st-ds-font-library__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.st-ds-font-library__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+
+.st-ds-font-library__card-copy,
+.st-ds-font-library__usage {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.st-ds-font-library__preview {
+  display: flex;
+  align-items: center;
+  min-height: 104px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg) 72%, var(--color-surface));
+  font-size: clamp(1rem, 1.15vw, 1.2rem);
+  line-height: 1.45;
+  color: var(--color-text-main);
+}
+
 .st-ds-colors-ledger-wrap {
   width: 100%;
   max-width: 100%;
@@ -11051,6 +11191,11 @@ select.st-ds-foundations-input {
     width: 100%;
   }
 
+  .st-ds-font-library__intake,
+  .st-ds-font-library__local-grid {
+    grid-template-columns: 1fr;
+  }
+
   .st-ds-foundations-list.is-token-grid,
   .st-ds-foundations-list.is-rule-grid {
     grid-template-columns: 1fr;
@@ -11110,14 +11255,20 @@ select.st-ds-foundations-input {
   .st-ds-foundations-panel__header,
   .st-ds-foundations-card__top,
   .st-ds-foundations-card__bottom,
-  .st-ds-foundations-list__row {
+  .st-ds-foundations-list__row,
+  .st-ds-font-library__top,
+  .st-ds-font-library__card-head,
+  .st-ds-font-library__card-foot {
     width: 100%;
   }
 
   .st-ds-foundations-panel__header,
   .st-ds-foundations-card__top,
   .st-ds-foundations-card__bottom,
-  .st-ds-foundations-list__row {
+  .st-ds-foundations-list__row,
+  .st-ds-font-library__top,
+  .st-ds-font-library__card-head,
+  .st-ds-font-library__card-foot {
     flex-direction: column;
   }
 
@@ -11135,6 +11286,10 @@ select.st-ds-foundations-input {
 
   .st-ds-foundations-input--inline {
     text-align: left;
+  }
+
+  .st-ds-font-library {
+    padding: var(--space-4);
   }
 }
 

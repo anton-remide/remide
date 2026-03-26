@@ -5,6 +5,7 @@ import type { FoundationRegistry } from './foundations';
 import {
   generateFoundationCss,
   getDirtyFoundationEntries,
+  getFoundationFontStack,
   getFoundationItemKey,
   validateFoundationRegistry,
 } from './foundations';
@@ -35,6 +36,44 @@ describe('foundation registry', () => {
     expect(css).not.toContain('[data-theme="darkgray"]');
     expect(css).not.toContain('[data-theme="nearblack"]');
     expect(css).toContain('--rule-heading-1-font:');
+  });
+
+  it('builds imports and font-face blocks from the shared font library', () => {
+    const registry = loadRegistry() as FoundationRegistry;
+    const editorialFont = {
+      id: 'editorial-new',
+      label: 'Editorial New',
+      family: 'Editorial New',
+      category: 'serif' as const,
+      source: 'local' as const,
+      faces: [
+        {
+          fileUrl: '/fonts/uploaded/editorial-new.woff2',
+          format: 'woff2',
+          style: 'normal',
+          weight: '400',
+        },
+      ],
+    };
+    const nextRegistry: FoundationRegistry = {
+      ...registry,
+      fontLibrary: [...(registry.fontLibrary ?? []), editorialFont],
+    };
+    const headingToken = nextRegistry.collections
+      .find((collection) => collection.id === 'fonts')
+      ?.tokens.find((token) => token.id === 'font-heading');
+
+    if (!headingToken) {
+      throw new Error('font-heading token not found');
+    }
+
+    headingToken.values.base = getFoundationFontStack(editorialFont);
+
+    const css = generateFoundationCss(nextRegistry);
+
+    expect(css).toContain("@font-face {\n  font-family: 'Editorial New';");
+    expect(css).toContain("src: url('/fonts/uploaded/editorial-new.woff2') format('woff2');");
+    expect(css).toContain("--font-heading: 'Editorial New', serif;");
   });
 
   it('tracks dirty sections and items for unsaved edits', () => {

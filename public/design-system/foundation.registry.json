@@ -5,6 +5,45 @@
     "defaultTheme": "tracker",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
   },
+  "fontLibrary": [
+    {
+      "id": "geist",
+      "label": "Geist",
+      "family": "Geist",
+      "category": "sans",
+      "source": "google",
+      "importUrl": "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    },
+    {
+      "id": "geist-mono",
+      "label": "Geist Mono",
+      "family": "Geist Mono",
+      "category": "mono",
+      "source": "google",
+      "importUrl": "https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    },
+    {
+      "id": "satoshi-variable",
+      "label": "Satoshi Variable",
+      "family": "Satoshi Variable",
+      "category": "sans",
+      "source": "local",
+      "faces": [
+        {
+          "fileUrl": "/fonts/satoshi/Satoshi-Variable.woff2",
+          "format": "woff2",
+          "style": "normal",
+          "weight": "300 900"
+        },
+        {
+          "fileUrl": "/fonts/satoshi/Satoshi-VariableItalic.woff2",
+          "format": "woff2",
+          "style": "italic",
+          "weight": "300 900"
+        }
+      ]
+    }
+  ],
   "collections": [
     {
       "id": "fonts",

@@ -219,7 +219,7 @@ describe('DesignSystemFoundationsPage', () => {
     });
 
     expect(screen.getByText('DM Sans')).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'DM Sans • Sans' })).toBeInTheDocument();
+    expect(screen.getAllByRole('option', { name: 'DM Sans • Sans' })).toHaveLength(3);
 
     const bodySelect = screen.getByRole('combobox', { name: 'Body project font' });
     fireEvent.change(bodySelect, { target: { value: "'DM Sans', sans-serif" } });
@@ -272,7 +272,7 @@ describe('DesignSystemFoundationsPage', () => {
     });
 
     expect(screen.getByText('Editorial New')).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Editorial New • Serif' })).toBeInTheDocument();
+    expect(screen.getAllByRole('option', { name: 'Editorial New • Serif' })).toHaveLength(3);
 
     const uploadCall = fetchMock.mock.calls[1];
     expect(String(uploadCall?.[0])).toBe('/__internal/foundations/fonts');

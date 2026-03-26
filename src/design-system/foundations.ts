@@ -5,6 +5,26 @@ export interface FoundationMeta {
   description: string;
 }
 
+export type FoundationFontCategory = 'sans' | 'serif' | 'mono';
+export type FoundationFontSource = 'google' | 'local';
+
+export interface FoundationFontFace {
+  fileUrl: string;
+  format: string;
+  style: string;
+  weight: string;
+}
+
+export interface FoundationFontAsset {
+  id: string;
+  label: string;
+  family: string;
+  category: FoundationFontCategory;
+  source: FoundationFontSource;
+  importUrl?: string;
+  faces?: FoundationFontFace[];
+}
+
 export interface FoundationGroup {
   id: string;
   label: string;
@@ -53,6 +73,7 @@ export interface FoundationRuleCollection {
 
 export interface FoundationRegistry {
   meta: FoundationMeta;
+  fontLibrary?: FoundationFontAsset[];
   collections: FoundationTokenCollection[];
   rules: FoundationRuleCollection[];
 }
@@ -68,6 +89,52 @@ export interface DirtyFoundationEntries {
 }
 
 export type FoundationSection = FoundationTokenCollection | FoundationRuleCollection;
+
+const FOUNDATION_FONT_FALLBACKS: Record<FoundationFontCategory, string> = {
+  sans: 'sans-serif',
+  serif: 'serif',
+  mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+};
+
+export const DEFAULT_FOUNDATION_FONT_LIBRARY: FoundationFontAsset[] = [
+  {
+    id: 'geist',
+    label: 'Geist',
+    family: 'Geist',
+    category: 'sans',
+    source: 'google',
+    importUrl: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap',
+  },
+  {
+    id: 'geist-mono',
+    label: 'Geist Mono',
+    family: 'Geist Mono',
+    category: 'mono',
+    source: 'google',
+    importUrl: 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap',
+  },
+  {
+    id: 'satoshi-variable',
+    label: 'Satoshi Variable',
+    family: 'Satoshi Variable',
+    category: 'sans',
+    source: 'local',
+    faces: [
+      {
+        fileUrl: '/fonts/satoshi/Satoshi-Variable.woff2',
+        format: 'woff2',
+        style: 'normal',
+        weight: '300 900',
+      },
+      {
+        fileUrl: '/fonts/satoshi/Satoshi-VariableItalic.woff2',
+        format: 'woff2',
+        style: 'italic',
+        weight: '300 900',
+      },
+    ],
+  },
+];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -98,6 +165,105 @@ function validateStringMap(value: unknown, path: string, issues: FoundationValid
   }
 }
 
+function validateFontLibrary(value: unknown, path: string, issues: FoundationValidationIssue[]) {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(value)) {
+    pushIssue(issues, path, 'Expected array');
+    return;
+  }
+
+  value.forEach((entry, index) => {
+    const entryPath = `${path}[${index}]`;
+
+    if (!isRecord(entry)) {
+      pushIssue(issues, entryPath, 'Expected object');
+      return;
+    }
+
+    validateString(entry.id, `${entryPath}.id`, issues);
+    validateString(entry.label, `${entryPath}.label`, issues);
+    validateString(entry.family, `${entryPath}.family`, issues);
+    validateString(entry.category, `${entryPath}.category`, issues);
+    validateString(entry.source, `${entryPath}.source`, issues);
+
+    if (entry.importUrl !== undefined) {
+      validateString(entry.importUrl, `${entryPath}.importUrl`, issues);
+    }
+
+    if (entry.faces !== undefined) {
+      if (!Array.isArray(entry.faces)) {
+        pushIssue(issues, `${entryPath}.faces`, 'Expected array');
+      } else {
+        entry.faces.forEach((face, faceIndex) => {
+          const facePath = `${entryPath}.faces[${faceIndex}]`;
+
+          if (!isRecord(face)) {
+            pushIssue(issues, facePath, 'Expected object');
+            return;
+          }
+
+          validateString(face.fileUrl, `${facePath}.fileUrl`, issues);
+          validateString(face.format, `${facePath}.format`, issues);
+          validateString(face.style, `${facePath}.style`, issues);
+          validateString(face.weight, `${facePath}.weight`, issues);
+        });
+      }
+    }
+  });
+}
+
+function quoteCssFontFamily(value: string) {
+  const safe = value.replace(/'/g, "\\'");
+  return `'${safe}'`;
+}
+
+function buildFontFaceBlocks(fontLibrary: FoundationFontAsset[]) {
+  return fontLibrary.flatMap((font) => {
+    if (!font.faces || font.faces.length === 0) {
+      return [];
+    }
+
+    return font.faces.map((face) => `@font-face {
+  font-family: ${quoteCssFontFamily(font.family)};
+  src: url('${face.fileUrl}') format('${face.format}');
+  font-style: ${face.style};
+  font-weight: ${face.weight};
+  font-display: swap;
+}`);
+  });
+}
+
+function buildGoogleFontImports(fontLibrary: FoundationFontAsset[]) {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+
+  for (const font of fontLibrary) {
+    if (!font.importUrl || seen.has(font.importUrl)) {
+      continue;
+    }
+
+    seen.add(font.importUrl);
+    lines.push(`@import url('${font.importUrl}');`);
+  }
+
+  return lines;
+}
+
+export function getFoundationFontStack(font: Pick<FoundationFontAsset, 'family' | 'category'>) {
+  return `${quoteCssFontFamily(font.family)}, ${FOUNDATION_FONT_FALLBACKS[font.category]}`;
+}
+
+export function getFoundationFontLibrary(registry: FoundationRegistry) {
+  if (!registry.fontLibrary || registry.fontLibrary.length === 0) {
+    return DEFAULT_FOUNDATION_FONT_LIBRARY;
+  }
+
+  return registry.fontLibrary;
+}
+
 export function validateFoundationRegistry(value: unknown): FoundationValidationIssue[] {
   const issues: FoundationValidationIssue[] = [];
 
@@ -114,6 +280,8 @@ export function validateFoundationRegistry(value: unknown): FoundationValidation
     validateString(value.meta.defaultTheme, 'meta.defaultTheme', issues);
     validateString(value.meta.description, 'meta.description', issues);
   }
+
+  validateFontLibrary(value.fontLibrary, 'fontLibrary', issues);
 
   if (!Array.isArray(value.collections)) {
     pushIssue(issues, 'collections', 'Expected array');
@@ -312,6 +480,9 @@ export function generateFoundationCss(registry: FoundationRegistry) {
   const radii = getTokenCollection(registry, 'radii');
   const shadows = getTokenCollection(registry, 'shadows');
   const typographyRules = getRuleCollection(registry, 'typography-rules');
+  const fontLibrary = getFoundationFontLibrary(registry);
+  const googleImports = buildGoogleFontImports(fontLibrary);
+  const fontFaceBlocks = buildFontFaceBlocks(fontLibrary);
 
   const rootLines = [
     ...cssVarLines(fonts.tokens, 'base'),
@@ -334,25 +505,10 @@ export function generateFoundationCss(registry: FoundationRegistry) {
     })
     .join('\n\n');
 
-  return `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+  const fontPrelude = [...googleImports, ...fontFaceBlocks];
+  const prelude = fontPrelude.length > 0 ? `${fontPrelude.join('\n\n')}\n\n` : '';
 
-@font-face {
-  font-family: 'Satoshi Variable';
-  src: url('/fonts/satoshi/Satoshi-Variable.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 300 900;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Satoshi Variable';
-  src: url('/fonts/satoshi/Satoshi-VariableItalic.woff2') format('woff2');
-  font-style: italic;
-  font-weight: 300 900;
-  font-display: swap;
-}
-
-/* Generated from public/design-system/foundation.registry.json */
+  return `${prelude}/* Generated from public/design-system/foundation.registry.json */
 :root {
 ${rootLines.join('\n')}
 }
