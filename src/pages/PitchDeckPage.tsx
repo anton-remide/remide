@@ -2,17 +2,23 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { ArrowRight, Shield, Landmark, Network, Check, Zap, Globe, TrendingUp, Lock, Users, ChevronDown } from 'lucide-react';
 import { useReveal } from '../hooks/useAnimations';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { useTheme } from '../context/ThemeProvider';
+import type { Theme } from '../context/ThemeProvider';
 
 const TOTAL_SLIDES = 12;
 
 /** Force nearblack theme on mount, restore previous on unmount */
 function useForceDarkTheme() {
+  const { theme, setTheme } = useTheme();
+  const prevRef = useRef<Theme>(theme);
+
   useEffect(() => {
-    const prev = document.documentElement.getAttribute('data-theme') || 'beige';
-    document.documentElement.setAttribute('data-theme', 'nearblack');
+    prevRef.current = theme === 'nearblack' ? prevRef.current : theme;
+    if (theme !== 'nearblack') setTheme('nearblack');
     return () => {
-      document.documentElement.setAttribute('data-theme', prev);
+      setTheme(prevRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
 

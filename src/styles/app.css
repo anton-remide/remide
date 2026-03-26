@@ -9585,11 +9585,17 @@ article.st-page:has(.st-floating-cta) {
 
 /* ── Root ── */
 .st-pitch {
-  background: var(--color-bg);
-  color: var(--color-text-main);
+  background: #111110;
+  color: #EDEDEC;
   font-family: var(--font1);
   min-height: 100vh;
   position: relative;
+}
+
+/* Override reveal opacity inside pitch — ensures content shows even if GSAP delays */
+.st-pitch .reveal,
+.st-pitch .stagger-in {
+  animation-delay: 0.3s;
 }
 
 /* ── Slide Section ── */
