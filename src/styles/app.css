@@ -9578,3 +9578,850 @@ article.st-page:has(.st-floating-cta) {
   }
 }
 
+/* ==========================================================================
+   Pitch Deck — /pitch
+   Full-screen slide-based investor deck, forced nearblack theme.
+   ========================================================================== */
+
+/* ── Root ── */
+.st-pitch {
+  background: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font1);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ── Slide Section ── */
+.st-pitch-slide {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-6);
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.st-pitch-slide--title {
+  text-align: center;
+}
+
+.st-pitch-slide--final {
+  text-align: center;
+}
+
+.st-pitch-slide-inner {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Slide Number ── */
+.st-pitch-slide-num {
+  display: inline-block;
+  font-family: var(--font2);
+  font-size: var(--type-caption);
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-radius: var(--radius-pill);
+  padding: 2px 12px;
+  margin-bottom: var(--space-6);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Dot Navigation (right side) ── */
+.st-pitch-nav {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.st-pitch-nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s, border-color 0.25s, transform 0.25s;
+}
+
+.st-pitch-nav-dot:hover {
+  border-color: var(--color-text-main);
+  transform: scale(1.3);
+}
+
+.st-pitch-nav-dot.is-active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  transform: scale(1.3);
+}
+
+/* ── PRE-SEED Badge ── */
+.st-pitch-badge {
+  display: inline-block;
+  font-family: var(--font2);
+  font-size: var(--type-body-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-8);
+}
+
+/* ── Logo ── */
+.st-pitch-logo {
+  display: block;
+  height: 40px;
+  margin: 0 auto var(--space-8);
+  filter: brightness(0) invert(1);
+}
+
+/* ── Titles ── */
+.st-pitch-title {
+  font-family: var(--font2);
+  font-size: clamp(28px, 4.5vw, 48px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+  margin: 0 auto var(--space-8);
+  max-width: 800px;
+}
+
+.st-pitch-heading {
+  font-family: var(--font2);
+  font-size: clamp(24px, 3.5vw, 38px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+  margin: 0 0 var(--space-6);
+}
+
+/* ── Taglines (title slide) ── */
+.st-pitch-taglines {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.st-pitch-taglines p {
+  font-size: var(--type-body-lg);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-3);
+}
+
+.st-pitch-accent {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ── Scroll hint ── */
+.st-pitch-scroll-hint {
+  margin-top: var(--space-12);
+  color: var(--color-text-secondary);
+  animation: pitchBounce 2s ease-in-out infinite;
+}
+
+@keyframes pitchBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* ── Body text ── */
+.st-pitch-body {
+  font-size: var(--type-body-lg);
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin: 0 0 var(--space-8);
+  max-width: 720px;
+}
+
+.st-pitch-body--lead {
+  font-size: clamp(16px, 2vw, 19px);
+}
+
+/* ── Big Stat ── */
+.st-pitch-stat-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: var(--space-6);
+}
+
+.st-pitch-slide--title .st-pitch-stat-hero,
+.st-pitch-econ-hero .st-pitch-stat-hero {
+  align-items: center;
+}
+
+.st-pitch-stat-value {
+  font-family: var(--font2);
+  font-size: clamp(48px, 8vw, 80px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--color-accent);
+}
+
+.st-pitch-stat-label {
+  font-size: var(--type-body-lg);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+/* ── Card Grid ── */
+.st-pitch-grid {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.st-pitch-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.st-pitch-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* ── Cards ── */
+.st-pitch-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-8);
+  text-align: left;
+}
+
+.st-pitch-card h3 {
+  font-family: var(--font2);
+  font-size: var(--type-heading-3);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+  margin: 0 0 var(--space-3);
+}
+
+.st-pitch-card p {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.st-pitch-card-icon {
+  color: var(--color-accent);
+  margin-bottom: var(--space-4);
+}
+
+.st-pitch-card-desc {
+  margin-bottom: var(--space-4) !important;
+}
+
+.st-pitch-card--dim {
+  opacity: 0.65;
+}
+
+.st-pitch-card--highlight {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent), inset 0 0 60px rgba(255, 122, 51, 0.04);
+}
+
+.st-pitch-card-note {
+  font-size: var(--type-body-sm) !important;
+  margin-top: var(--space-4) !important;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Product Badge ── */
+.st-pitch-product-badge {
+  display: inline-block;
+  font-family: var(--font2);
+  font-size: var(--type-micro);
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+  margin-bottom: var(--space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Checklist ── */
+.st-pitch-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.st-pitch-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  padding: var(--space-2) 0;
+}
+
+.st-pitch-checklist li svg {
+  color: var(--color-accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Comparison (Slide 3) ── */
+.st-pitch-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.st-pitch-comparison-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.st-pitch-comparison-title {
+  font-family: var(--font2);
+  font-size: var(--type-body-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+  margin: 0 0 var(--space-2);
+}
+
+.st-pitch-layer {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-6);
+  position: relative;
+}
+
+.st-pitch-layer-label {
+  display: inline-block;
+  font-family: var(--font2);
+  font-size: var(--type-nano);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.st-pitch-layer strong {
+  display: block;
+  font-size: var(--type-body-lg);
+  color: var(--color-text-main);
+  margin-bottom: var(--space-1);
+}
+
+.st-pitch-layer p {
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.st-pitch-layer--accent {
+  border-color: var(--color-accent);
+  background: rgba(255, 122, 51, 0.06);
+}
+
+.st-pitch-layer--accent .st-pitch-layer-label {
+  color: var(--color-accent);
+}
+
+/* ── Flow Diagram (Slide 6) ── */
+.st-pitch-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: var(--space-8) 0;
+}
+
+.st-pitch-flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.st-pitch-flow-node {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font2);
+  font-size: var(--type-body);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--color-text-main);
+}
+
+.st-pitch-flow-node--accent {
+  border-color: var(--color-accent);
+  background: rgba(255, 122, 51, 0.08);
+  color: var(--color-accent);
+  font-size: var(--type-body-lg);
+  padding: var(--space-4) var(--space-8);
+}
+
+.st-pitch-flow-label {
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+.st-pitch-flow-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+
+.st-pitch-flow-details span {
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.st-pitch-flow-connector {
+  width: 2px;
+  height: 28px;
+  background: var(--color-border-strong);
+  position: relative;
+}
+
+.st-pitch-flow-connector::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--color-border-strong);
+}
+
+.st-pitch-flow-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.st-pitch-flow-footer-item {
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.st-pitch-flow-footer-item strong {
+  color: var(--color-accent);
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+/* ── Plain List (Bilateral) ── */
+.st-pitch-plain-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-4) 0;
+}
+
+.st-pitch-plain-list li {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.st-pitch-plain-list li:last-child {
+  border-bottom: none;
+}
+
+.st-pitch-muted {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  font-family: var(--font1);
+  font-size: var(--type-body-sm);
+  text-transform: none;
+}
+
+/* ── Network Diagram (Slide 7) ── */
+.st-pitch-network-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  margin: var(--space-6) 0;
+}
+
+.st-pitch-network-center {
+  background: rgba(255, 122, 51, 0.08);
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-6);
+  font-family: var(--font2);
+  font-size: var(--type-body-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+.st-pitch-network-center span {
+  font-family: var(--font1);
+  font-size: var(--type-body-sm);
+  font-weight: 400;
+  text-transform: none;
+  color: var(--color-text-secondary);
+}
+
+.st-pitch-network-nodes {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.st-pitch-network-nodes span {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font2);
+  font-size: var(--type-body-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+}
+
+/* ── Traction Icons ── */
+.st-pitch-traction-icon {
+  font-size: 32px;
+  margin-bottom: var(--space-4);
+}
+
+/* ── Roadmap (Slide 9) ── */
+.st-pitch-roadmap {
+  position: relative;
+  padding-left: 32px;
+  margin-top: var(--space-8);
+}
+
+.st-pitch-roadmap::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border-strong);
+}
+
+.st-pitch-roadmap-phase {
+  position: relative;
+  padding: var(--space-6) 0;
+}
+
+.st-pitch-roadmap-phase + .st-pitch-roadmap-phase {
+  border-top: none;
+}
+
+.st-pitch-roadmap-marker {
+  position: absolute;
+  left: -32px;
+  top: var(--space-6);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg);
+  z-index: 1;
+}
+
+.st-pitch-roadmap-phase--done .st-pitch-roadmap-marker {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.st-pitch-roadmap-phase--active .st-pitch-roadmap-marker {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-subtle);
+}
+
+.st-pitch-roadmap-phase h3 {
+  font-family: var(--font2);
+  font-size: var(--type-heading-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+  margin: 0 0 var(--space-2);
+}
+
+.st-pitch-roadmap-phase p {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Economics Hero ── */
+.st-pitch-econ-hero {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.st-pitch-econ-hero h3 {
+  font-family: var(--font2);
+  font-size: var(--type-heading-2);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+  margin: 0 0 var(--space-4);
+}
+
+.st-pitch-econ-hero .st-pitch-body {
+  margin: var(--space-4) auto 0;
+  text-align: center;
+}
+
+/* ── Moat Numbers ── */
+.st-pitch-moat-num {
+  font-family: var(--font2);
+  font-size: clamp(36px, 5vw, 52px);
+  font-weight: 800;
+  color: var(--color-accent);
+  line-height: 1;
+  margin-bottom: var(--space-4);
+}
+
+/* ── Callout (Moat slide) ── */
+.st-pitch-callout {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-8);
+  margin-top: var(--space-8);
+  text-align: left;
+}
+
+.st-pitch-callout h4 {
+  font-family: var(--font2);
+  font-size: var(--type-heading-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-3);
+}
+
+.st-pitch-callout p {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── Team Cards ── */
+.st-pitch-team-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.st-pitch-team-photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto var(--space-4);
+  display: block;
+}
+
+.st-pitch-team-photo--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+}
+
+.st-pitch-team-card h3 {
+  font-family: var(--font2);
+  font-size: var(--type-heading-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+  margin: 0 0 var(--space-1);
+}
+
+.st-pitch-team-role {
+  font-size: var(--type-body-sm);
+  color: var(--color-accent);
+  font-weight: 600;
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.st-pitch-team-card p {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Backers ── */
+.st-pitch-backers {
+  font-size: var(--type-body-lg);
+  color: var(--color-text-secondary);
+  margin: var(--space-8) 0;
+  text-align: center;
+}
+
+.st-pitch-backers strong {
+  color: var(--color-text-main);
+}
+
+/* ── Raise Card ── */
+.st-pitch-raise-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent);
+  padding: var(--space-8);
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto var(--space-8);
+}
+
+.st-pitch-raise-amount {
+  font-family: var(--font2);
+  font-size: clamp(40px, 7vw, 64px);
+  font-weight: 800;
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.st-pitch-raise-label {
+  font-family: var(--font2);
+  font-size: var(--type-heading-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+  margin-bottom: var(--space-4);
+}
+
+.st-pitch-raise-card p {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-4);
+}
+
+.st-pitch-raise-close {
+  font-size: var(--type-body-sm);
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+/* ── CTA Button ── */
+.st-pitch-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-accent);
+  color: #fff;
+  font-family: var(--font2);
+  font-size: var(--type-body-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-pill);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.st-pitch-cta:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Contact ── */
+.st-pitch-contact {
+  font-size: var(--type-body);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-4);
+}
+
+/* ── Responsive ── */
+@media (max-width: 991px) {
+  .st-pitch-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .st-pitch-slide {
+    padding: var(--space-12) var(--space-4);
+    min-height: auto;
+    min-height: 100dvh;
+  }
+
+  .st-pitch-grid--2,
+  .st-pitch-grid--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .st-pitch-comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .st-pitch-flow-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .st-pitch-title {
+    font-size: clamp(24px, 6vw, 36px);
+  }
+
+  .st-pitch-heading {
+    font-size: clamp(20px, 5vw, 30px);
+  }
+
+  .st-pitch-stat-value {
+    font-size: clamp(40px, 12vw, 64px);
+  }
+
+  .st-pitch-slide-inner {
+    padding: 0;
+  }
+}
+

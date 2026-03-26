@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/layout/Header';
 import TopBanner from './components/layout/TopBanner';
 import Footer from './components/layout/Footer';
@@ -27,20 +27,31 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
+const PitchDeckPage = lazy(() => import('./pages/PitchDeckPage'));
 
 /* BrowserRouter basename — matches Vite base config.
    Dev: BASE_URL = '/'  →  basename = ''
    Prod: BASE_URL = '/remide/'  →  basename = '/remide' */
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-export default function App() {
+/** Standalone routes render without Header/Footer (e.g. /pitch) */
+const STANDALONE_PREFIXES = ['/pitch'];
+
+function AppShell() {
+  const { pathname } = useLocation();
+  const isStandalone = STANDALONE_PREFIXES.some((p) => pathname.startsWith(p));
+
   return (
-    <BrowserRouter basename={basename}>
+    <>
       <ScrollToTop />
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <a href="#main-content" className="st-skip-link">Skip to main content</a>
-        <TopBanner />
-        <Header />
+        {!isStandalone && (
+          <>
+            <a href="#main-content" className="st-skip-link">Skip to main content</a>
+            <TopBanner />
+            <Header />
+          </>
+        )}
         <main id="main-content" style={{ flexGrow: 1 }}>
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
@@ -67,6 +78,9 @@ export default function App() {
                 <Route path="/cbdcs/:id" element={<CbdcDetailPage />} />
                 <Route path="/issuers/:slug" element={<IssuerDetailPage />} />
 
+                {/* Standalone pages */}
+                <Route path="/pitch" element={<PitchDeckPage />} />
+
                 {/* Design System preview (dev only) */}
                 <Route path="/ui" element={<DesignSystemPage />} />
                 <Route path="/ui/*" element={<DesignSystemPage />} />
@@ -77,8 +91,16 @@ export default function App() {
             </Suspense>
           </ErrorBoundary>
         </main>
-        <Footer />
+        {!isStandalone && <Footer />}
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter basename={basename}>
+      <AppShell />
     </BrowserRouter>
   );
 }
