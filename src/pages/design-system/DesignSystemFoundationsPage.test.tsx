@@ -173,8 +173,8 @@ describe('DesignSystemFoundationsPage', () => {
     expect(radiiLedger?.querySelector('.st-ds-token-ledger__swatch')).not.toBeInTheDocument();
   });
 
-  it('shows icons inside the core foundations nav with lucide reference content', async () => {
-    renderWithProviders(<DesignSystemFoundationsPage />);
+  it('shows icons inside the core foundations nav as a header link only', async () => {
+    const { container } = renderWithProviders(<DesignSystemFoundationsPage />);
 
     await screen.findByRole('heading', { name: 'Colors' });
 
@@ -182,13 +182,12 @@ describe('DesignSystemFoundationsPage', () => {
     fireEvent.click(within(sidebar).getByRole('button', { name: 'Icons' }));
 
     expect(await screen.findByRole('heading', { name: 'Icons' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Open Lucide/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Lucide/i })).toHaveAttribute(
       'href',
       'https://github.com/lucide-icons/lucide',
     );
-    expect(screen.getAllByText('lucide-react').length).toBeGreaterThan(0);
-    expect(screen.getByText('Navigation and utility')).toBeInTheDocument();
-    expect(screen.getByText('Coverage and trust')).toBeInTheDocument();
+    expect(container.querySelector('.st-ds-icons-library')).not.toBeInTheDocument();
+    expect(container.querySelector('.st-ds-foundations-list__item.is-rule-card')).not.toBeInTheDocument();
   });
 
   it('shows only elevation tokens in the shadows ledger', async () => {
@@ -215,6 +214,9 @@ describe('DesignSystemFoundationsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Fonts' })).toBeInTheDocument();
     expect(container.querySelector('.st-ds-foundations-panel--main.is-compact-token-stack')).toBeInTheDocument();
     expect(container.querySelector('.st-ds-foundations-list__item.is-font-role-card')).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/^(Heading|Body|Mono)$/).slice(0, 3).map((node) => node.textContent),
+    ).toEqual(['Heading', 'Body', 'Mono']);
 
     fireEvent.click(within(sidebar).getByRole('button', { name: 'Typography Scale' }));
 

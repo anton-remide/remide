@@ -1,15 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowRight,
-  Building2,
-  Check,
-  ExternalLink,
-  Filter,
-  Globe,
-  Search,
-  Shield,
-  type LucideIcon,
-} from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import Heading from '../../components/ui/Heading';
 import Text from '../../components/ui/Text';
 import { useTheme, type Theme } from '../../context/ThemeProvider';
@@ -52,6 +42,11 @@ const SECTION_NAV_ORDER = [
   TYPOGRAPHY_SCALE_SECTION_ID,
   TYPOGRAPHY_RULES_SECTION_ID,
 ];
+const FONT_ROLE_ORDER = new Map([
+  ['font-heading', 0],
+  ['font-body', 1],
+  ['font-mono', 2],
+]);
 type ColorsView = 'active' | 'basic';
 type FontLibraryFeedbackTone = 'success' | 'error';
 const FOUNDATION_THEME_ORDER: Theme[] = ['tracker', 'institute', 'main-site'];
@@ -162,35 +157,6 @@ const BASIC_BADGE_COLORS = [
   '#2A64F6',
 ] as const;
 const ICON_LIBRARY_URL = 'https://github.com/lucide-icons/lucide';
-
-interface IconFoundationSampleGroup {
-  title: string;
-  description: string;
-  icons: Array<{ label: string; icon: LucideIcon }>;
-}
-
-const ICON_FOUNDATION_SAMPLE_GROUPS: IconFoundationSampleGroup[] = [
-  {
-    title: 'Navigation and utility',
-    description: 'Search, filtering, and directional affordances used across product chrome.',
-    icons: [
-      { label: 'Search', icon: Search },
-      { label: 'Filter', icon: Filter },
-      { label: 'ArrowRight', icon: ArrowRight },
-      { label: 'ExternalLink', icon: ExternalLink },
-    ],
-  },
-  {
-    title: 'Coverage and trust',
-    description: 'Entity, jurisdiction, and verification metaphors used in cards and detail surfaces.',
-    icons: [
-      { label: 'Building2', icon: Building2 },
-      { label: 'Globe', icon: Globe },
-      { label: 'Shield', icon: Shield },
-      { label: 'Check', icon: Check },
-    ],
-  },
-];
 
 function getFoundationModeLabel(mode: string) {
   if (mode === 'base') {
@@ -1020,6 +986,7 @@ export default function DesignSystemFoundationsPage() {
     ? resolveTokenMode(activeSection, theme)
     : undefined;
   const isColorsSectionActive = activeSection?.id === COLOR_SECTION_ID && isTokenSection(activeSection);
+  const isIconsSectionActive = activeSection?.id === ICONS_SECTION_ID;
 
   const dirty = useMemo(() => {
     if (!savedRegistry || !draftRegistry) {
@@ -1049,8 +1016,22 @@ export default function DesignSystemFoundationsPage() {
         id: `${activeSection.id}-${group.id}`,
         label: group.label,
         layout: 'token' as const,
-        items: activeSection.tokens
+        items: [...activeSection.tokens]
           .filter((item) => item.group === group.id)
+          .sort((left, right) => {
+            if (activeSection.id !== FONTS_SECTION_ID) {
+              return 0;
+            }
+
+            const leftRank = FONT_ROLE_ORDER.get(left.id) ?? Number.MAX_SAFE_INTEGER;
+            const rightRank = FONT_ROLE_ORDER.get(right.id) ?? Number.MAX_SAFE_INTEGER;
+
+            if (leftRank !== rightRank) {
+              return leftRank - rightRank;
+            }
+
+            return left.label.localeCompare(right.label);
+          })
           .map((item) => ({ kind: 'token' as const, sectionId: activeSection.id, item, mode })),
       })).filter((group) => group.items.length > 0);
     }
@@ -2011,61 +1992,6 @@ export default function DesignSystemFoundationsPage() {
     );
   }
 
-  function renderIconsLibrary() {
-    if (activeSection.id !== ICONS_SECTION_ID) {
-      return null;
-    }
-
-    return (
-      <section className="st-ds-icons-library clip-lg" aria-label="Lucide icon library">
-        <div className="st-ds-icons-library__header">
-          <div className="st-ds-icons-library__copy">
-            <span className="st-ds-foundations-group__title">Canonical Library</span>
-            <p className="st-ds-foundations-list__desc">
-              Foundations Core uses Lucide as the shared icon language for navigation, entity surfaces,
-              filters, states, and trust cues.
-            </p>
-          </div>
-          <a
-            className="st-ds-icons-library__link"
-            href={ICON_LIBRARY_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <span>Open Lucide</span>
-            <ExternalLink size={14} aria-hidden="true" />
-          </a>
-        </div>
-
-        <div className="st-ds-icons-library__meta">
-          <code className="st-ds-foundations-list__code">lucide-react</code>
-          <code className="st-ds-foundations-list__code">github.com/lucide-icons/lucide</code>
-        </div>
-
-        <div className="st-ds-icons-library__groups">
-          {ICON_FOUNDATION_SAMPLE_GROUPS.map((group) => (
-            <article key={group.title} className="st-ds-icons-library__group">
-              <div className="st-ds-icons-library__group-copy">
-                <span className="st-ds-foundations-group__title">{group.title}</span>
-                <p className="st-ds-foundations-list__desc">{group.description}</p>
-              </div>
-              <div className="st-ds-icons-library__grid">
-                {group.icons.map(({ label, icon: Icon }) => (
-                  <div key={label} className="st-ds-icons-library__item">
-                    <span className="st-ds-icons-library__glyph" aria-hidden="true">
-                      <Icon size={18} strokeWidth={1.9} />
-                    </span>
-                    <span className="st-ds-foundations-list__value-label">{label}</span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
   if (loading) {
     return (
       <div className="st-ds-content st-ds-foundations">
@@ -2173,15 +2099,27 @@ export default function DesignSystemFoundationsPage() {
                 </div>
               </div>
             )}
+            {isIconsSectionActive && (
+              <div className="st-ds-foundations-panel__header-meta">
+                <a
+                  className="st-ds-foundations-btn st-ds-foundations-btn--ghost st-ds-foundations-btn--xs st-ds-foundations-btn--link"
+                  href={ICON_LIBRARY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Lucide</span>
+                  <ExternalLink size={12} aria-hidden="true" />
+                </a>
+              </div>
+            )}
           </div>
 
           {isColorsSectionActive ? (
             activeColorsView === 'active' ? renderColorsLedger(activeSection) : renderBasicColorsLedger()
-          ) : (
+          ) : isIconsSectionActive ? null : (
             isTokenSection(activeSection) && CORE_LEDGER_SECTION_IDS.has(activeSection.id) ? renderCoreTokenLedger(activeSection) : (
             <div className="st-ds-foundations-groups">
             {renderFontLibraryManager()}
-            {renderIconsLibrary()}
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
                   <div className={['st-ds-foundations-list', group.layout === 'token' ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
