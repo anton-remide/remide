@@ -24,6 +24,17 @@ describe('DesignSystemFoundationsPage', () => {
 
     fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const method = init?.method ?? 'GET';
+      const url = String(_input);
+
+      if (url === '/__internal/foundations/fonts' && method === 'POST') {
+        return new Response(JSON.stringify({
+          publicUrl: '/fonts/uploaded/mock-font.woff2',
+          format: 'woff2',
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
 
       if (method === 'PUT') {
         const payload = JSON.parse(String(init?.body)) as { registry: FoundationRegistry };
@@ -45,6 +56,16 @@ describe('DesignSystemFoundationsPage', () => {
       value: {
         writeText: clipboardWriteTextMock,
       },
+    });
+    vi.stubGlobal('FileReader', class MockFileReader {
+      result: string | ArrayBuffer | null = null;
+      onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
+      onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
+
+      readAsDataURL() {
+        this.result = 'data:font/woff2;base64,ZmFrZQ==';
+        this.onload?.call(this as unknown as FileReader, new ProgressEvent('load'));
+      }
     });
   });
 
@@ -146,6 +167,20 @@ describe('DesignSystemFoundationsPage', () => {
     expect(radiiLedger?.querySelector('.st-ds-token-ledger__swatch')).not.toBeInTheDocument();
   });
 
+  it('hides focus ring from the shadows ledger while keeping elevation tokens', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Shadows' }));
+
+    expect(await screen.findByRole('heading', { name: 'Shadows' })).toBeInTheDocument();
+    expect(screen.queryByText('Focus Ring')).not.toBeInTheDocument();
+    expect(screen.queryByText('--shadow-focus')).not.toBeInTheDocument();
+    expect(screen.getByText('Large')).toBeInTheDocument();
+  });
+
   it('renders fonts and typography scale in a compact fixed-width card layout', async () => {
     const { container } = renderWithProviders(<DesignSystemFoundationsPage />);
 
@@ -162,6 +197,86 @@ describe('DesignSystemFoundationsPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Typography Scale' })).toBeInTheDocument();
     expect(container.querySelector('.st-ds-foundations-panel--main.is-compact-token-stack')).toBeInTheDocument();
+  });
+
+  it('adds Google Fonts into the shared library and exposes them in role pickers', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Fonts' }));
+
+    expect(await screen.findByRole('heading', { name: 'Fonts' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Google Fonts CSS URL'), {
+      target: { value: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google Font' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(screen.getByText('DM Sans')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'DM Sans • Sans' })).toBeInTheDocument();
+
+    const bodySelect = screen.getByRole('combobox', { name: 'Body project font' });
+    fireEvent.change(bodySelect, { target: { value: "'DM Sans', sans-serif" } });
+
+    const bodyCard = bodySelect.closest('article');
+    expect(bodyCard).not.toBeNull();
+
+    fireEvent.click(within(bodyCard as HTMLElement).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    const putCall = fetchMock.mock.calls[2];
+    const putPayload = JSON.parse(String(putCall?.[1]?.body)) as { registry: FoundationRegistry };
+
+    expect(
+      putPayload.registry.collections
+        .find((collection) => collection.id === 'fonts')
+        ?.tokens.find((token) => token.id === 'font-body')
+        ?.values.base,
+    ).toBe("'DM Sans', sans-serif");
+  });
+
+  it('uploads a local font and makes it available across font roles', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Fonts' }));
+
+    expect(await screen.findByRole('heading', { name: 'Fonts' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Local font family name'), {
+      target: { value: 'Editorial New' },
+    });
+    fireEvent.change(screen.getByLabelText('Local font fallback'), {
+      target: { value: 'serif' },
+    });
+    fireEvent.change(screen.getByLabelText('Local font file'), {
+      target: {
+        files: [new File(['fake-font'], 'editorial-new.woff2', { type: 'font/woff2' })],
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload Local Font' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    expect(screen.getByText('Editorial New')).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Editorial New • Serif' })).toBeInTheDocument();
+
+    const uploadCall = fetchMock.mock.calls[1];
+    expect(String(uploadCall?.[0])).toBe('/__internal/foundations/fonts');
+    expect(uploadCall?.[1]?.method).toBe('POST');
   });
 
   it('autosaves a valid color edit on blur', async () => {

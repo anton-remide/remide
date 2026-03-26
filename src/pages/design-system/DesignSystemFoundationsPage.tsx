@@ -3,6 +3,8 @@ import Heading from '../../components/ui/Heading';
 import Text from '../../components/ui/Text';
 import { useTheme, type Theme } from '../../context/ThemeProvider';
 import type {
+  FoundationFontAsset,
+  FoundationFontCategory,
   FoundationRegistry,
   FoundationRuleItem,
   FoundationSection,
@@ -12,11 +14,14 @@ import type {
 import {
   generateFoundationCss,
   getDirtyFoundationEntries,
+  getFoundationFontLibrary,
+  getFoundationFontStack,
   getFoundationItemKey,
   getFoundationSections,
 } from '../../design-system/foundations';
 
 const FOUNDATION_ENDPOINT = '/__internal/foundations';
+const FOUNDATION_FONT_UPLOAD_ENDPOINT = '/__internal/foundations/fonts';
 const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
 const COLOR_SECTION_ID = 'colors';
@@ -34,15 +39,17 @@ const SECTION_NAV_ORDER = [
   TYPOGRAPHY_SCALE_SECTION_ID,
   TYPOGRAPHY_RULES_SECTION_ID,
 ];
-type ProjectFontCategory = 'sans' | 'serif' | 'mono';
-type ProjectFontSource = 'google' | 'local';
 type ColorsView = 'active' | 'basic';
+type FontLibraryFeedbackTone = 'success' | 'error';
 const FOUNDATION_THEME_ORDER: Theme[] = ['tracker', 'institute', 'main-site'];
 const FOUNDATION_THEME_LABELS: Record<Theme, string> = {
   tracker: 'Tracker',
   institute: 'Institute',
   'main-site': 'Main site',
 };
+const FONT_SOURCE_ORDER = ['google', 'local'] as const;
+const GOOGLE_FONT_HOST = 'fonts.googleapis.com';
+const GOOGLE_FONT_SPECIMEN_HOST = 'fonts.google.com';
 const BASIC_COLOR_STEPS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'] as const;
 const BASIC_COLOR_PALETTES = [
   {
@@ -141,6 +148,9 @@ const BASIC_BADGE_COLORS = [
   '#91D243',
   '#2A64F6',
 ] as const;
+const FOUNDATIONS_TOKEN_VISIBILITY: Partial<Record<string, Set<string>>> = {
+  shadows: new Set(['shadow-focus']),
+};
 
 function getFoundationModeLabel(mode: string) {
   if (mode === 'base') {
@@ -170,36 +180,244 @@ interface DisplayFoundationGroup {
   items: DisplayFoundationItem[];
 }
 
-interface ProjectFontOption {
-  value: string;
-  label: string;
-  category: ProjectFontCategory;
-  source: ProjectFontSource;
+interface FontLibraryFeedback {
+  tone: FontLibraryFeedbackTone;
+  message: string;
 }
 
-const PROJECT_FONT_OPTIONS: ProjectFontOption[] = [
-  {
-    value: "'Geist', sans-serif",
-    label: 'Geist',
-    category: 'sans',
-    source: 'google',
-  },
-  {
-    value: "'Satoshi Variable', sans-serif",
-    label: 'Satoshi Variable',
-    category: 'sans',
-    source: 'local',
-  },
-  {
-    value: "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    label: 'Geist Mono',
-    category: 'mono',
-    source: 'google',
-  },
-];
+interface ParsedGoogleFontPayload {
+  families: string[];
+  importUrl: string;
+}
 
 function cloneRegistry(registry: FoundationRegistry) {
   return JSON.parse(JSON.stringify(registry)) as FoundationRegistry;
+}
+
+function slugifyValue(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function buildFontAssetId(fontFamily: string, existingIds: Set<string>) {
+  const base = slugifyValue(fontFamily) || 'font';
+
+  if (!existingIds.has(base)) {
+    return base;
+  }
+
+  let suffix = 2;
+  while (existingIds.has(`${base}-${suffix}`)) {
+    suffix += 1;
+  }
+
+  return `${base}-${suffix}`;
+}
+
+function getFontCategoryLabel(category: FoundationFontCategory) {
+  switch (category) {
+    case 'serif':
+      return 'Serif';
+    case 'mono':
+      return 'Mono';
+    default:
+      return 'Sans';
+  }
+}
+
+function getFontOptionSourceLabel(source: FoundationFontAsset['source']) {
+  switch (source) {
+    case 'google':
+      return 'Google';
+    case 'local':
+      return 'Local';
+    default:
+      return 'Bundled';
+  }
+}
+
+function getFontRoleOptions(fontLibrary: FoundationFontAsset[], tokenId: string) {
+  const preferredCategory = tokenId === 'font-mono' ? 'mono' : null;
+
+  return [...fontLibrary].sort((left, right) => {
+    if (preferredCategory) {
+      const leftPreferred = left.category === preferredCategory ? 1 : 0;
+      const rightPreferred = right.category === preferredCategory ? 1 : 0;
+
+      if (leftPreferred !== rightPreferred) {
+        return rightPreferred - leftPreferred;
+      }
+    }
+
+    const leftSourceRank = FONT_SOURCE_ORDER.indexOf(left.source);
+    const rightSourceRank = FONT_SOURCE_ORDER.indexOf(right.source);
+
+    if (leftSourceRank !== rightSourceRank) {
+      return leftSourceRank - rightSourceRank;
+    }
+
+    return left.label.localeCompare(right.label);
+  });
+}
+
+function buildGoogleImportUrlFromFamily(family: string) {
+  return `https://${GOOGLE_FONT_HOST}/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}&display=swap`;
+}
+
+function extractFamilyName(rawValue: string) {
+  const value = rawValue.replace(/\+/g, ' ').trim();
+  const separatorIndex = value.indexOf(':');
+  return separatorIndex === -1 ? value : value.slice(0, separatorIndex).trim();
+}
+
+function parseGoogleFontPayload(input: string): ParsedGoogleFontPayload | null {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  let url: URL;
+
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return null;
+  }
+
+  if (url.hostname === GOOGLE_FONT_HOST) {
+    const normalizedUrl = new URL(url.toString());
+
+    if (!normalizedUrl.searchParams.get('display')) {
+      normalizedUrl.searchParams.set('display', 'swap');
+    }
+
+    const families = normalizedUrl.searchParams
+      .getAll('family')
+      .map(extractFamilyName)
+      .filter(Boolean);
+
+    if (families.length === 0) {
+      return null;
+    }
+
+    return {
+      families: [...new Set(families)],
+      importUrl: normalizedUrl.toString(),
+    };
+  }
+
+  if (url.hostname === GOOGLE_FONT_SPECIMEN_HOST) {
+    const specimenMatch = url.pathname.match(/\/specimen\/([^/]+)/);
+    const family = specimenMatch ? extractFamilyName(decodeURIComponent(specimenMatch[1])) : '';
+
+    if (!family) {
+      return null;
+    }
+
+    return {
+      families: [family],
+      importUrl: buildGoogleImportUrlFromFamily(family),
+    };
+  }
+
+  return null;
+}
+
+function inferFontCategory(family: string): FoundationFontCategory {
+  const normalized = family.trim().toLowerCase();
+
+  if (normalized.includes('mono')) {
+    return 'mono';
+  }
+
+  if (normalized.includes('serif')) {
+    return 'serif';
+  }
+
+  return 'sans';
+}
+
+function isFoundationTokenVisible(sectionId: string, tokenId: string) {
+  return !FOUNDATIONS_TOKEN_VISIBILITY[sectionId]?.has(tokenId);
+}
+
+function guessFontFormat(fileName: string) {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+
+  switch (extension) {
+    case 'woff2':
+      return 'woff2';
+    case 'woff':
+      return 'woff';
+    case 'ttf':
+      return 'truetype';
+    case 'otf':
+      return 'opentype';
+    default:
+      return null;
+  }
+}
+
+function deriveFontFamilyFromFileName(fileName: string) {
+  return fileName
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+}
+
+function readFileAsBase64(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      const separatorIndex = result.indexOf(',');
+
+      if (separatorIndex === -1) {
+        reject(new Error('Failed to encode the selected font file.'));
+        return;
+      }
+
+      resolve(result.slice(separatorIndex + 1));
+    };
+
+    reader.onerror = () => {
+      reject(new Error('Failed to read the selected font file.'));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadFoundationFontFile(file: File): Promise<{ publicUrl: string; format: string }> {
+  if (!import.meta.env.DEV) {
+    throw new Error('Local font upload is available only in the Vite dev server.');
+  }
+
+  const contentBase64 = await readFileAsBase64(file);
+  const response = await fetch(FOUNDATION_FONT_UPLOAD_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentBase64,
+    }),
+  });
+
+  const payload = await response.json() as { error?: string; publicUrl?: string; format?: string };
+
+  if (!response.ok || !payload.publicUrl || !payload.format) {
+    throw new Error(payload.error || 'Failed to upload the selected font file.');
+  }
+
+  return {
+    publicUrl: payload.publicUrl,
+    format: payload.format,
+  };
 }
 
 function clampColorChannel(value: number) {
@@ -542,30 +760,6 @@ function splitFoundationItemKey(itemKey: string) {
   };
 }
 
-function getFontOptionSourceLabel(source: ProjectFontSource) {
-  switch (source) {
-    case 'google':
-      return 'Google';
-    case 'local':
-      return 'Local';
-    default:
-      return 'Bundled';
-  }
-}
-
-function getFontRoleCategories(tokenId: string): ProjectFontCategory[] {
-  if (tokenId === 'font-mono') {
-    return ['mono'];
-  }
-
-  return ['sans', 'serif'];
-}
-
-function getFontRoleOptions(tokenId: string) {
-  const categories = getFontRoleCategories(tokenId);
-  return PROJECT_FONT_OPTIONS.filter((option) => categories.includes(option.category));
-}
-
 export default function DesignSystemFoundationsPage() {
   const { theme } = useTheme();
   const [savedRegistry, setSavedRegistry] = useState<FoundationRegistry | null>(null);
@@ -580,6 +774,15 @@ export default function DesignSystemFoundationsPage() {
   const [colorCellErrors, setColorCellErrors] = useState<Record<string, string>>({});
   const [activeColorsView, setActiveColorsView] = useState<ColorsView>('active');
   const [copiedBasicColorKey, setCopiedBasicColorKey] = useState<string | null>(null);
+  const [fontLibraryFeedback, setFontLibraryFeedback] = useState<FontLibraryFeedback | null>(null);
+  const [fontLibraryBusy, setFontLibraryBusy] = useState(false);
+  const [googleFontUrlDraft, setGoogleFontUrlDraft] = useState('');
+  const [localFontNameDraft, setLocalFontNameDraft] = useState('');
+  const [localFontCategoryDraft, setLocalFontCategoryDraft] = useState<FoundationFontCategory>('sans');
+  const [localFontWeightDraft, setLocalFontWeightDraft] = useState('400');
+  const [localFontStyleDraft, setLocalFontStyleDraft] = useState('normal');
+  const [localFontFile, setLocalFontFile] = useState<File | null>(null);
+  const [localFontInputKey, setLocalFontInputKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -619,6 +822,10 @@ export default function DesignSystemFoundationsPage() {
   }, []);
 
   const activeRegistry = draftRegistry ?? savedRegistry;
+  const activeFontLibrary = useMemo(
+    () => (activeRegistry ? getFoundationFontLibrary(activeRegistry) : []),
+    [activeRegistry],
+  );
   const sections = useMemo(() => (activeRegistry ? getFoundationSections(activeRegistry) : []), [activeRegistry]);
   const visibleSections = useMemo(() => {
     const sectionOrder = new Map(SECTION_NAV_ORDER.map((sectionId, index) => [sectionId, index]));
@@ -690,6 +897,30 @@ export default function DesignSystemFoundationsPage() {
 
   const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
   const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
+  const fontUsageMap = useMemo(() => {
+    const usage = new Map<string, string[]>();
+
+    if (!activeRegistry) {
+      return usage;
+    }
+
+    const fontRolesSection = activeRegistry.collections.find((entry) => entry.id === FONTS_SECTION_ID);
+
+    if (!fontRolesSection) {
+      return usage;
+    }
+
+    for (const font of activeFontLibrary) {
+      const stack = getFoundationFontStack(font);
+      const usedBy = fontRolesSection.tokens
+        .filter((token) => (token.values.base ?? '') === stack)
+        .map((token) => token.label);
+
+      usage.set(font.id, usedBy);
+    }
+
+    return usage;
+  }, [activeFontLibrary, activeRegistry]);
 
   const groupedItems = useMemo<DisplayFoundationGroup[]>(() => {
     if (!activeSection) {
@@ -781,6 +1012,226 @@ export default function DesignSystemFoundationsPage() {
       delete next[cellKey];
       return next;
     });
+  }
+
+  async function persistRegistrySnapshot(nextSavedRegistry: FoundationRegistry) {
+    if (!savedRegistry || !draftRegistry) {
+      return null;
+    }
+
+    const previousDraft = cloneRegistry(draftRegistry);
+    const pendingItemKeys = getDirtyFoundationEntries(savedRegistry, draftRegistry).itemKeys;
+    const saved = await saveFoundationRegistry(nextSavedRegistry);
+
+    applyFoundationRegistry(saved);
+    setSavedRegistry(saved);
+
+    const nextDraft = cloneRegistry(saved);
+
+    for (const pendingItemKey of pendingItemKeys) {
+      const parsedKey = splitFoundationItemKey(pendingItemKey);
+
+      if (!parsedKey) {
+        continue;
+      }
+
+      copyFoundationItem(previousDraft, nextDraft, parsedKey.sectionId, parsedKey.itemId);
+    }
+
+    setDraftRegistry(nextDraft);
+    return saved;
+  }
+
+  async function handleAddGoogleFont() {
+    if (!savedRegistry || !draftRegistry) {
+      return;
+    }
+
+    const parsedPayload = parseGoogleFontPayload(googleFontUrlDraft);
+
+    if (!parsedPayload) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: 'Paste a Google Fonts CSS URL or a direct specimen URL.',
+      });
+      return;
+    }
+
+    const existingIds = new Set(activeFontLibrary.map((font) => font.id));
+    const existingFamilies = new Set(activeFontLibrary.map((font) => `${font.family.toLowerCase()}::${font.source}`));
+    const nextFonts = parsedPayload.families
+      .filter((family) => !existingFamilies.has(`${family.toLowerCase()}::google`))
+      .map((family) => {
+        const id = buildFontAssetId(family, existingIds);
+        existingIds.add(id);
+
+        return {
+          id,
+          label: family,
+          family,
+          category: inferFontCategory(family),
+          source: 'google' as const,
+          importUrl: parsedPayload.importUrl,
+        };
+      });
+
+    if (nextFonts.length === 0) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: 'These Google Fonts are already available in the library.',
+      });
+      return;
+    }
+
+    const nextRegistry = cloneRegistry(savedRegistry);
+    nextRegistry.fontLibrary = [...activeFontLibrary, ...nextFonts];
+    setFontLibraryBusy(true);
+    setFontLibraryFeedback(null);
+
+    try {
+      await persistRegistrySnapshot(nextRegistry);
+      setGoogleFontUrlDraft('');
+      setFontLibraryFeedback({
+        tone: 'success',
+        message: nextFonts.length === 1
+          ? `Added ${nextFonts[0].label} to the shared font library.`
+          : `Added ${nextFonts.length} Google Fonts to the shared font library.`,
+      });
+    } catch (error) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Failed to add Google Fonts.',
+      });
+    } finally {
+      setFontLibraryBusy(false);
+    }
+  }
+
+  async function handleUploadLocalFont() {
+    if (!savedRegistry || !draftRegistry) {
+      return;
+    }
+
+    if (!localFontFile) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: 'Choose a local font file first.',
+      });
+      return;
+    }
+
+    const fontFormat = guessFontFormat(localFontFile.name);
+
+    if (!fontFormat) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: 'Upload .woff2, .woff, .ttf, or .otf files.',
+      });
+      return;
+    }
+
+    const family = localFontNameDraft.trim();
+
+    if (!family) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: 'Enter the font family name for the uploaded file.',
+      });
+      return;
+    }
+
+    const duplicate = activeFontLibrary.some((font) => font.family.toLowerCase() === family.toLowerCase() && font.source === 'local');
+
+    if (duplicate) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: `${family} is already in the local font library.`,
+      });
+      return;
+    }
+
+    setFontLibraryBusy(true);
+    setFontLibraryFeedback(null);
+
+    try {
+      const uploadPayload = await uploadFoundationFontFile(localFontFile);
+      const existingIds = new Set(activeFontLibrary.map((font) => font.id));
+      const nextRegistry = cloneRegistry(savedRegistry);
+
+      nextRegistry.fontLibrary = [
+        ...activeFontLibrary,
+        {
+          id: buildFontAssetId(family, existingIds),
+          label: family,
+          family,
+          category: localFontCategoryDraft,
+          source: 'local',
+          faces: [
+            {
+              fileUrl: uploadPayload.publicUrl,
+              format: uploadPayload.format || fontFormat,
+              style: localFontStyleDraft,
+              weight: localFontWeightDraft.trim() || '400',
+            },
+          ],
+        },
+      ];
+
+      await persistRegistrySnapshot(nextRegistry);
+      setLocalFontNameDraft('');
+      setLocalFontCategoryDraft('sans');
+      setLocalFontWeightDraft('400');
+      setLocalFontStyleDraft('normal');
+      setLocalFontFile(null);
+      setLocalFontInputKey((current) => current + 1);
+      setFontLibraryFeedback({
+        tone: 'success',
+        message: `${family} was uploaded and added to the shared font library.`,
+      });
+    } catch (error) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Failed to upload the local font.',
+      });
+    } finally {
+      setFontLibraryBusy(false);
+    }
+  }
+
+  async function handleRemoveFont(fontId: string) {
+    if (!savedRegistry || !draftRegistry) {
+      return;
+    }
+
+    const usedBy = fontUsageMap.get(fontId) ?? [];
+
+    if (usedBy.length > 0) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: `Reassign ${usedBy.join(', ')} before removing this font from the library.`,
+      });
+      return;
+    }
+
+    const nextRegistry = cloneRegistry(savedRegistry);
+    nextRegistry.fontLibrary = activeFontLibrary.filter((font) => font.id !== fontId);
+    setFontLibraryBusy(true);
+    setFontLibraryFeedback(null);
+
+    try {
+      await persistRegistrySnapshot(nextRegistry);
+      setFontLibraryFeedback({
+        tone: 'success',
+        message: 'Removed the font from the shared library.',
+      });
+    } catch (error) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Failed to remove the font.',
+      });
+    } finally {
+      setFontLibraryBusy(false);
+    }
   }
 
   function updateTokenValue(collectionId: string, tokenId: string, tokenMode: string, value: string) {
@@ -984,7 +1435,9 @@ export default function DesignSystemFoundationsPage() {
           </div>
 
           {section.groups.map((group) => {
-            const tokens = section.tokens.filter((item) => item.group === group.id);
+            const tokens = section.tokens.filter(
+              (item) => item.group === group.id && isFoundationTokenVisible(section.id, item.id),
+            );
 
             if (tokens.length === 0) {
               return null;
@@ -1254,7 +1707,9 @@ export default function DesignSystemFoundationsPage() {
           </div>
 
           {section.groups.map((group) => {
-            const tokens = section.tokens.filter((item) => item.group === group.id);
+            const tokens = section.tokens.filter(
+              (item) => item.group === group.id && isFoundationTokenVisible(section.id, item.id),
+            );
 
             if (tokens.length === 0) {
               return null;
@@ -1343,6 +1798,225 @@ export default function DesignSystemFoundationsPage() {
           })}
         </div>
       </div>
+    );
+  }
+
+  function renderFontLibraryManager() {
+    if (activeSection.id !== FONTS_SECTION_ID) {
+      return null;
+    }
+
+    const controlsDisabled = fontLibraryBusy || savingItemKey !== null || !import.meta.env.DEV;
+
+    return (
+      <section className="st-ds-font-library clip-lg" aria-label="Font Library">
+        <div className="st-ds-font-library__top">
+          <div className="st-ds-font-library__intro">
+            <span className="st-ds-foundations-group__title">Font Library</span>
+            <p className="st-ds-font-library__lede">
+              Add Google Fonts or upload local files once, then reuse every loaded family in Body, Heading, Mono, and any future font role.
+            </p>
+          </div>
+          <div className="st-ds-font-library__meta">
+            <span className="st-ds-foundations-chip">
+              {activeFontLibrary.length} loaded
+            </span>
+            {!import.meta.env.DEV && <span className="st-ds-foundations-chip">Read only</span>}
+          </div>
+        </div>
+
+        <div className="st-ds-font-library__intake">
+          <section className="st-ds-font-library__panel">
+            <div className="st-ds-font-library__panel-head">
+              <span className="st-ds-foundations-list__label">Google Fonts URL</span>
+              <span className="st-ds-foundations-list__desc">Paste a CSS embed URL or a specimen link.</span>
+            </div>
+            <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
+              <span className="sr-only">Google Fonts CSS URL</span>
+              <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
+                <input
+                  className="st-ds-foundations-input"
+                  aria-label="Google Fonts CSS URL"
+                  placeholder="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap"
+                  value={googleFontUrlDraft}
+                  readOnly={!import.meta.env.DEV}
+                  onChange={(event) => setGoogleFontUrlDraft(event.target.value)}
+                />
+              </span>
+            </label>
+            <button
+              type="button"
+              className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+              disabled={controlsDisabled || googleFontUrlDraft.trim().length === 0}
+              onClick={() => {
+                void handleAddGoogleFont();
+              }}
+            >
+              {fontLibraryBusy ? 'Adding…' : 'Add Google Font'}
+            </button>
+          </section>
+
+          <section className="st-ds-font-library__panel">
+            <div className="st-ds-font-library__panel-head">
+              <span className="st-ds-foundations-list__label">Local Upload</span>
+              <span className="st-ds-foundations-list__desc">Store .woff2, .woff, .ttf, or .otf in the shared dev library.</span>
+            </div>
+            <div className="st-ds-font-library__local-grid">
+              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
+                <span className="st-ds-foundations-list__value-label">Family</span>
+                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
+                  <input
+                    className="st-ds-foundations-input"
+                    aria-label="Local font family name"
+                    placeholder="Suisse Int'l"
+                    value={localFontNameDraft}
+                    readOnly={!import.meta.env.DEV}
+                    onChange={(event) => setLocalFontNameDraft(event.target.value)}
+                  />
+                </span>
+              </label>
+              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
+                <span className="st-ds-foundations-list__value-label">Fallback</span>
+                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
+                  <select
+                    className="st-ds-foundations-input"
+                    aria-label="Local font fallback"
+                    value={localFontCategoryDraft}
+                    disabled={!import.meta.env.DEV}
+                    onChange={(event) => setLocalFontCategoryDraft(event.target.value as FoundationFontCategory)}
+                  >
+                    <option value="sans">Sans</option>
+                    <option value="serif">Serif</option>
+                    <option value="mono">Mono</option>
+                  </select>
+                </span>
+              </label>
+              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
+                <span className="st-ds-foundations-list__value-label">Weight</span>
+                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
+                  <input
+                    className="st-ds-foundations-input"
+                    aria-label="Local font weight"
+                    placeholder="400 or 100 900"
+                    value={localFontWeightDraft}
+                    readOnly={!import.meta.env.DEV}
+                    onChange={(event) => setLocalFontWeightDraft(event.target.value)}
+                  />
+                </span>
+              </label>
+              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
+                <span className="st-ds-foundations-list__value-label">Style</span>
+                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
+                  <select
+                    className="st-ds-foundations-input"
+                    aria-label="Local font style"
+                    value={localFontStyleDraft}
+                    disabled={!import.meta.env.DEV}
+                    onChange={(event) => setLocalFontStyleDraft(event.target.value)}
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="italic">Italic</option>
+                  </select>
+                </span>
+              </label>
+            </div>
+            <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
+              <span className="st-ds-foundations-list__value-label">Font file</span>
+              <span className={['st-ds-foundations-control', 'st-ds-foundations-control--file', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
+                <input
+                  key={localFontInputKey}
+                  className="st-ds-font-library__file-input"
+                  aria-label="Local font file"
+                  type="file"
+                  accept=".woff2,.woff,.ttf,.otf"
+                  disabled={!import.meta.env.DEV}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setLocalFontFile(file);
+
+                    if (file && localFontNameDraft.trim().length === 0) {
+                      setLocalFontNameDraft(deriveFontFamilyFromFileName(file.name));
+                    }
+                  }}
+                />
+                <span className="st-ds-font-library__file-label">
+                  {localFontFile ? localFontFile.name : 'Choose font file'}
+                </span>
+              </span>
+            </label>
+            <button
+              type="button"
+              className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+              disabled={controlsDisabled || !localFontFile}
+              onClick={() => {
+                void handleUploadLocalFont();
+              }}
+            >
+              {fontLibraryBusy ? 'Uploading…' : 'Upload Local Font'}
+            </button>
+          </section>
+        </div>
+
+        {fontLibraryFeedback && (
+          <div
+            className={[
+              'st-ds-font-library__feedback',
+              fontLibraryFeedback.tone === 'error' && 'is-error',
+              fontLibraryFeedback.tone === 'success' && 'is-success',
+            ].filter(Boolean).join(' ')}
+            role="status"
+          >
+            {fontLibraryFeedback.message}
+          </div>
+        )}
+
+        <div className="st-ds-font-library__grid">
+          {activeFontLibrary.map((font) => {
+            const stack = getFoundationFontStack(font);
+            const usedBy = fontUsageMap.get(font.id) ?? [];
+            const canRemove = import.meta.env.DEV && !fontLibraryBusy && savingItemKey === null && usedBy.length === 0;
+
+            return (
+              <article key={font.id} className="st-ds-font-library__card">
+                <div className="st-ds-font-library__card-head">
+                  <div className="st-ds-font-library__card-copy">
+                    <span className="st-ds-foundations-list__label">{font.label}</span>
+                    <code className="st-ds-foundations-list__code">{stack}</code>
+                  </div>
+                  <div className="st-ds-foundations-font-role__badges">
+                    <span className="st-ds-foundations-chip">{getFontOptionSourceLabel(font.source)}</span>
+                    <span className="st-ds-foundations-chip">{getFontCategoryLabel(font.category)}</span>
+                  </div>
+                </div>
+                <div className="st-ds-font-library__preview" style={{ fontFamily: stack }}>
+                  Sphinx of black quartz, judge my vow.
+                </div>
+                <div className="st-ds-font-library__card-foot">
+                  <div className="st-ds-font-library__usage">
+                    {usedBy.length > 0 ? (
+                      <span className="st-ds-foundations-list__desc">
+                        Used by {usedBy.join(', ')}
+                      </span>
+                    ) : (
+                      <span className="st-ds-foundations-list__desc">Available in every role picker.</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+                    disabled={!canRemove}
+                    onClick={() => {
+                      void handleRemoveFont(font.id);
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     );
   }
 
@@ -1460,6 +2134,7 @@ export default function DesignSystemFoundationsPage() {
           ) : (
             isTokenSection(activeSection) && CORE_LEDGER_SECTION_IDS.has(activeSection.id) ? renderCoreTokenLedger(activeSection) : (
             <div className="st-ds-foundations-groups">
+            {renderFontLibraryManager()}
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
                   <div className={['st-ds-foundations-list', group.layout === 'token' ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
@@ -1475,9 +2150,9 @@ export default function DesignSystemFoundationsPage() {
                       const tokenMode = entry.mode;
                       const tokenLocked = token.editable === false;
                       const isFontRoleCard = entry.sectionId === FONTS_SECTION_ID;
-                      const fontRoleOptions = isFontRoleCard ? getFontRoleOptions(token.id) : [];
-                      const selectedFontOption = fontRoleOptions.find((option) => option.value === (token.values[tokenMode] ?? '')) ?? null;
-                      const showTokenPreview = !isFontRoleCard && token.preview !== 'spacing';
+                      const fontRoleOptions = isFontRoleCard ? getFontRoleOptions(activeFontLibrary, token.id) : [];
+                      const selectedFontOption = fontRoleOptions.find((option) => getFoundationFontStack(option) === (token.values[tokenMode] ?? '')) ?? null;
+                      const showTokenPreview = token.preview !== 'spacing';
                       const hasTokenFooter = tokenLocked || showTokenPreview || isDirty;
                       const canSaveItem = savingItemKey === null && (!isFontRoleCard || selectedFontOption !== null);
                       const fontRoleStatusLabel = selectedFontOption ? getFontOptionSourceLabel(selectedFontOption.source) : 'Not Bundled';
@@ -1517,16 +2192,28 @@ export default function DesignSystemFoundationsPage() {
                                   <select
                                     className="st-ds-foundations-input"
                                     aria-label={`${token.label} project font`}
-                                    value={selectedFontOption?.value ?? ''}
+                                    value={selectedFontOption ? getFoundationFontStack(selectedFontOption) : ''}
                                     disabled={tokenLocked}
                                     onChange={(event) => updateTokenValue(entry.sectionId, token.id, tokenMode, event.target.value)}
                                   >
                                     {!selectedFontOption && <option value="">Unsupported Current Stack</option>}
-                                    {fontRoleOptions.map((option) => (
-                                      <option key={`${token.id}-${option.value}`} value={option.value}>
-                                        {option.label}
-                                      </option>
-                                    ))}
+                                    {FONT_SOURCE_ORDER.map((source) => {
+                                      const options = fontRoleOptions.filter((option) => option.source === source);
+
+                                      if (options.length === 0) {
+                                        return null;
+                                      }
+
+                                      return (
+                                        <optgroup key={`${token.id}-${source}`} label={getFontOptionSourceLabel(source)}>
+                                          {options.map((option) => (
+                                            <option key={`${token.id}-${option.id}`} value={getFoundationFontStack(option)}>
+                                              {`${option.label} • ${getFontCategoryLabel(option.category)}`}
+                                            </option>
+                                          ))}
+                                        </optgroup>
+                                      );
+                                    })}
                                   </select>
                                 </span>
                               </label>
@@ -1550,6 +2237,11 @@ export default function DesignSystemFoundationsPage() {
                             <div className="st-ds-foundations-card__bottom">
                               <div className="st-ds-foundations-card__notes">
                                 {tokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
+                                {isFontRoleCard && selectedFontOption && (
+                                  <span className="st-ds-foundations-chip">
+                                    {getFontCategoryLabel(selectedFontOption.category)}
+                                  </span>
+                                )}
                               </div>
 
                               {showTokenPreview && (
