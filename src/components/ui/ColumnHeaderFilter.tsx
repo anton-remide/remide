@@ -235,7 +235,7 @@ export default function ColumnHeaderFilter({
               {filteredValues.map((val) => (
                 <label key={val} className="st-col-filter-item" onClick={() => toggleOne(val)}>
                   <span className={`st-col-filter-check${checked.has(val) ? ' checked' : ''}`}>
-                    {checked.has(val) && <Check size={11} strokeWidth={3} />}
+                    {checked.has(val) && <Check size={11} />}
                   </span>
                   <span className="st-col-filter-item-label">
                     {renderValue ? renderValue(val) : val}

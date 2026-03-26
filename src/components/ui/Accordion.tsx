@@ -1,4 +1,5 @@
 import { useState, useCallback, useId, type ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export interface AccordionItemProps {
   title: ReactNode;
@@ -34,16 +35,7 @@ export function AccordionItem({
       >
         <span className="st-accordion-item__title">{title}</span>
         {badge && <span className="st-accordion-item__badge">{badge}</span>}
-        <svg
-          className="st-accordion-item__chevron"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronDown className="st-accordion-item__chevron" size={16} aria-hidden="true" />
       </button>
       <div
         id={contentId}

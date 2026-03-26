@@ -6,10 +6,13 @@ import './styles/app.css';
 import AuthProvider from './context/AuthProvider';
 import { ThemeProvider } from './context/ThemeProvider';
 import App from './App';
+import { initializeGlobalIconSettings } from './lib/iconSettings';
 
 if (window.location.hash.includes('figmacapture=')) {
   document.documentElement.classList.add('figma-capture-mode');
 }
+
+initializeGlobalIconSettings();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

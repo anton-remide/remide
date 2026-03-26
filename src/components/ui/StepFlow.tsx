@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Check } from 'lucide-react';
 
 export interface StepFlowStep {
   number: number;
@@ -29,9 +30,7 @@ export default function StepFlow({ steps, direction = 'horizontal', className }:
         >
           <div className="st-step-flow__indicator">
             {step.status === 'completed' ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M3 8l4 4 6-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <Check size={16} aria-hidden="true" />
             ) : (
               step.icon || <span>{step.number}</span>
             )}

@@ -79,19 +79,31 @@ describe('foundation registry', () => {
   it('tracks dirty sections and items for unsaved edits', () => {
     const saved = loadRegistry() as FoundationRegistry;
     const draft = structuredClone(saved);
+    const typographyRules = draft.rules.find((rule) => rule.id === 'typography-rules');
 
     draft.collections[0].tokens[0].label = 'Background Surface';
-    draft.rules[0].items[0].properties.size = '4rem';
+
+    if (!typographyRules) {
+      throw new Error('typography-rules not found');
+    }
+
+    typographyRules.items[0].properties.size = '4rem';
 
     const dirtyEntries = getDirtyFoundationEntries(saved, draft);
 
+    const savedTypographyRules = draft.rules.find((rule) => rule.id === 'typography-rules');
+
+    if (!savedTypographyRules) {
+      throw new Error('typography-rules not found after mutation');
+    }
+
     expect(dirtyEntries.sectionIds).toEqual(expect.arrayContaining([
       draft.collections[0].id,
-      draft.rules[0].id,
+      savedTypographyRules.id,
     ]));
     expect(dirtyEntries.itemKeys).toEqual(expect.arrayContaining([
       getFoundationItemKey(draft.collections[0].id, draft.collections[0].tokens[0].id),
-      getFoundationItemKey(draft.rules[0].id, draft.rules[0].items[0].id),
+      getFoundationItemKey(savedTypographyRules.id, savedTypographyRules.items[0].id),
     ]));
   });
 });

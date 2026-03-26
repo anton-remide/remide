@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DesignSystemFoundationsPage from './DesignSystemFoundationsPage';
 import { renderWithProviders } from '../../test/helpers';
 import type { FoundationRegistry } from '../../design-system/foundations';
+import {
+  GLOBAL_ICON_STROKE_WIDTH_CSS_VAR,
+  GLOBAL_ICON_STROKE_WIDTH_STORAGE_KEY,
+} from '../../lib/iconSettings';
 
 const REGISTRY_PATH = resolve(process.cwd(), 'public/design-system/foundation.registry.json');
 
@@ -21,6 +25,8 @@ describe('DesignSystemFoundationsPage', () => {
   beforeEach(() => {
     currentRegistry = loadRegistry();
     clipboardWriteTextMock = vi.fn(async () => undefined);
+    window.localStorage.clear();
+    document.documentElement.style.removeProperty(GLOBAL_ICON_STROKE_WIDTH_CSS_VAR);
 
     fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const method = init?.method ?? 'GET';
@@ -70,6 +76,8 @@ describe('DesignSystemFoundationsPage', () => {
   });
 
   afterEach(() => {
+    window.localStorage.clear();
+    document.documentElement.style.removeProperty(GLOBAL_ICON_STROKE_WIDTH_CSS_VAR);
     vi.unstubAllGlobals();
   });
 
@@ -173,7 +181,7 @@ describe('DesignSystemFoundationsPage', () => {
     expect(radiiLedger?.querySelector('.st-ds-token-ledger__swatch')).not.toBeInTheDocument();
   });
 
-  it('shows icons inside the core foundations nav as a header link only', async () => {
+  it('renders icons as a dedicated foundations playground', async () => {
     const { container } = renderWithProviders(<DesignSystemFoundationsPage />);
 
     await screen.findByRole('heading', { name: 'Colors' });
@@ -181,13 +189,91 @@ describe('DesignSystemFoundationsPage', () => {
     const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
     fireEvent.click(within(sidebar).getByRole('button', { name: 'Icons' }));
 
-    expect(await screen.findByRole('heading', { name: 'Icons' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('article', { name: 'Stroke Controls' })).toBeInTheDocument();
+    });
     expect(screen.getByRole('link', { name: /Lucide/i })).toHaveAttribute(
       'href',
       'https://github.com/lucide-icons/lucide',
     );
-    expect(container.querySelector('.st-ds-icons-library')).not.toBeInTheDocument();
+    expect(container.querySelector('.st-ds-icons-playground')).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Stroke Controls' })).toBeInTheDocument();
+    expect(container.querySelector('.st-ds-icons-playground__preview')).toBeInTheDocument();
+    expect(container.querySelector('.st-ds-icons-playground__search')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Stroke width')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Semantic role Inherit' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Alias override')).not.toBeInTheDocument();
     expect(container.querySelector('.st-ds-foundations-list__item.is-rule-card')).not.toBeInTheDocument();
+  });
+
+  it('updates icon stroke width and syncs saved value globally', async () => {
+    const { container } = renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Icons' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Stroke width')).toBeInTheDocument();
+    });
+
+    const strokeInput = screen.getByLabelText('Stroke width') as HTMLInputElement;
+    const previewIcon = container.querySelector('.st-ds-icons-playground__frame svg');
+    expect(previewIcon).not.toBeNull();
+    expect(strokeInput.value).toBe('2');
+    expect(previewIcon).toHaveAttribute('style', expect.stringContaining('--st-local-icon-stroke-width: 2'));
+    expect(document.documentElement.style.getPropertyValue(GLOBAL_ICON_STROKE_WIDTH_CSS_VAR)).toBe('');
+
+    fireEvent.change(strokeInput, {
+      target: { value: '4' },
+    });
+
+    expect(strokeInput.value).toBe('4');
+    expect(previewIcon).toHaveAttribute('style', expect.stringContaining('--st-local-icon-stroke-width: 3'));
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Discard' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+
+    expect(strokeInput.value).toBe('2');
+    expect(previewIcon).toHaveAttribute('style', expect.stringContaining('--st-local-icon-stroke-width: 2'));
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+
+    fireEvent.change(strokeInput, {
+      target: { value: '4' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(strokeInput.value).toBe('4');
+    expect(previewIcon).toHaveAttribute('style', expect.stringContaining('--st-local-icon-stroke-width: 3'));
+    expect(document.documentElement.style.getPropertyValue(GLOBAL_ICON_STROKE_WIDTH_CSS_VAR)).toBe('3');
+    expect(window.localStorage.getItem(GLOBAL_ICON_STROKE_WIDTH_STORAGE_KEY)).toBe('3');
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+  });
+
+  it('updates semantic role pills and color source inside the icons playground', async () => {
+    const { container } = renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Icons' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Semantic role Inherit' })).toBeInTheDocument();
+    });
+
+    const summary = container.querySelector('.st-ds-icons-playground__summary');
+    expect(summary).not.toBeNull();
+    expect(summary).toHaveTextContent(/Color source\s*Inherit - currentColor/);
+    fireEvent.click(screen.getByRole('button', { name: 'Semantic role Danger' }));
+
+    expect(summary).toHaveTextContent(/Color source\s*Semantic role - Danger \(\-\-color-danger\)/);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Semantic role Accent' }));
+
+    expect(summary).toHaveTextContent(/Color source\s*Semantic role - Accent \(\-\-color-accent\)/);
   });
 
   it('shows only elevation tokens in the shadows ledger', async () => {
@@ -266,6 +352,36 @@ describe('DesignSystemFoundationsPage', () => {
         ?.tokens.find((token) => token.id === 'font-body')
         ?.values.base,
     ).toBe("'DM Sans', sans-serif");
+  });
+
+  it('removes unused Google fonts from the shared library and blocks used defaults', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Fonts' }));
+
+    expect(await screen.findByRole('heading', { name: 'Fonts' })).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Remove Geist' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Google Fonts CSS URL'), {
+      target: { value: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Google Font' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove DM Sans' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    expect(screen.queryAllByRole('option', { name: 'DM Sans • Sans' })).toHaveLength(0);
   });
 
   it('uploads a local font and makes it available across font roles', async () => {

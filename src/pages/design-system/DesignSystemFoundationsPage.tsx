@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { ChevronDown, ExternalLink, Trash2 } from 'lucide-react';
+import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import Heading from '../../components/ui/Heading';
 import Text from '../../components/ui/Text';
 import { useTheme, type Theme } from '../../context/ThemeProvider';
+import {
+  DEFAULT_GLOBAL_ICON_STROKE_WIDTH,
+  ICON_STROKE_PRESETS,
+  readGlobalIconStrokeWidth,
+  setGlobalIconStrokeWidth,
+  type IconStrokePreset,
+} from '../../lib/iconSettings';
 import type {
   FoundationFontAsset,
   FoundationFontCategory,
@@ -157,6 +165,89 @@ const BASIC_BADGE_COLORS = [
   '#2A64F6',
 ] as const;
 const ICON_LIBRARY_URL = 'https://github.com/lucide-icons/lucide';
+const ICON_PREVIEW_ICON_NAME: IconName = 'search';
+const ICON_PREVIEW_SIZE = 24;
+type IconColorTokenId =
+  | 'color-text-main'
+  | 'color-text-secondary'
+  | 'color-accent'
+  | 'color-success'
+  | 'color-warning'
+  | 'color-danger'
+  | 'color-info'
+  | 'color-neutral';
+type IconSemanticRole =
+  | 'inherit'
+  | 'main'
+  | 'secondary'
+  | 'accent'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'neutral';
+
+interface IconPlaygroundState {
+  strokeWidth: IconStrokePreset;
+  semanticRole: IconSemanticRole;
+}
+
+interface IconResolvedColorSource {
+  previewColor: string;
+  summary: string;
+}
+
+const ICON_COLOR_TOKEN_META: Record<IconColorTokenId, { label: string; varName: string }> = {
+  'color-text-main': {
+    label: 'Text Main',
+    varName: '--color-text-main',
+  },
+  'color-text-secondary': {
+    label: 'Text Secondary',
+    varName: '--color-text-secondary',
+  },
+  'color-accent': {
+    label: 'Accent Primary',
+    varName: '--color-accent',
+  },
+  'color-success': {
+    label: 'Success',
+    varName: '--color-success',
+  },
+  'color-warning': {
+    label: 'Warning',
+    varName: '--color-warning',
+  },
+  'color-danger': {
+    label: 'Danger',
+    varName: '--color-danger',
+  },
+  'color-info': {
+    label: 'Info',
+    varName: '--color-info',
+  },
+  'color-neutral': {
+    label: 'Neutral',
+    varName: '--color-neutral',
+  },
+};
+
+const ICON_SEMANTIC_ROLE_META: Array<{ id: IconSemanticRole; label: string; tokenId: IconColorTokenId | null }> = [
+  { id: 'inherit', label: 'Inherit', tokenId: null },
+  { id: 'main', label: 'Main', tokenId: 'color-text-main' },
+  { id: 'secondary', label: 'Secondary', tokenId: 'color-text-secondary' },
+  { id: 'accent', label: 'Accent', tokenId: 'color-accent' },
+  { id: 'success', label: 'Success', tokenId: 'color-success' },
+  { id: 'warning', label: 'Warning', tokenId: 'color-warning' },
+  { id: 'danger', label: 'Danger', tokenId: 'color-danger' },
+  { id: 'info', label: 'Info', tokenId: 'color-info' },
+  { id: 'neutral', label: 'Neutral', tokenId: 'color-neutral' },
+];
+
+const DEFAULT_ICON_PLAYGROUND_STATE: IconPlaygroundState = {
+  strokeWidth: DEFAULT_GLOBAL_ICON_STROKE_WIDTH,
+  semanticRole: 'inherit',
+};
 
 function getFoundationModeLabel(mode: string) {
   if (mode === 'base') {
@@ -175,6 +266,52 @@ function getSpacingPreviewWidth(value: string) {
 
   return Math.max(3, Math.min(12, Math.round((parsed / 96) * 12)));
 }
+
+function getFoundationColorTokenMeta(registry: FoundationRegistry | null, tokenId: IconColorTokenId) {
+  const fallback = ICON_COLOR_TOKEN_META[tokenId];
+  const colorsCollection = registry?.collections.find((entry) => entry.id === COLOR_SECTION_ID);
+  const token = colorsCollection?.tokens.find((entry) => entry.id === tokenId);
+
+  return {
+    id: tokenId,
+    label: token?.label ?? fallback.label,
+    varName: token?.name ?? fallback.varName,
+  };
+}
+
+function getIconSemanticRoleTokenId(role: IconSemanticRole) {
+  return ICON_SEMANTIC_ROLE_META.find((entry) => entry.id === role)?.tokenId ?? null;
+}
+
+function resolveIconColorSource(
+  registry: FoundationRegistry | null,
+  semanticRole: IconSemanticRole,
+): IconResolvedColorSource {
+  if (semanticRole === 'inherit') {
+    return {
+      previewColor: 'var(--color-text-main)',
+      summary: 'Inherit - currentColor (preview context uses --color-text-main)',
+    };
+  }
+
+  const tokenId = getIconSemanticRoleTokenId(semanticRole);
+  const token = tokenId ? getFoundationColorTokenMeta(registry, tokenId) : null;
+
+  if (!token) {
+    return {
+      previewColor: 'var(--color-text-main)',
+      summary: 'Inherit - currentColor (preview context uses --color-text-main)',
+    };
+  }
+
+  const roleLabel = ICON_SEMANTIC_ROLE_META.find((entry) => entry.id === semanticRole)?.label ?? semanticRole;
+
+  return {
+    previewColor: `var(${token.varName})`,
+    summary: `Semantic role - ${roleLabel} (${token.varName})`,
+  };
+}
+
 type DisplayFoundationItem =
   | { kind: 'token'; sectionId: string; item: FoundationToken; mode: string }
   | { kind: 'rule'; sectionId: string; item: FoundationRuleItem };
@@ -888,6 +1025,11 @@ export default function DesignSystemFoundationsPage() {
   const [googleFontUrlDraft, setGoogleFontUrlDraft] = useState('');
   const [localFontFile, setLocalFontFile] = useState<File | null>(null);
   const [localFontInputKey, setLocalFontInputKey] = useState(0);
+  const [iconPlayground, setIconPlayground] = useState<IconPlaygroundState>(() => ({
+    ...DEFAULT_ICON_PLAYGROUND_STATE,
+    strokeWidth: readGlobalIconStrokeWidth(),
+  }));
+  const [savedIconStrokeWidth, setSavedIconStrokeWidth] = useState<IconStrokePreset>(() => readGlobalIconStrokeWidth());
 
   useEffect(() => {
     let cancelled = false;
@@ -930,6 +1072,10 @@ export default function DesignSystemFoundationsPage() {
   const activeFontLibrary = useMemo(
     () => (activeRegistry ? getFoundationFontLibrary(activeRegistry) : []),
     [activeRegistry],
+  );
+  const googleFontLibrary = useMemo(
+    () => activeFontLibrary.filter((font) => font.source === 'google'),
+    [activeFontLibrary],
   );
   const sections = useMemo(() => (activeRegistry ? getFoundationSections(activeRegistry) : []), [activeRegistry]);
   const visibleSections = useMemo(() => {
@@ -981,6 +1127,10 @@ export default function DesignSystemFoundationsPage() {
     () => visibleSections.find((section) => section.id === selectedSectionId) ?? visibleSections[0] ?? null,
     [selectedSectionId, visibleSections],
   );
+  const resolvedIconColorSource = useMemo(
+    () => resolveIconColorSource(activeRegistry, iconPlayground.semanticRole),
+    [activeRegistry, iconPlayground.semanticRole],
+  );
 
   const activeMode = activeSection && isTokenSection(activeSection)
     ? resolveTokenMode(activeSection, theme)
@@ -1003,6 +1153,30 @@ export default function DesignSystemFoundationsPage() {
 
   const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
   const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
+  const fontUsageMap = useMemo(() => {
+    const usage = new Map<string, string[]>();
+
+    if (!activeRegistry) {
+      return usage;
+    }
+
+    const fontsCollection = activeRegistry.collections.find((entry) => entry.id === FONTS_SECTION_ID);
+
+    if (!fontsCollection) {
+      return usage;
+    }
+
+    for (const font of activeFontLibrary) {
+      const stack = getFoundationFontStack(font);
+      const roles = fontsCollection.tokens
+        .filter((token) => (token.values.base ?? '') === stack)
+        .map((token) => token.label);
+
+      usage.set(font.id, roles);
+    }
+
+    return usage;
+  }, [activeFontLibrary, activeRegistry]);
 
   const groupedItems = useMemo<DisplayFoundationGroup[]>(() => {
     if (!activeSection) {
@@ -1279,6 +1453,42 @@ export default function DesignSystemFoundationsPage() {
       setFontLibraryFeedback({
         tone: 'error',
         message: error instanceof Error ? error.message : 'Failed to upload the local font.',
+      });
+    } finally {
+      setFontLibraryBusy(false);
+    }
+  }
+
+  async function handleRemoveGoogleFont(fontId: string) {
+    if (!savedRegistry || !draftRegistry) {
+      return;
+    }
+
+    const usedBy = fontUsageMap.get(fontId) ?? [];
+
+    if (usedBy.length > 0) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: `This font is currently used in ${usedBy.join(', ')}.`,
+      });
+      return;
+    }
+
+    const nextRegistry = cloneRegistry(savedRegistry);
+    nextRegistry.fontLibrary = activeFontLibrary.filter((font) => font.id !== fontId);
+    setFontLibraryBusy(true);
+    setFontLibraryFeedback(null);
+
+    try {
+      await persistRegistrySnapshot(nextRegistry);
+      setFontLibraryFeedback({
+        tone: 'success',
+        message: 'Google font removed from the shared library.',
+      });
+    } catch (error) {
+      setFontLibraryFeedback({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Failed to remove the Google font.',
       });
     } finally {
       setFontLibraryBusy(false);
@@ -1939,6 +2149,45 @@ export default function DesignSystemFoundationsPage() {
             >
               {fontLibraryBusy ? 'Adding…' : 'Add Google Font'}
             </button>
+
+            <div className="st-ds-font-library__google-list" aria-label="Added Google fonts">
+              <span className="st-ds-foundations-list__value-label">Added Google Fonts</span>
+              {googleFontLibrary.length > 0 ? (
+                <div className="st-ds-font-library__google-items">
+                  {googleFontLibrary.map((font) => {
+                    const usedBy = fontUsageMap.get(font.id) ?? [];
+                    const canRemove = import.meta.env.DEV && !fontLibraryBusy && savingItemKey === null && usedBy.length === 0;
+
+                    return (
+                      <div key={font.id} className="st-ds-font-library__google-item">
+                        <span className="st-ds-font-library__google-label">{font.label}</span>
+                        <div className="st-ds-font-library__google-actions">
+                          {usedBy.length > 0 ? (
+                            <span className="st-ds-font-library__google-status">
+                              Used in {usedBy.join(', ')}
+                            </span>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="st-ds-font-library__google-remove"
+                            aria-label={`Remove ${font.label}`}
+                            title={usedBy.length > 0 ? `Used in ${usedBy.join(', ')}` : `Remove ${font.label}`}
+                            disabled={!canRemove}
+                            onClick={() => {
+                              void handleRemoveGoogleFont(font.id);
+                            }}
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <span className="st-ds-foundations-list__desc">No Google fonts added yet.</span>
+              )}
+            </div>
           </section>
 
           <section className="st-ds-font-library__panel">
@@ -1989,6 +2238,130 @@ export default function DesignSystemFoundationsPage() {
           </div>
         )}
       </section>
+    );
+  }
+
+  function renderIconsPlayground() {
+    const strokeIndex = Math.max(0, ICON_STROKE_PRESETS.indexOf(iconPlayground.strokeWidth));
+    const isIconStrokeDirty = iconPlayground.strokeWidth !== savedIconStrokeWidth;
+    const previewIconStyle = {
+      '--st-local-icon-stroke-width': String(iconPlayground.strokeWidth),
+    } as CSSProperties;
+
+    return (
+      <div className="st-ds-icons-playground">
+        <article className="st-ds-icons-playground__card clip-lg" aria-label="Stroke Controls">
+          <div className="st-ds-icons-playground__card-head">
+            <span className="st-ds-foundations-list__label">Stroke width</span>
+            <span className="st-ds-foundations-chip">{iconPlayground.strokeWidth}</span>
+          </div>
+
+          <div className="st-ds-icons-playground__range-block">
+            <input
+              className="st-ds-icons-playground__range"
+              aria-label="Stroke width"
+              type="range"
+              min={0}
+              max={ICON_STROKE_PRESETS.length - 1}
+              step={1}
+              value={strokeIndex}
+              onChange={(event) => {
+                const nextIndex = Number.parseInt(event.target.value, 10);
+                const nextStroke = ICON_STROKE_PRESETS[nextIndex] ?? DEFAULT_ICON_PLAYGROUND_STATE.strokeWidth;
+                setIconPlayground((current) => ({ ...current, strokeWidth: nextStroke }));
+              }}
+            />
+            <div className="st-ds-icons-playground__range-marks" aria-hidden="true">
+              {ICON_STROKE_PRESETS.map((stroke) => (
+                <span key={stroke}>{stroke}</span>
+              ))}
+            </div>
+          </div>
+
+          {isIconStrokeDirty && (
+            <div className="st-ds-foundations-card__actions">
+              <div className="st-ds-foundations-card__actions-row" role="group" aria-label="Stroke width unsaved changes">
+                <button
+                  type="button"
+                  className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
+                  onClick={() => {
+                    setIconPlayground((current) => ({ ...current, strokeWidth: savedIconStrokeWidth }));
+                  }}
+                >
+                  Discard
+                </button>
+                <button
+                  type="button"
+                  className="st-ds-foundations-btn st-ds-foundations-btn--primary"
+                  onClick={() => {
+                    const nextSavedStrokeWidth = setGlobalIconStrokeWidth(iconPlayground.strokeWidth);
+                    setSavedIconStrokeWidth(nextSavedStrokeWidth);
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
+        </article>
+
+        <aside className="st-ds-icons-playground__preview clip-lg" aria-label="Icon Preview">
+          <div className="st-ds-icons-playground__card-head">
+            <span className="st-ds-foundations-list__label">Preview</span>
+            <span className="st-ds-foundations-chip">48x48</span>
+          </div>
+
+          <div className="st-ds-icons-playground__semantic-pills" role="group" aria-label="Semantic roles">
+            {ICON_SEMANTIC_ROLE_META.map((option) => {
+              const isActive = option.id === iconPlayground.semanticRole;
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={[
+                    'st-ds-icons-playground__semantic-pill',
+                    isActive && 'is-active',
+                  ].filter(Boolean).join(' ')}
+                  aria-label={`Semantic role ${option.label}`}
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setIconPlayground((current) => ({
+                      ...current,
+                      semanticRole: option.id,
+                    }));
+                  }}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="st-ds-icons-playground__preview-surface">
+            <div
+              className="st-ds-icons-playground__frame"
+              style={{ color: resolvedIconColorSource.previewColor }}
+            >
+              <DynamicIcon
+                name={ICON_PREVIEW_ICON_NAME}
+                size={ICON_PREVIEW_SIZE}
+                color="currentColor"
+                aria-label="Icon preview"
+                style={previewIconStyle}
+                fallback={() => <span className="st-ds-icons-playground__preview-loading">Loading icon...</span>}
+              />
+            </div>
+          </div>
+
+          <dl className="st-ds-icons-playground__summary">
+            <div className="st-ds-icons-playground__summary-row">
+              <dt>Color source</dt>
+              <dd>{resolvedIconColorSource.summary}</dd>
+            </div>
+          </dl>
+        </aside>
+      </div>
     );
   }
 
@@ -2061,6 +2434,7 @@ export default function DesignSystemFoundationsPage() {
             'st-ds-foundations-panel--main',
             (activeSection.id === FONTS_SECTION_ID || activeSection.id === TYPOGRAPHY_SCALE_SECTION_ID) && 'is-compact-token-stack',
             activeSection.id === FONTS_SECTION_ID && 'is-fonts',
+            activeSection.id === ICONS_SECTION_ID && 'is-icons',
             activeSection.id === TYPOGRAPHY_RULES_SECTION_ID && 'is-typography-rules',
           ].filter(Boolean).join(' ')}
         >
@@ -2068,6 +2442,7 @@ export default function DesignSystemFoundationsPage() {
             className={[
               'st-ds-foundations-panel__header',
               isColorsSectionActive && 'st-ds-foundations-panel__header--colors-modes',
+              isIconsSectionActive && 'st-ds-foundations-panel__header--icons-link',
             ]
               .filter(Boolean)
               .join(' ')}
@@ -2116,7 +2491,7 @@ export default function DesignSystemFoundationsPage() {
 
           {isColorsSectionActive ? (
             activeColorsView === 'active' ? renderColorsLedger(activeSection) : renderBasicColorsLedger()
-          ) : isIconsSectionActive ? null : (
+          ) : isIconsSectionActive ? renderIconsPlayground() : (
             isTokenSection(activeSection) && CORE_LEDGER_SECTION_IDS.has(activeSection.id) ? renderCoreTokenLedger(activeSection) : (
             <div className="st-ds-foundations-groups">
             {renderFontLibraryManager()}
@@ -2164,6 +2539,11 @@ export default function DesignSystemFoundationsPage() {
                                       {fontRoleStatusLabel}
                                     </span>
                                   )}
+                                  {isFontRoleCard && selectedFontOption && (
+                                    <span className="st-ds-foundations-chip">
+                                      {getFontCategoryLabel(selectedFontOption.category)}
+                                    </span>
+                                  )}
                                   {isDirty && <span className="st-ds-foundations-list__badge">Edited</span>}
                                 </span>
                               </div>
@@ -2173,7 +2553,7 @@ export default function DesignSystemFoundationsPage() {
                             {isFontRoleCard ? (
                               <label className="st-ds-foundations-inline-field">
                                 <span className="sr-only">Project Font</span>
-                                <span className={['st-ds-foundations-control', tokenLocked && 'is-readonly'].filter(Boolean).join(' ')}>
+                                <span className={['st-ds-foundations-control', 'st-ds-foundations-control--select', tokenLocked && 'is-readonly'].filter(Boolean).join(' ')}>
                                   <select
                                     className="st-ds-foundations-input"
                                     aria-label={`${token.label} project font`}
@@ -2200,6 +2580,7 @@ export default function DesignSystemFoundationsPage() {
                                       );
                                     })}
                                   </select>
+                                  <ChevronDown className="st-ds-foundations-control__chevron" size={14} aria-hidden="true" />
                                 </span>
                               </label>
                             ) : (
@@ -2222,11 +2603,6 @@ export default function DesignSystemFoundationsPage() {
                             <div className="st-ds-foundations-card__bottom">
                               <div className="st-ds-foundations-card__notes">
                                 {tokenLocked && <span className="st-ds-foundations-chip">Locked</span>}
-                                {isFontRoleCard && selectedFontOption && (
-                                  <span className="st-ds-foundations-chip">
-                                    {getFontCategoryLabel(selectedFontOption.category)}
-                                  </span>
-                                )}
                               </div>
 
                               {showTokenPreview && (

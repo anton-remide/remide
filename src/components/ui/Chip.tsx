@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { X } from 'lucide-react';
 
 export interface ChipProps {
   children: ReactNode;
@@ -33,9 +34,7 @@ export default function Chip({ children, selected, onRemove, onClick, className 
           aria-label="Remove"
           type="button"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <X size={12} aria-hidden="true" />
         </button>
       )}
     </span>
