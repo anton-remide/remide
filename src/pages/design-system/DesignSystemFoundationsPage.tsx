@@ -356,10 +356,21 @@ function guessFontFormat(fileName: string) {
 }
 
 function deriveFontFamilyFromFileName(fileName: string) {
-  return fileName
+  const cleaned = fileName
     .replace(/\.[^.]+$/, '')
-    .replace(/[-_]+/g, ' ')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b(woff2|woff|ttf|otf|regular|italic|oblique|variable|roman|book|medium|semibold|bold|light|thin|black|extrabold|ultrabold|\d{3})\b/gi, '')
+    .replace(/\s+/g, ' ')
     .trim();
+
+  if (!cleaned) {
+    return 'Custom Font';
+  }
+
+  return cleaned
+    .split(' ')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function readFileAsBase64(file: File) {
@@ -770,10 +781,6 @@ export default function DesignSystemFoundationsPage() {
   const [fontLibraryFeedback, setFontLibraryFeedback] = useState<FontLibraryFeedback | null>(null);
   const [fontLibraryBusy, setFontLibraryBusy] = useState(false);
   const [googleFontUrlDraft, setGoogleFontUrlDraft] = useState('');
-  const [localFontNameDraft, setLocalFontNameDraft] = useState('');
-  const [localFontCategoryDraft, setLocalFontCategoryDraft] = useState<FoundationFontCategory>('sans');
-  const [localFontWeightDraft, setLocalFontWeightDraft] = useState('400');
-  const [localFontStyleDraft, setLocalFontStyleDraft] = useState('normal');
   const [localFontFile, setLocalFontFile] = useState<File | null>(null);
   const [localFontInputKey, setLocalFontInputKey] = useState(0);
 
@@ -890,30 +897,6 @@ export default function DesignSystemFoundationsPage() {
 
   const dirtySectionIds = useMemo(() => new Set(dirtyEntries.sectionIds), [dirtyEntries.sectionIds]);
   const dirtyItemKeys = useMemo(() => new Set(dirtyEntries.itemKeys), [dirtyEntries.itemKeys]);
-  const fontUsageMap = useMemo(() => {
-    const usage = new Map<string, string[]>();
-
-    if (!activeRegistry) {
-      return usage;
-    }
-
-    const fontRolesSection = activeRegistry.collections.find((entry) => entry.id === FONTS_SECTION_ID);
-
-    if (!fontRolesSection) {
-      return usage;
-    }
-
-    for (const font of activeFontLibrary) {
-      const stack = getFoundationFontStack(font);
-      const usedBy = fontRolesSection.tokens
-        .filter((token) => (token.values.base ?? '') === stack)
-        .map((token) => token.label);
-
-      usage.set(font.id, usedBy);
-    }
-
-    return usage;
-  }, [activeFontLibrary, activeRegistry]);
 
   const groupedItems = useMemo<DisplayFoundationGroup[]>(() => {
     if (!activeSection) {
@@ -1123,15 +1106,10 @@ export default function DesignSystemFoundationsPage() {
       return;
     }
 
-    const family = localFontNameDraft.trim();
-
-    if (!family) {
-      setFontLibraryFeedback({
-        tone: 'error',
-        message: 'Enter the font family name for the uploaded file.',
-      });
-      return;
-    }
+    const family = deriveFontFamilyFromFileName(localFontFile.name);
+    const category = inferFontCategory(localFontFile.name);
+    const style = /\b(italic|oblique)\b/i.test(localFontFile.name) ? 'italic' : 'normal';
+    const weight = /\bvariable\b/i.test(localFontFile.name) ? '100 900' : '400';
 
     const duplicate = activeFontLibrary.some((font) => font.family.toLowerCase() === family.toLowerCase() && font.source === 'local');
 
@@ -1157,24 +1135,20 @@ export default function DesignSystemFoundationsPage() {
           id: buildFontAssetId(family, existingIds),
           label: family,
           family,
-          category: localFontCategoryDraft,
+          category,
           source: 'local',
           faces: [
             {
               fileUrl: uploadPayload.publicUrl,
               format: uploadPayload.format || fontFormat,
-              style: localFontStyleDraft,
-              weight: localFontWeightDraft.trim() || '400',
+              style,
+              weight,
             },
           ],
         },
       ];
 
       await persistRegistrySnapshot(nextRegistry);
-      setLocalFontNameDraft('');
-      setLocalFontCategoryDraft('sans');
-      setLocalFontWeightDraft('400');
-      setLocalFontStyleDraft('normal');
       setLocalFontFile(null);
       setLocalFontInputKey((current) => current + 1);
       setFontLibraryFeedback({
@@ -1185,42 +1159,6 @@ export default function DesignSystemFoundationsPage() {
       setFontLibraryFeedback({
         tone: 'error',
         message: error instanceof Error ? error.message : 'Failed to upload the local font.',
-      });
-    } finally {
-      setFontLibraryBusy(false);
-    }
-  }
-
-  async function handleRemoveFont(fontId: string) {
-    if (!savedRegistry || !draftRegistry) {
-      return;
-    }
-
-    const usedBy = fontUsageMap.get(fontId) ?? [];
-
-    if (usedBy.length > 0) {
-      setFontLibraryFeedback({
-        tone: 'error',
-        message: `Reassign ${usedBy.join(', ')} before removing this font from the library.`,
-      });
-      return;
-    }
-
-    const nextRegistry = cloneRegistry(savedRegistry);
-    nextRegistry.fontLibrary = activeFontLibrary.filter((font) => font.id !== fontId);
-    setFontLibraryBusy(true);
-    setFontLibraryFeedback(null);
-
-    try {
-      await persistRegistrySnapshot(nextRegistry);
-      setFontLibraryFeedback({
-        tone: 'success',
-        message: 'Removed the font from the shared library.',
-      });
-    } catch (error) {
-      setFontLibraryFeedback({
-        tone: 'error',
-        message: error instanceof Error ? error.message : 'Failed to remove the font.',
       });
     } finally {
       setFontLibraryBusy(false);
@@ -1799,27 +1737,9 @@ export default function DesignSystemFoundationsPage() {
 
     return (
       <section className="st-ds-font-library clip-lg" aria-label="Font Library">
-        <div className="st-ds-font-library__top">
-          <div className="st-ds-font-library__intro">
-            <span className="st-ds-foundations-group__title">Font Library</span>
-            <p className="st-ds-font-library__lede">
-              Add Google Fonts or upload local files once, then reuse every loaded family in Body, Heading, Mono, and any future font role.
-            </p>
-          </div>
-          <div className="st-ds-font-library__meta">
-            <span className="st-ds-foundations-chip">
-              {activeFontLibrary.length} loaded
-            </span>
-            {!import.meta.env.DEV && <span className="st-ds-foundations-chip">Read only</span>}
-          </div>
-        </div>
-
         <div className="st-ds-font-library__intake">
           <section className="st-ds-font-library__panel">
-            <div className="st-ds-font-library__panel-head">
-              <span className="st-ds-foundations-list__label">Google Fonts URL</span>
-              <span className="st-ds-foundations-list__desc">Paste a CSS embed URL or a specimen link.</span>
-            </div>
+            <span className="st-ds-foundations-list__label">Google Fonts URL</span>
             <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
               <span className="sr-only">Google Fonts CSS URL</span>
               <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
@@ -1846,69 +1766,7 @@ export default function DesignSystemFoundationsPage() {
           </section>
 
           <section className="st-ds-font-library__panel">
-            <div className="st-ds-font-library__panel-head">
-              <span className="st-ds-foundations-list__label">Local Upload</span>
-              <span className="st-ds-foundations-list__desc">Store .woff2, .woff, .ttf, or .otf in the shared dev library.</span>
-            </div>
-            <div className="st-ds-font-library__local-grid">
-              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
-                <span className="st-ds-foundations-list__value-label">Family</span>
-                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
-                  <input
-                    className="st-ds-foundations-input"
-                    aria-label="Local font family name"
-                    placeholder="Suisse Int'l"
-                    value={localFontNameDraft}
-                    readOnly={!import.meta.env.DEV}
-                    onChange={(event) => setLocalFontNameDraft(event.target.value)}
-                  />
-                </span>
-              </label>
-              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
-                <span className="st-ds-foundations-list__value-label">Fallback</span>
-                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
-                  <select
-                    className="st-ds-foundations-input"
-                    aria-label="Local font fallback"
-                    value={localFontCategoryDraft}
-                    disabled={!import.meta.env.DEV}
-                    onChange={(event) => setLocalFontCategoryDraft(event.target.value as FoundationFontCategory)}
-                  >
-                    <option value="sans">Sans</option>
-                    <option value="serif">Serif</option>
-                    <option value="mono">Mono</option>
-                  </select>
-                </span>
-              </label>
-              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
-                <span className="st-ds-foundations-list__value-label">Weight</span>
-                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
-                  <input
-                    className="st-ds-foundations-input"
-                    aria-label="Local font weight"
-                    placeholder="400 or 100 900"
-                    value={localFontWeightDraft}
-                    readOnly={!import.meta.env.DEV}
-                    onChange={(event) => setLocalFontWeightDraft(event.target.value)}
-                  />
-                </span>
-              </label>
-              <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
-                <span className="st-ds-foundations-list__value-label">Style</span>
-                <span className={['st-ds-foundations-control', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
-                  <select
-                    className="st-ds-foundations-input"
-                    aria-label="Local font style"
-                    value={localFontStyleDraft}
-                    disabled={!import.meta.env.DEV}
-                    onChange={(event) => setLocalFontStyleDraft(event.target.value)}
-                  >
-                    <option value="normal">Normal</option>
-                    <option value="italic">Italic</option>
-                  </select>
-                </span>
-              </label>
-            </div>
+            <span className="st-ds-foundations-list__label">Local Upload</span>
             <label className="st-ds-foundations-inline-field st-ds-foundations-inline-field--stack">
               <span className="st-ds-foundations-list__value-label">Font file</span>
               <span className={['st-ds-foundations-control', 'st-ds-foundations-control--file', controlsDisabled && 'is-readonly'].filter(Boolean).join(' ')}>
@@ -1922,10 +1780,6 @@ export default function DesignSystemFoundationsPage() {
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null;
                     setLocalFontFile(file);
-
-                    if (file && localFontNameDraft.trim().length === 0) {
-                      setLocalFontNameDraft(deriveFontFamilyFromFileName(file.name));
-                    }
                   }}
                 />
                 <span className="st-ds-font-library__file-label">
@@ -1958,53 +1812,6 @@ export default function DesignSystemFoundationsPage() {
             {fontLibraryFeedback.message}
           </div>
         )}
-
-        <div className="st-ds-font-library__grid">
-          {activeFontLibrary.map((font) => {
-            const stack = getFoundationFontStack(font);
-            const usedBy = fontUsageMap.get(font.id) ?? [];
-            const canRemove = import.meta.env.DEV && !fontLibraryBusy && savingItemKey === null && usedBy.length === 0;
-
-            return (
-              <article key={font.id} className="st-ds-font-library__card">
-                <div className="st-ds-font-library__card-head">
-                  <div className="st-ds-font-library__card-copy">
-                    <span className="st-ds-foundations-list__label">{font.label}</span>
-                    <code className="st-ds-foundations-list__code">{stack}</code>
-                  </div>
-                  <div className="st-ds-foundations-font-role__badges">
-                    <span className="st-ds-foundations-chip">{getFontOptionSourceLabel(font.source)}</span>
-                    <span className="st-ds-foundations-chip">{getFontCategoryLabel(font.category)}</span>
-                  </div>
-                </div>
-                <div className="st-ds-font-library__preview" style={{ fontFamily: stack }}>
-                  Sphinx of black quartz, judge my vow.
-                </div>
-                <div className="st-ds-font-library__card-foot">
-                  <div className="st-ds-font-library__usage">
-                    {usedBy.length > 0 ? (
-                      <span className="st-ds-foundations-list__desc">
-                        Used by {usedBy.join(', ')}
-                      </span>
-                    ) : (
-                      <span className="st-ds-foundations-list__desc">Available in every role picker.</span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className="st-ds-foundations-btn st-ds-foundations-btn--ghost"
-                    disabled={!canRemove}
-                    onClick={() => {
-                      void handleRemoveFont(font.id);
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
       </section>
     );
   }
