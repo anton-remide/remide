@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "updatedAt": "2026-03-25T11:29:55.685Z",
+    "updatedAt": "2026-03-26T07:30:55.042Z",
     "defaultTheme": "tracker",
     "description": "Canonical foundations registry for RemiDe. Values live here; runtime CSS and /ui/foundations consume this file."
   },
@@ -867,6 +867,63 @@
     }
   ],
   "rules": [
+    {
+      "id": "icons",
+      "label": "Icons",
+      "description": "Canonical iconography library and usage contracts.",
+      "kind": "rule",
+      "groups": [
+        {
+          "id": "library",
+          "label": "Library"
+        },
+        {
+          "id": "usage",
+          "label": "Usage"
+        }
+      ],
+      "items": [
+        {
+          "id": "icon-library",
+          "label": "Lucide Library",
+          "group": "library",
+          "description": "Use Lucide as the single outline icon library across product chrome and content surfaces.",
+          "previewText": "lucide-react",
+          "properties": {
+            "package": "lucide-react",
+            "repository": "https://github.com/lucide-icons/lucide",
+            "style": "Outline",
+            "stroke-width": "1.75-2"
+          }
+        },
+        {
+          "id": "icon-size-scale",
+          "label": "Size Scale",
+          "group": "usage",
+          "description": "Default icon sizes by density and component weight.",
+          "previewText": "16 / 18 / 20 / 24 px",
+          "properties": {
+            "dense-ui": "16px",
+            "controls": "18px",
+            "cards": "20px",
+            "hero-empty-states": "24px"
+          }
+        },
+        {
+          "id": "icon-usage-rules",
+          "label": "Usage Rules",
+          "group": "usage",
+          "description": "Keep icon semantics tied to surrounding copy, surfaces, and badges.",
+          "previewText": "currentColor + semantic context",
+          "properties": {
+            "color": "--color-primary",
+            "semantic-source": "text + badge + surface",
+            "filled-icons": "Avoid",
+            "custom-svg": "Only if Lucide has no fit"
+          }
+        }
+      ]
+    },
     {
       "id": "typography-rules",
       "label": "Typography Rules",

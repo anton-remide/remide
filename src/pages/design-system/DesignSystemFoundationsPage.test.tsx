@@ -91,7 +91,13 @@ describe('DesignSystemFoundationsPage', () => {
     expect(
       screen.getByRole('button', { name: 'Edit Background Primary Main site color value' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('#21201C14')).toBeInTheDocument();
+    const trackerBorderCell = screen.getByRole('button', {
+      name: 'Edit Border Tracker color value',
+    });
+
+    expect(within(trackerBorderCell).getByText('#21201C')).toBeInTheDocument();
+    expect(within(trackerBorderCell).getByText('8')).toBeInTheDocument();
+    expect(within(trackerBorderCell).getByText('%')).toBeInTheDocument();
   });
 
   it('switches colors to basic palette view and copies hex values', async () => {
@@ -165,6 +171,24 @@ describe('DesignSystemFoundationsPage', () => {
 
     expect(radiiLedger).toBeInTheDocument();
     expect(radiiLedger?.querySelector('.st-ds-token-ledger__swatch')).not.toBeInTheDocument();
+  });
+
+  it('shows icons inside the core foundations nav with lucide reference content', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    await screen.findByRole('heading', { name: 'Colors' });
+
+    const sidebar = screen.getByRole('complementary', { name: 'Foundations' });
+    fireEvent.click(within(sidebar).getByRole('button', { name: 'Icons' }));
+
+    expect(await screen.findByRole('heading', { name: 'Icons' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Open Lucide/i })).toHaveAttribute(
+      'href',
+      'https://github.com/lucide-icons/lucide',
+    );
+    expect(screen.getAllByText('lucide-react').length).toBeGreaterThan(0);
+    expect(screen.getByText('Navigation and utility')).toBeInTheDocument();
+    expect(screen.getByText('Coverage and trust')).toBeInTheDocument();
   });
 
   it('shows only elevation tokens in the shadows ledger', async () => {
@@ -280,8 +304,10 @@ describe('DesignSystemFoundationsPage', () => {
     fireEvent.click(trigger);
 
     const input = screen.getByLabelText('Background Primary Tracker color value');
-    fireEvent.change(input, { target: { value: '#ABCDEF80' } });
-    fireEvent.blur(input);
+    const opacityInput = screen.getByLabelText('Background Primary Tracker opacity');
+    fireEvent.change(input, { target: { value: '#ABCDEF' } });
+    fireEvent.change(opacityInput, { target: { value: '50' } });
+    fireEvent.blur(opacityInput);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -343,7 +369,37 @@ describe('DesignSystemFoundationsPage', () => {
     fireEvent.change(input, { target: { value: 'rgba(0, 0, 0, 0.5)' } });
     fireEvent.blur(input);
 
-    expect(await screen.findByText('Enter a HEX color as #RRGGBB or #RRGGBBAA.')).toBeInTheDocument();
+    expect(await screen.findByText('Enter a HEX color as #RRGGBB.')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('splits existing alpha hex values into hex and opacity inputs', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    const trigger = await screen.findByRole('button', {
+      name: 'Edit Border Tracker color value',
+    });
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByLabelText('Border Tracker color value')).toHaveValue('#21201C');
+    expect(screen.getByLabelText('Border Tracker opacity')).toHaveValue('8');
+  });
+
+  it('shows inline error and skips save for invalid opacity', async () => {
+    renderWithProviders(<DesignSystemFoundationsPage />);
+
+    const trigger = await screen.findByRole('button', {
+      name: 'Edit Border Strong Tracker color value',
+    });
+
+    fireEvent.click(trigger);
+
+    const opacityInput = screen.getByLabelText('Border Strong Tracker opacity');
+    fireEvent.change(opacityInput, { target: { value: '240' } });
+    fireEvent.blur(opacityInput);
+
+    expect(await screen.findByText('Enter opacity as a whole number from 0 to 100.')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

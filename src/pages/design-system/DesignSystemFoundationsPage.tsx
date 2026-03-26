@@ -1,4 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  ExternalLink,
+  Filter,
+  Globe,
+  Search,
+  Shield,
+  type LucideIcon,
+} from 'lucide-react';
 import Heading from '../../components/ui/Heading';
 import Text from '../../components/ui/Text';
 import { useTheme, type Theme } from '../../context/ThemeProvider';
@@ -25,6 +36,7 @@ const FOUNDATION_FONT_UPLOAD_ENDPOINT = '/__internal/foundations/fonts';
 const FOUNDATION_PUBLIC_URL = `${import.meta.env.BASE_URL}design-system/foundation.registry.json`;
 const FOUNDATION_RUNTIME_STYLE_ID = 'st-foundations-runtime-style';
 const COLOR_SECTION_ID = 'colors';
+const ICONS_SECTION_ID = 'icons';
 const FONTS_SECTION_ID = 'fonts';
 const TYPOGRAPHY_RULES_SECTION_ID = 'typography-rules';
 const TYPOGRAPHY_SCALE_SECTION_ID = 'typography-scale';
@@ -32,6 +44,7 @@ const CORE_LEDGER_SECTION_IDS = new Set([COLOR_SECTION_ID, 'spacing', 'radii', '
 const TYPOGRAPHY_SECTION_IDS = new Set([FONTS_SECTION_ID, TYPOGRAPHY_SCALE_SECTION_ID, TYPOGRAPHY_RULES_SECTION_ID]);
 const SECTION_NAV_ORDER = [
   'colors',
+  ICONS_SECTION_ID,
   'spacing',
   'radii',
   'shadows',
@@ -148,6 +161,36 @@ const BASIC_BADGE_COLORS = [
   '#91D243',
   '#2A64F6',
 ] as const;
+const ICON_LIBRARY_URL = 'https://github.com/lucide-icons/lucide';
+
+interface IconFoundationSampleGroup {
+  title: string;
+  description: string;
+  icons: Array<{ label: string; icon: LucideIcon }>;
+}
+
+const ICON_FOUNDATION_SAMPLE_GROUPS: IconFoundationSampleGroup[] = [
+  {
+    title: 'Navigation and utility',
+    description: 'Search, filtering, and directional affordances used across product chrome.',
+    icons: [
+      { label: 'Search', icon: Search },
+      { label: 'Filter', icon: Filter },
+      { label: 'ArrowRight', icon: ArrowRight },
+      { label: 'ExternalLink', icon: ExternalLink },
+    ],
+  },
+  {
+    title: 'Coverage and trust',
+    description: 'Entity, jurisdiction, and verification metaphors used in cards and detail surfaces.',
+    icons: [
+      { label: 'Building2', icon: Building2 },
+      { label: 'Globe', icon: Globe },
+      { label: 'Shield', icon: Shield },
+      { label: 'Check', icon: Check },
+    ],
+  },
+];
 
 function getFoundationModeLabel(mode: string) {
   if (mode === 'base') {
@@ -180,6 +223,11 @@ interface DisplayFoundationGroup {
 interface FontLibraryFeedback {
   tone: FontLibraryFeedbackTone;
   message: string;
+}
+
+interface ColorCellDraft {
+  hex: string;
+  opacity: string;
 }
 
 interface ParsedGoogleFontPayload {
@@ -532,6 +580,101 @@ function normalizeAnyColorValue(value: string) {
   return normalizeHexColorValue(value) ?? normalizeRgbColorValue(value);
 }
 
+function normalizeBaseHexColorValue(value: string) {
+  const trimmed = value.trim();
+  const shortHexMatch = trimmed.match(/^#([0-9a-f]{3})$/i);
+
+  if (shortHexMatch) {
+    return `#${shortHexMatch[1]
+      .split('')
+      .map((char) => `${char}${char}`)
+      .join('')
+      .toUpperCase()}`;
+  }
+
+  const longHexMatch = trimmed.match(/^#([0-9a-f]{6})$/i);
+
+  if (!longHexMatch) {
+    return null;
+  }
+
+  return `#${longHexMatch[1].toUpperCase()}`;
+}
+
+function alphaChannelToOpacityPercentage(alphaChannel: number) {
+  return Math.round((clampColorChannel(alphaChannel) / 255) * 100);
+}
+
+function parseOpacityPercentageValue(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!/^\d{1,3}$/.test(trimmed)) {
+    return null;
+  }
+
+  const numeric = Number.parseInt(trimmed, 10);
+
+  if (numeric < 0 || numeric > 100) {
+    return null;
+  }
+
+  return numeric;
+}
+
+function getColorCellDraft(value: string): ColorCellDraft {
+  const normalized = normalizeAnyColorValue(value);
+
+  if (!normalized) {
+    return {
+      hex: value.trim(),
+      opacity: '100',
+    };
+  }
+
+  if (normalized.length === 9) {
+    const alphaChannel = Number.parseInt(normalized.slice(7, 9), 16);
+
+    return {
+      hex: normalized.slice(0, 7),
+      opacity: String(alphaChannelToOpacityPercentage(alphaChannel)),
+    };
+  }
+
+  return {
+    hex: normalized,
+    opacity: '100',
+  };
+}
+
+function composeColorCellValue(draft: ColorCellDraft) {
+  const normalizedHex = normalizeBaseHexColorValue(draft.hex);
+  const opacity = parseOpacityPercentageValue(draft.opacity);
+
+  if (!normalizedHex || opacity === null) {
+    return null;
+  }
+
+  if (opacity === 100) {
+    return normalizedHex;
+  }
+
+  return `${normalizedHex}${toHexChannel((opacity / 100) * 255)}`;
+}
+
+function getColorCellPreviewValue(draft: ColorCellDraft) {
+  const composed = composeColorCellValue(draft);
+
+  if (composed) {
+    return composed;
+  }
+
+  return normalizeBaseHexColorValue(draft.hex) ?? draft.hex;
+}
+
 function normalizeColorRegistry(registry: FoundationRegistry) {
   const colorsCollection = registry.collections.find((entry) => entry.id === COLOR_SECTION_ID);
 
@@ -694,10 +837,6 @@ function getTokenValue(registry: FoundationRegistry, collectionId: string, token
   return token?.values[mode] ?? '';
 }
 
-function isHexColorValue(value: string) {
-  return normalizeHexColorValue(value) !== null;
-}
-
 function colorSwatchStyle(value: string, isInvalid = false) {
   const normalized = normalizeAnyColorValue(value);
 
@@ -774,7 +913,7 @@ export default function DesignSystemFoundationsPage() {
   const [itemErrorMessages, setItemErrorMessages] = useState<Record<string, string>>({});
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [editingColorCellKey, setEditingColorCellKey] = useState<string | null>(null);
-  const [colorCellDrafts, setColorCellDrafts] = useState<Record<string, string>>({});
+  const [colorCellDrafts, setColorCellDrafts] = useState<Record<string, ColorCellDraft>>({});
   const [colorCellErrors, setColorCellErrors] = useState<Record<string, string>>({});
   const [activeColorsView, setActiveColorsView] = useState<ColorsView>('active');
   const [copiedBasicColorKey, setCopiedBasicColorKey] = useState<string | null>(null);
@@ -1265,10 +1404,10 @@ export default function DesignSystemFoundationsPage() {
     clearColorCellError(cellKey);
     clearItemError(getFoundationItemKey(sectionId, tokenId));
     setEditingColorCellKey(cellKey);
-    setColorCellDrafts((current) => (cellKey in current ? current : { ...current, [cellKey]: value }));
+    setColorCellDrafts((current) => (cellKey in current ? current : { ...current, [cellKey]: getColorCellDraft(value) }));
   }
 
-  function updateColorCellDraft(sectionId: string, tokenId: string, mode: string, value: string) {
+  function updateColorCellDraft(sectionId: string, tokenId: string, mode: string, value: ColorCellDraft) {
     const cellKey = getColorCellKey(sectionId, tokenId, mode);
     setEditingColorCellKey(cellKey);
     clearColorCellError(cellKey);
@@ -1290,8 +1429,8 @@ export default function DesignSystemFoundationsPage() {
 
     const cellKey = getColorCellKey(sectionId, tokenId, mode);
     const itemKey = getFoundationItemKey(sectionId, tokenId);
-    const nextValue = colorCellDrafts[cellKey] ?? getTokenValue(draftRegistry, sectionId, tokenId, mode);
-    const normalizedValue = normalizeHexColorValue(nextValue);
+    const nextColorDraft = colorCellDrafts[cellKey] ?? getColorCellDraft(getTokenValue(draftRegistry, sectionId, tokenId, mode));
+    const normalizedValue = composeColorCellValue(nextColorDraft);
     const savedValue = normalizeAnyColorValue(getTokenValue(savedRegistry, sectionId, tokenId, mode))
       ?? getTokenValue(savedRegistry, sectionId, tokenId, mode).trim();
 
@@ -1302,10 +1441,14 @@ export default function DesignSystemFoundationsPage() {
       return;
     }
 
-    if (!normalizedValue || !isHexColorValue(nextValue)) {
+    if (!normalizedValue) {
+      const hasValidHex = normalizeBaseHexColorValue(nextColorDraft.hex) !== null;
+
       setColorCellErrors((current) => ({
         ...current,
-        [cellKey]: 'Enter a HEX color as #RRGGBB or #RRGGBBAA.',
+        [cellKey]: hasValidHex
+          ? 'Enter opacity as a whole number from 0 to 100.'
+          : 'Enter a HEX color as #RRGGBB.',
       }));
       return;
     }
@@ -1411,53 +1554,99 @@ export default function DesignSystemFoundationsPage() {
 
                       {FOUNDATION_THEME_ORDER.map((mode) => {
                         const cellKey = getColorCellKey(section.id, token.id, mode);
-                        const inputLabel = `${token.label} ${FOUNDATION_THEME_LABELS[mode]} color value`;
-                        const value = colorCellDrafts[cellKey] ?? token.values[mode] ?? '';
+                        const hexInputLabel = `${token.label} ${FOUNDATION_THEME_LABELS[mode]} color value`;
+                        const opacityInputLabel = `${token.label} ${FOUNDATION_THEME_LABELS[mode]} opacity`;
+                        const value = token.values[mode] ?? '';
+                        const draft = colorCellDrafts[cellKey] ?? getColorCellDraft(value);
                         const isEditing = editingColorCellKey === cellKey;
                         const cellError = colorCellErrors[cellKey];
+                        const previewValue = isEditing ? getColorCellPreviewValue(draft) : value;
 
                         return (
                           <div key={cellKey} className="st-ds-colors-ledger__cell-shell">
                             {isEditing ? (
-                              <label className="st-ds-colors-ledger__cell st-ds-colors-ledger__cell--editing">
+                              <label
+                                className="st-ds-colors-ledger__cell st-ds-colors-ledger__cell--editing"
+                                onBlur={(event) => {
+                                  const nextFocusedElement = event.relatedTarget as Node | null;
+
+                                  if (event.currentTarget.contains(nextFocusedElement)) {
+                                    return;
+                                  }
+
+                                  void commitColorCell(section.id, token.id, mode);
+                                }}
+                              >
                                 <span
                                   className="st-ds-colors-ledger__swatch"
-                                  style={colorSwatchStyle(value, Boolean(cellError))}
+                                  style={colorSwatchStyle(previewValue, Boolean(cellError))}
                                   aria-hidden="true"
                                 />
-                                <span className="sr-only">{inputLabel}</span>
-                                <input
-                                  className="st-ds-colors-ledger__input"
-                                  aria-label={inputLabel}
-                                  value={value}
-                                  placeholder="#RRGGBB"
-                                  maxLength={9}
-                                  spellCheck={false}
-                                  autoCapitalize="characters"
-                                  autoFocus
-                                  disabled={tokenLocked || savingItemKey !== null}
-                                  onChange={(event) => updateColorCellDraft(section.id, token.id, mode, event.target.value)}
-                                  onBlur={() => {
-                                    void commitColorCell(section.id, token.id, mode);
-                                  }}
-                                  onKeyDown={(event) => {
-                                    if (event.key === 'Enter') {
-                                      event.preventDefault();
-                                      event.currentTarget.blur();
-                                    }
+                                <span className="st-ds-colors-ledger__field">
+                                  <span className="st-ds-colors-ledger__field-main">
+                                    <span className="sr-only">{hexInputLabel}</span>
+                                    <input
+                                      className="st-ds-colors-ledger__input"
+                                      aria-label={hexInputLabel}
+                                      value={draft.hex}
+                                      placeholder="#RRGGBB"
+                                      maxLength={7}
+                                      spellCheck={false}
+                                      autoCapitalize="characters"
+                                      autoFocus
+                                      disabled={tokenLocked || savingItemKey !== null}
+                                      onChange={(event) => updateColorCellDraft(section.id, token.id, mode, {
+                                        ...draft,
+                                        hex: event.target.value,
+                                      })}
+                                      onKeyDown={(event) => {
+                                        if (event.key === 'Enter') {
+                                          event.preventDefault();
+                                          event.currentTarget.blur();
+                                        }
 
-                                    if (event.key === 'Escape') {
-                                      event.preventDefault();
-                                      discardColorCell(section.id, token.id, mode);
-                                    }
-                                  }}
-                                />
+                                        if (event.key === 'Escape') {
+                                          event.preventDefault();
+                                          discardColorCell(section.id, token.id, mode);
+                                        }
+                                      }}
+                                    />
+                                  </span>
+                                  <span className="st-ds-colors-ledger__field-opacity">
+                                    <input
+                                      className="st-ds-colors-ledger__opacity-input"
+                                      aria-label={opacityInputLabel}
+                                      value={draft.opacity}
+                                      placeholder="100"
+                                      maxLength={3}
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      disabled={tokenLocked || savingItemKey !== null}
+                                      onChange={(event) => updateColorCellDraft(section.id, token.id, mode, {
+                                        ...draft,
+                                        opacity: event.target.value.replace(/\D+/g, '').slice(0, 3),
+                                      })}
+                                      onKeyDown={(event) => {
+                                        if (event.key === 'Enter') {
+                                          event.preventDefault();
+                                          event.currentTarget.blur();
+                                        }
+
+                                        if (event.key === 'Escape') {
+                                          event.preventDefault();
+                                          discardColorCell(section.id, token.id, mode);
+                                        }
+                                      }}
+                                    />
+                                    <span className="st-ds-colors-ledger__opacity-unit">%</span>
+                                  </span>
+                                </span>
                               </label>
                             ) : (
                               <button
                                 type="button"
                                 className="st-ds-colors-ledger__cell"
-                                aria-label={`Edit ${inputLabel}`}
+                                aria-label={`Edit ${hexInputLabel}`}
                                 disabled={tokenLocked || savingItemKey !== null}
                                 onClick={() => beginColorCellEdit(section.id, token.id, mode, value)}
                                 onFocus={() => beginColorCellEdit(section.id, token.id, mode, value)}
@@ -1467,7 +1656,13 @@ export default function DesignSystemFoundationsPage() {
                                   style={colorSwatchStyle(value, Boolean(cellError))}
                                   aria-hidden="true"
                                 />
-                                <span className="st-ds-colors-ledger__value">{value}</span>
+                                <span className="st-ds-colors-ledger__field">
+                                  <span className="st-ds-colors-ledger__value">{draft.hex}</span>
+                                  <span className="st-ds-colors-ledger__field-opacity">
+                                    <span className="st-ds-colors-ledger__opacity-value">{draft.opacity}</span>
+                                    <span className="st-ds-colors-ledger__opacity-unit">%</span>
+                                  </span>
+                                </span>
                               </button>
                             )}
 
@@ -1816,6 +2011,61 @@ export default function DesignSystemFoundationsPage() {
     );
   }
 
+  function renderIconsLibrary() {
+    if (activeSection.id !== ICONS_SECTION_ID) {
+      return null;
+    }
+
+    return (
+      <section className="st-ds-icons-library clip-lg" aria-label="Lucide icon library">
+        <div className="st-ds-icons-library__header">
+          <div className="st-ds-icons-library__copy">
+            <span className="st-ds-foundations-group__title">Canonical Library</span>
+            <p className="st-ds-foundations-list__desc">
+              Foundations Core uses Lucide as the shared icon language for navigation, entity surfaces,
+              filters, states, and trust cues.
+            </p>
+          </div>
+          <a
+            className="st-ds-icons-library__link"
+            href={ICON_LIBRARY_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span>Open Lucide</span>
+            <ExternalLink size={14} aria-hidden="true" />
+          </a>
+        </div>
+
+        <div className="st-ds-icons-library__meta">
+          <code className="st-ds-foundations-list__code">lucide-react</code>
+          <code className="st-ds-foundations-list__code">github.com/lucide-icons/lucide</code>
+        </div>
+
+        <div className="st-ds-icons-library__groups">
+          {ICON_FOUNDATION_SAMPLE_GROUPS.map((group) => (
+            <article key={group.title} className="st-ds-icons-library__group">
+              <div className="st-ds-icons-library__group-copy">
+                <span className="st-ds-foundations-group__title">{group.title}</span>
+                <p className="st-ds-foundations-list__desc">{group.description}</p>
+              </div>
+              <div className="st-ds-icons-library__grid">
+                {group.icons.map(({ label, icon: Icon }) => (
+                  <div key={label} className="st-ds-icons-library__item">
+                    <span className="st-ds-icons-library__glyph" aria-hidden="true">
+                      <Icon size={18} strokeWidth={1.9} />
+                    </span>
+                    <span className="st-ds-foundations-list__value-label">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   if (loading) {
     return (
       <div className="st-ds-content st-ds-foundations">
@@ -1931,6 +2181,7 @@ export default function DesignSystemFoundationsPage() {
             isTokenSection(activeSection) && CORE_LEDGER_SECTION_IDS.has(activeSection.id) ? renderCoreTokenLedger(activeSection) : (
             <div className="st-ds-foundations-groups">
             {renderFontLibraryManager()}
+            {renderIconsLibrary()}
             {groupedItems.map((group) => (
                 <div key={group.id} className="st-ds-foundations-group">
                   <div className={['st-ds-foundations-list', group.layout === 'token' ? 'is-token-grid' : 'is-rule-grid'].join(' ')}>
