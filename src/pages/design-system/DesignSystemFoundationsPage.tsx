@@ -148,9 +148,6 @@ const BASIC_BADGE_COLORS = [
   '#91D243',
   '#2A64F6',
 ] as const;
-const FOUNDATIONS_TOKEN_VISIBILITY: Partial<Record<string, Set<string>>> = {
-  shadows: new Set(['shadow-focus']),
-};
 
 function getFoundationModeLabel(mode: string) {
   if (mode === 'base') {
@@ -339,10 +336,6 @@ function inferFontCategory(family: string): FoundationFontCategory {
   }
 
   return 'sans';
-}
-
-function isFoundationTokenVisible(sectionId: string, tokenId: string) {
-  return !FOUNDATIONS_TOKEN_VISIBILITY[sectionId]?.has(tokenId);
 }
 
 function guessFontFormat(fileName: string) {
@@ -1435,9 +1428,7 @@ export default function DesignSystemFoundationsPage() {
           </div>
 
           {section.groups.map((group) => {
-            const tokens = section.tokens.filter(
-              (item) => item.group === group.id && isFoundationTokenVisible(section.id, item.id),
-            );
+            const tokens = section.tokens.filter((item) => item.group === group.id);
 
             if (tokens.length === 0) {
               return null;
@@ -1707,9 +1698,7 @@ export default function DesignSystemFoundationsPage() {
           </div>
 
           {section.groups.map((group) => {
-            const tokens = section.tokens.filter(
-              (item) => item.group === group.id && isFoundationTokenVisible(section.id, item.id),
-            );
+            const tokens = section.tokens.filter((item) => item.group === group.id);
 
             if (tokens.length === 0) {
               return null;

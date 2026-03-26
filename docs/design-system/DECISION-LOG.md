@@ -326,7 +326,7 @@ The plan was reviewed through 3 cycles using the Hard Work Framework (`docs/hard
 ### Focus Ring Invisible on Dark Themes
 
 **What:** Global `:focus-visible` at line 324 of `app.css` uses `var(--black)` which resolves to a dark color on dark themes — invisible.
-**Fix (planned):** Replace with `--focus-ring: 0 0 0 3px var(--color-accent-a25)` token.
+**Fix (planned):** Replace with a direct `box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)` treatment.
 **Status:** In Plan 01 §0c, not yet applied.
 
 ---

@@ -31,9 +31,6 @@
   --z-overlay: 9000;
   --z-modal: 9999;
 
-  /* ── Focus ring (derived from generated foundations token) ── */
-  --focus-ring: var(--shadow-focus);
-
   /* ── Line-height (Plan 01 §0d) ── */
   --leading-tight: 1.2;
   --leading-snug: 1.35;
@@ -193,7 +190,7 @@ a:hover {
 
 :focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 ul {
@@ -273,7 +270,7 @@ ul {
 
 .st-btn:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-focus),
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent),
     0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
@@ -1409,7 +1406,7 @@ a.st-content-card:hover {
 .st-search input:focus {
   border-color: var(--accent);
   background: var(--white);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .st-search input::placeholder {
@@ -1530,7 +1527,7 @@ a.st-content-card:hover {
 
 .st-select:focus {
   border-color: var(--accent);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 /* ==========================================================================
@@ -2303,7 +2300,7 @@ a.st-content-card:hover {
 .st-input:focus {
   border-color: var(--accent);
   background: var(--white);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .st-textarea {
@@ -2326,7 +2323,7 @@ a.st-content-card:hover {
 .st-textarea:focus {
   border-color: var(--accent);
   background: var(--white);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 /* ==========================================================================
@@ -4443,7 +4440,7 @@ a, button, input, select, textarea {
 
 .st-header-search-input:focus {
   border-color: var(--accent);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .st-header-search-input::placeholder {
@@ -6396,7 +6393,7 @@ thead .st-pricing-col-highlight {
 
 .st-landing-v2 .st-landing-subscribe-form.is-focused input {
   border-color: var(--accent);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .st-landing-v2 .st-landing-subscribe-form.is-error input {
@@ -6958,7 +6955,7 @@ body:has(.st-top-banner) .st-landing-v2 .st-hero {
 
 .st-header-search-input:focus {
   border: none;
-  box-shadow: var(--shadow-md), var(--shadow-focus);
+  box-shadow: var(--shadow-md), 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .st-header-search-input::placeholder {
@@ -7748,7 +7745,7 @@ article.st-page:has(.st-floating-cta) {
   transform: translateX(18px);
 }
 .st-toggle__input:focus-visible + .st-toggle__track {
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 .st-toggle--sm .st-toggle__track {
   width: 32px;
@@ -7807,7 +7804,7 @@ article.st-page:has(.st-floating-cta) {
 }
 .st-input:focus {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 .st-input.has-icon {
   padding-left: calc(var(--space-3) + 20px + var(--space-2));
@@ -7864,7 +7861,7 @@ article.st-page:has(.st-floating-cta) {
 }
 .st-search-bar__input:focus {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 .st-search-bar__spinner {
   position: absolute;
@@ -9688,7 +9685,7 @@ article.st-page:has(.st-floating-cta) {
 .st-ds-search:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 /* Card grid */
@@ -11077,7 +11074,7 @@ select.st-ds-foundations-input {
 .st-ds-foundations-modes__btn:focus-visible,
 .st-ds-foundations-sidebar__button:focus-visible,
 .st-ds-foundations-list__item:focus-visible {
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .st-ds-foundations-textarea {

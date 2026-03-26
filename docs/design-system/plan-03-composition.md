@@ -413,20 +413,12 @@ An interactive panel with a card that demonstrates each duration/easing combinat
 
 ## Section 9: Focus States (`#focus`)
 
-### Focus ring token
-
-```css
-:root {
-  --focus-ring: 0 0 0 3px var(--color-accent-a25, rgba(255, 95, 15, 0.25));
-}
-```
-
 ### Global rule (replaces current broken rule at line 324)
 
 ```css
 :focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 ```
 
@@ -438,11 +430,11 @@ Some components need adjusted focus treatment:
 
 | Component | Focus treatment |
 |-----------|----------------|
-| **Button** | `box-shadow: var(--focus-ring), var(--shadow-sm)` (composite) |
-| **Input/Select** | `border-color: var(--color-accent); box-shadow: var(--focus-ring)` |
-| **Toggle** | `box-shadow: var(--focus-ring)` on track |
-| **Link** | `box-shadow: var(--focus-ring); border-radius: 2px` |
-| **Card (interactive)** | `box-shadow: var(--focus-ring), var(--shadow-md)` |
+| **Button** | `box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent), var(--shadow-sm)` |
+| **Input/Select** | `border-color: var(--color-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)` |
+| **Toggle** | `box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)` on track |
+| **Link** | `box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent); border-radius: 2px` |
+| **Card (interactive)** | `box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent), var(--shadow-md)` |
 
 ### Phase 2: Retrofit
 
@@ -634,7 +626,7 @@ A 3D-perspective diagram showing stacked layers with labels. Can be built with C
 
 3. **The page has its own sidebar** with the 12 sections listed above.
 
-4. **New CSS tokens** (`--grid-*`, `--z-*`, `--duration-*`, `--ease-*`, `--leading-*`, `--focus-ring`) should be added to the `:root` block in `app.css` near the existing spacing tokens.
+4. **New CSS tokens** (`--grid-*`, `--z-*`, `--duration-*`, `--ease-*`, `--leading-*`) should be added to the `:root` block in `app.css` near the existing spacing tokens.
 
 5. **Current phase = Desktop + Comfortable.** Document mobile rules but don't build responsive demos. Show them as comparison tables and wireframe sketches.
 

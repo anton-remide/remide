@@ -72,7 +72,6 @@
   --shadow-sm: 0 1px 2px rgba(33, 32, 28, 0.05), 0 1px 3px rgba(33, 32, 28, 0.07);
   --shadow-md: 0 4px 12px rgba(33, 32, 28, 0.06), 0 1px 3px rgba(33, 32, 28, 0.04);
   --shadow-lg: 0 8px 24px rgba(33, 32, 28, 0.10), 0 2px 6px rgba(33, 32, 28, 0.06);
-  --shadow-focus: 0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent);
   --rule-heading-display-font: var(--font-heading);
   --rule-heading-display-size: var(--type-display);
   --rule-heading-display-line-height: 1.08;
@@ -166,7 +165,6 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.20), 0 1px 3px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.20);
-  --shadow-focus: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 [data-theme="main-site"] {
@@ -195,5 +193,4 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.20);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-focus: 0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent);
 }

@@ -167,7 +167,7 @@ describe('DesignSystemFoundationsPage', () => {
     expect(radiiLedger?.querySelector('.st-ds-token-ledger__swatch')).not.toBeInTheDocument();
   });
 
-  it('hides focus ring from the shadows ledger while keeping elevation tokens', async () => {
+  it('shows only elevation tokens in the shadows ledger', async () => {
     renderWithProviders(<DesignSystemFoundationsPage />);
 
     await screen.findByRole('heading', { name: 'Colors' });
@@ -177,7 +177,6 @@ describe('DesignSystemFoundationsPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Shadows' })).toBeInTheDocument();
     expect(screen.queryByText('Focus Ring')).not.toBeInTheDocument();
-    expect(screen.queryByText('--shadow-focus')).not.toBeInTheDocument();
     expect(screen.getByText('Large')).toBeInTheDocument();
   });
 

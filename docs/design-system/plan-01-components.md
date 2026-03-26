@@ -76,17 +76,14 @@ After adding: grep for all hardcoded `z-index:` values in `app.css` and migrate 
 The global `:focus-visible` rule at line 324 of `app.css` uses `var(--black)` which is invisible on dark themes. Fix:
 
 ```css
-/* Add to :root */
---focus-ring: 0 0 0 3px var(--color-accent-a25, rgba(255, 95, 15, 0.25));
-
 /* Replace line 324-327 */
 :focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 ```
 
-**Note:** Retrofitting `:focus-visible` across all 43 existing interactive components is Phase 2 work. For now, just add the token and fix the global rule. New components built in this plan MUST use `--focus-ring`.
+**Note:** Retrofitting `:focus-visible` across all 43 existing interactive components is Phase 2 work. For now, just fix the global rule. New components built in this plan should use the same direct focus shadow treatment.
 
 ### 0d. Line-Height Tokens
 
